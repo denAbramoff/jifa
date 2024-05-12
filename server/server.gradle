@@ -64,7 +64,9 @@ startScripts.enabled = false
 distTar.enabled = false
 distZip.enabled = false
 
-mainClassName = 'org.eclipse.jifa.server.Launcher'
+application {
+    mainClass = 'org.eclipse.jifa.server.Launcher'
+}
 
 tasks.named('compileJava') {
     inputs.files(tasks.named('processResources'))

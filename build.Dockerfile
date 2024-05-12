@@ -1,5 +1,5 @@
 FROM node:18
-RUN apt-get update && apt-get install openjdk-17-jdk -y
+RUN apt-get update && apt-get install openjdk-21-jdk -y
 WORKDIR /workspace/
 COPY . /workspace/
 ARG GRADLE_ARGS

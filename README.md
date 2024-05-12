@@ -15,8 +15,6 @@
 [![Eclipse License](https://img.shields.io/github/license/eclipse/jifa?label=License)](https://github.com/eclipse/jifa/blob/main/LICENSE)
 ![Commit Check](https://github.com/eclipse/jifa/actions/workflows/commit-check.yml/badge.svg?branch=main)
 
-> [中文](https://github.com/eclipse/jifa/blob/main/README_zh.md)
-
 ## Introduction
 
 Online Analyzer for Heap Dump, GC Log, Thread Dump and JFR File.

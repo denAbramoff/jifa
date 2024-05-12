@@ -1,4 +1,4 @@
-FROM eclipse-temurin:17-jdk
+FROM eclipse-temurin:21-jdk
 VOLUME /tmp
 ARG TARGETARCH
 COPY jifa-build/$TARGETARCH/BOOT-INF/lib /jifa/lib

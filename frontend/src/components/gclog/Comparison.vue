@@ -125,19 +125,19 @@ const timeRange = ref();
 
 function prepareToUpdateTimeRange(index) {
   let log = logs[index];
-  let metadata = log.metadata;
+  let metadata = LOG.metadata;
   timeRangeSelectorTargetIndex.value = index;
   timeRangeSelectorTarget.value = log;
   let useUptime = metadata.timestamp < 0;
   timeRangeSelectorTargetUseUptime.value = useUptime;
 
   if (useUptime) {
-    timeRangeStart.value = Math.floor(log.range!.start / 1000);
-    timeRangeEnd.value = Math.ceil(log.range!.end / 1000);
+    timeRangeStart.value = Math.floor(LOG.range!.start / 1000);
+    timeRangeEnd.value = Math.ceil(LOG.range!.end / 1000);
   } else {
     timeRange.value = [
-      new Date(metadata.timestamp + log.range!.start),
-      new Date(metadata.timestamp + log.range!.end)
+      new Date(metadata.timestamp + LOG.range!.start),
+      new Date(metadata.timestamp + LOG.range!.end)
     ];
   }
 
@@ -620,7 +620,7 @@ function buildTableData() {
     };
     metricGroupConfig.children.forEach((metricConfig: any) => {
       const needed = logs.map((log) =>
-        typeof metricConfig.needed === 'function' ? metricConfig.needed(log.metadata) : true
+        typeof metricConfig.needed === 'function' ? metricConfig.needed(LOG.metadata) : true
       );
 
       if (!needed.reduce((b1, b2) => b1 || b2)) {
@@ -694,15 +694,15 @@ function buildTableData() {
 }
 
 function loadObjectStatistics(log) {
-  request('objectStatistics', log.uniqueName, { ...log.range }).then((data) => {
-    log.objectStatistics = data;
+  request('objectStatistics', LOG.uniqueName, { ...LOG.range }).then((data) => {
+    LOG.objectStatistics = data;
     pendingRequest.value--;
   });
 }
 
 function loadVmOptions(log) {
-  request('vmOptions', log.uniqueName, { ...log.range }).then((data) => {
-    log.vmOptions = data
+  request('vmOptions', LOG.uniqueName, { ...LOG.range }).then((data) => {
+    LOG.vmOptions = data
       ? {
           gcRelated: data.gcRelated.map((option) => option.text),
           other: data.other.map((option) => option.text)
@@ -713,7 +713,7 @@ function loadVmOptions(log) {
 }
 
 function loadMemory(log) {
-  request('memoryStatistics', log.uniqueName, { ...log.range }).then((data) => {
+  request('memoryStatistics', LOG.uniqueName, { ...LOG.range }).then((data) => {
     const memoryStatistics = {};
     Object.keys(data).forEach((generation) => {
       const generationData = data[generation];
@@ -722,20 +722,20 @@ function loadMemory(log) {
         memoryStatistics[key] = generationData[metric];
       });
     });
-    log.memoryStatistics = memoryStatistics;
+    LOG.memoryStatistics = memoryStatistics;
     pendingRequest.value--;
   });
 }
 
 function loadPause(log) {
-  request('pauseStatistics', log.uniqueName, { ...log.range }).then((data) => {
-    log.pauseStatistics = data;
+  request('pauseStatistics', LOG.uniqueName, { ...LOG.range }).then((data) => {
+    LOG.pauseStatistics = data;
     pendingRequest.value--;
   });
 }
 
 function loadPhase(log) {
-  request('phaseStatistics', log.uniqueName, { ...log.range }).then((data) => {
+  request('phaseStatistics', LOG.uniqueName, { ...LOG.range }).then((data) => {
     const phaseStatistics = {};
     const metrics = ['count', 'intervalAvg', 'durationAvg', 'durationMax'];
     data.parents
@@ -756,7 +756,7 @@ function loadPhase(log) {
           phaseStatistics[key] = event[metric];
         });
       });
-    log.phaseStatistics = phaseStatistics;
+    LOG.phaseStatistics = phaseStatistics;
     pendingRequest.value--;
   });
 }
@@ -776,23 +776,23 @@ function loadData() {
 }
 
 function pollProgress(log) {
-  request('progressOfAnalysis', log.uniqueName).then((progress) => {
+  request('progressOfAnalysis', LOG.uniqueName).then((progress) => {
     if (progress.state === 'SUCCESS') {
-      request('metadata', log.uniqueName).then((metadata) => {
-        log.metadata = metadata;
+      request('metadata', LOG.uniqueName).then((metadata) => {
+        LOG.metadata = metadata;
 
-        if (!log.range) {
-          log.range = {
+        if (!LOG.range) {
+          LOG.range = {
             start: metadata.startTime,
             end: metadata.endTime
           };
         }
 
-        log.basicInfo = {
-          name: log.fileInfo.originalName,
+        LOG.basicInfo = {
+          name: LOG.fileInfo.originalName,
           logTimeRange: formatTimeRange(metadata.startTime, metadata.endTime, metadata.timestamp),
-          analysisTimeRange: formatTimeRange(log.range.start, log.range.end, metadata.timestamp),
-          analysisTimeRangeLength: log.range.end - log.range.start,
+          analysisTimeRange: formatTimeRange(LOG.range.start, LOG.range.end, metadata.timestamp),
+          analysisTimeRangeLength: LOG.range.end - LOG.range.start,
           collector: metadata.collector,
           parallelGCThreads: metadata.parallelGCThreads,
           concurrentGCThreads: metadata.concurrentGCThreads
@@ -839,7 +839,7 @@ function deleteLog(index) {
 }
 
 function openLog(log) {
-  window.open(`${log.uniqueName}?start=${log.range.start}&end=${log.range.end}`);
+  window.open(`${LOG.uniqueName}?start=${LOG.range.start}&end=${LOG.range.end}`);
 }
 
 const uniqueNames = ref([]);
@@ -849,13 +849,13 @@ function analyzeLogs() {
   analysisCounter.value = logs.length;
   uniqueNames.value = [];
   logs.forEach((log) => {
-    uniqueNames.value.push(log.uniqueName);
+    uniqueNames.value.push(LOG.uniqueName);
     axios
-      .get(`/jifa-api/files/${log.uniqueName}`)
+      .get(`/jifa-api/files/${LOG.uniqueName}`)
       .then(({ data }) => {
-        log.fileInfo = data;
+        LOG.fileInfo = data;
       })
-      .then(() => request('analyze', log.uniqueName))
+      .then(() => request('analyze', LOG.uniqueName))
       .then(() => {
         pollProgress(log);
       });

@@ -35,13 +35,16 @@ import io.kubernetes.client.openapi.models.V1ResourceRequirements;
 import io.kubernetes.client.openapi.models.V1Volume;
 import io.kubernetes.client.openapi.models.V1VolumeMount;
 import io.kubernetes.client.util.Config;
-import lombok.extern.slf4j.Slf4j;
+
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jifa.common.util.Validate;
 import org.eclipse.jifa.server.ConfigurationAccessor;
 import org.eclipse.jifa.server.condition.Cluster;
 import org.eclipse.jifa.server.repository.ElasticWorkerRepo;
 import org.eclipse.jifa.server.service.ElasticWorkerScheduler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -58,14 +61,16 @@ import static org.eclipse.jifa.server.Constant.WORKER_CONTAINER_NAME;
 
 @Cluster
 @Service
-@Slf4j
-public class K8SWorkerScheduler extends ConfigurationAccessor implements ElasticWorkerScheduler {
-
+public class K8SWorkerScheduler extends ConfigurationAccessor implements ElasticWorkerScheduler
+{
+    private static final Logger LOG = LoggerFactory.getLogger(K8SWorkerScheduler.class);
     private final ElasticWorkerRepo elasticWorkerRepo;
 
     private final CoreV1Api api;
 
-    public K8SWorkerScheduler(ElasticWorkerRepo elasticWorkerRepo) throws IOException {
+    @Autowired
+    public K8SWorkerScheduler(ElasticWorkerRepo elasticWorkerRepo) throws IOException
+    {
         this.elasticWorkerRepo = elasticWorkerRepo;
 
         ApiClient client = Config.defaultClient();
@@ -74,14 +79,18 @@ public class K8SWorkerScheduler extends ConfigurationAccessor implements Elastic
     }
 
     @Override
-    public void scheduleAsync(long identity, long requestedMemSize, BiConsumer<String, Throwable> callback) {
+    public void scheduleAsync(long identity, long requestedMemSize, BiConsumer<String, Throwable> callback)
+    {
         Validate.isTrue(isMaster());
-        new Thread(() -> {
+        new Thread(() ->
+        {
             String hostAddress;
-            try {
+            try
+            {
                 V1Volume volume = new V1Volume();
                 volume.setName("jifa-pv");
-                volume.persistentVolumeClaim(new V1PersistentVolumeClaimVolumeSource().claimName(config.getStoragePVCName()));
+                volume.persistentVolumeClaim(
+                        new V1PersistentVolumeClaimVolumeSource().claimName(config.getStoragePVCName()));
 
                 String podName = buildPodUniqueName(identity);
 
@@ -93,16 +102,17 @@ public class K8SWorkerScheduler extends ConfigurationAccessor implements Elastic
 
                 V1Probe healthCheck = new V1Probe();
                 healthCheck.httpGet(new V1HTTPGetAction().path(HTTP_API_PREFIX + HTTP_HEALTH_CHECK_MAPPING)
-                                                         .port(new IntOrString(DEFAULT_PORT)))
-                           .initialDelaySeconds(5)
-                           .periodSeconds(2)
-                           .failureThreshold(30);
+                                .port(new IntOrString(DEFAULT_PORT)))
+                        .initialDelaySeconds(5)
+                        .periodSeconds(2)
+                        .failureThreshold(30);
 
                 V1Container container = new V1Container()
                         .name(WORKER_CONTAINER_NAME)
                         .image(config.getElasticWorkerImage())
                         .imagePullPolicy("Always")
-                        .addVolumeMountsItem(new V1VolumeMount().name("jifa-pv").mountPath(config.getStoragePath().toString()))
+                        .addVolumeMountsItem(
+                                new V1VolumeMount().name("jifa-pv").mountPath(config.getStoragePath().toString()))
                         .addEnvItem(new V1EnvVar().name(ELASTIC_WORKER_IDENTITY_ENV_KEY).value(Long.toString(identity)))
                         .addEnvItem(new V1EnvVar().name("MYSQL_HOST").value(config.getDatabaseHost()))
                         .addEnvItem(new V1EnvVar().name("MYSQL_DATABASE").value(config.getDatabaseName()))
@@ -119,16 +129,18 @@ public class K8SWorkerScheduler extends ConfigurationAccessor implements Elastic
                         .startupProbe(healthCheck);
 
                 String jvmOptions = config.getElasticWorkerJVMOptions();
-                if (StringUtils.isNotBlank(jvmOptions)) {
+                if (StringUtils.isNotBlank(jvmOptions))
+                {
                     container.addEnvItem(new V1EnvVar().name("JAVA_TOOL_OPTIONS").value(jvmOptions));
                 }
 
                 V1PodSpec podSpec = new V1PodSpec().addContainersItem(container).addVolumesItem(volume)
-                                                   .serviceAccountName(config.getServiceAccountName())
-                                                   .restartPolicy("Never");
+                        .serviceAccountName(config.getServiceAccountName())
+                        .restartPolicy("Never");
 
                 String imagePullSecretName = config.getImagePullSecretName();
-                if (StringUtils.isNotBlank(imagePullSecretName)) {
+                if (StringUtils.isNotBlank(imagePullSecretName))
+                {
                     podSpec.addImagePullSecretsItem(new V1LocalObjectReference()
                             .name(imagePullSecretName));
                 }
@@ -139,25 +151,33 @@ public class K8SWorkerScheduler extends ConfigurationAccessor implements Elastic
 
                 api.createNamespacedPod(config.getClusterNamespace(), pod).execute();
 
-                while (true) {
+                while (true)
+                {
                     pod = api.readNamespacedPod(podName, config.getClusterNamespace()).execute();
                     V1PodStatus status = pod.getStatus();
                     String podIP = status != null ? status.getPodIP() : null;
-                    if (podIP != null) {
+                    if (podIP != null)
+                    {
                         hostAddress = podIP;
                         break;
                     }
                 }
 
                 outerLoop:
-                while (true) {
+                while (true)
+                {
                     V1PodStatus status = pod.getStatus();
-                    if (status != null) {
+                    if (status != null)
+                    {
                         List<V1ContainerStatus> containerStatuses = status.getContainerStatuses();
-                        if (containerStatuses != null) {
-                            for (V1ContainerStatus containerStatus : containerStatuses) {
-                                if (WORKER_CONTAINER_NAME.equals(containerStatus.getName())) {
-                                    if (containerStatus.getReady()) {
+                        if (containerStatuses != null)
+                        {
+                            for (V1ContainerStatus containerStatus : containerStatuses)
+                            {
+                                if (WORKER_CONTAINER_NAME.equals(containerStatus.getName()))
+                                {
+                                    if (containerStatus.getReady())
+                                    {
                                         break outerLoop;
                                     }
                                 }
@@ -166,11 +186,16 @@ public class K8SWorkerScheduler extends ConfigurationAccessor implements Elastic
                     }
                     pod = api.readNamespacedPod(podName, config.getClusterNamespace()).execute();
                 }
-            } catch (Throwable t) {
-                if (t instanceof ApiException apiException) {
-                    log.error("Failed to start elastic worker, response body: {}", apiException.getResponseBody());
-                } else {
-                    log.error("Failed to start elastic worker", t);
+            }
+            catch (Throwable t)
+            {
+                if (t instanceof ApiException apiException)
+                {
+                    LOG.error("Failed to start elastic worker, response body: {}", apiException.getResponseBody());
+                }
+                else
+                {
+                    LOG.error("Failed to start elastic worker", t);
                 }
                 callback.accept(null, t);
                 return;
@@ -181,37 +206,50 @@ public class K8SWorkerScheduler extends ConfigurationAccessor implements Elastic
     }
 
     @Override
-    public void terminate(long identity) throws ApiException {
+    public void terminate(long identity) throws ApiException
+    {
         api.deleteNamespacedPod(buildPodUniqueName(identity), config.getClusterNamespace()).execute();
     }
 
     @Override
-    public void terminateInconsistentInstancesQuietly() {
-        try {
+    public void terminateInconsistentInstancesQuietly()
+    {
+        try
+        {
             V1PodList pods = api.listNamespacedPod(config.getClusterNamespace()).execute();
-            for (V1Pod pod : pods.getItems()) {
-                try {
-                    if (pod.getMetadata() == null) {
+            for (V1Pod pod : pods.getItems())
+            {
+                try
+                {
+                    if (pod.getMetadata() == null)
+                    {
                         continue;
                     }
                     String name = pod.getMetadata().getName();
-                    if (name == null || !name.startsWith(POD_NAME_PREFIX)) {
+                    if (name == null || !name.startsWith(POD_NAME_PREFIX))
+                    {
                         continue;
                     }
                     long identity = Long.parseLong(name.substring(POD_NAME_PREFIX.length()));
-                    if (elasticWorkerRepo.findById(identity).isEmpty()) {
+                    if (elasticWorkerRepo.findById(identity).isEmpty())
+                    {
                         terminate(identity);
                     }
-                } catch (Throwable t) {
-                    log.error("Error occurred when processing pod");
+                }
+                catch (Throwable t)
+                {
+                    LOG.error("Error occurred when processing pod");
                 }
             }
-        } catch (Throwable t) {
-            log.error("Error occurred when terminating inconsistent instances", t);
+        }
+        catch (Throwable t)
+        {
+            LOG.error("Error occurred when terminating inconsistent instances", t);
         }
     }
 
-    private String buildPodUniqueName(long identity) {
+    private static String buildPodUniqueName(long identity)
+    {
         return POD_NAME_PREFIX + identity;
     }
 }

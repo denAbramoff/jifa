@@ -28,19 +28,17 @@ import java.util.stream.Collectors;
 
 import static org.eclipse.jifa.jfr.common.EventConstant.OBJECT_ALLOCATION_SAMPLE;
 
-public class AllocationsExtractor extends Extractor {
+public class AllocationsExtractor extends Extractor
+{
     protected boolean useObjectAllocationSample;
 
-    protected static final List<String> INTERESTED = Collections.unmodifiableList(new ArrayList<>() {
-        {
-            add(EventConstant.OBJECT_ALLOCATION_IN_NEW_TLAB);
-            add(EventConstant.OBJECT_ALLOCATION_OUTSIDE_TLAB);
-            add(OBJECT_ALLOCATION_SAMPLE);
-        }
-    });
+    protected static final List<String> INTERESTED = List.of(EventConstant.OBJECT_ALLOCATION_IN_NEW_TLAB,
+            EventConstant.OBJECT_ALLOCATION_OUTSIDE_TLAB, OBJECT_ALLOCATION_SAMPLE);
 
-    protected static class AllocTaskData extends TaskData {
-        AllocTaskData(RecordedThread thread) {
+    protected static class AllocTaskData extends TaskData
+    {
+        AllocTaskData(RecordedThread thread)
+        {
             super(thread);
         }
 
@@ -51,48 +49,61 @@ public class AllocationsExtractor extends Extractor {
 
     protected final Map<Long, AllocTaskData> data = new HashMap<>();
 
-    public AllocationsExtractor(JFRAnalysisContext context) {
+    public AllocationsExtractor(JFRAnalysisContext context)
+    {
         super(context, INTERESTED);
-        try {
+        try
+        {
             this.useObjectAllocationSample = this.context.getActiveSettingBool(OBJECT_ALLOCATION_SAMPLE, "enabled");
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             this.useObjectAllocationSample = false;
         }
     }
 
-    AllocTaskData getThreadData(RecordedThread thread) {
+    AllocTaskData getThreadData(RecordedThread thread)
+    {
         return data.computeIfAbsent(thread.getJavaThreadId(), i -> new AllocTaskData(thread));
     }
 
     @Override
-    void visitObjectAllocationInNewTLAB(RecordedEvent event) {
-        if (useObjectAllocationSample) {
+    void visitObjectAllocationInNewTLAB(RecordedEvent event)
+    {
+        if (useObjectAllocationSample)
+        {
             return;
         }
         visitEvent(event);
     }
 
     @Override
-    void visitObjectAllocationOutsideTLAB(RecordedEvent event) {
-        if (useObjectAllocationSample) {
+    void visitObjectAllocationOutsideTLAB(RecordedEvent event)
+    {
+        if (useObjectAllocationSample)
+        {
             return;
         }
         this.visitEvent(event);
     }
 
     @Override
-    void visitObjectAllocationSample(RecordedEvent event) {
+    void visitObjectAllocationSample(RecordedEvent event)
+    {
         this.visitEvent(event);
     }
 
-    void visitEvent(RecordedEvent event) {
+    void visitEvent(RecordedEvent event)
+    {
         RecordedStackTrace stackTrace = event.getStackTrace();
-        if (stackTrace == null) {
+        if (stackTrace == null)
+        {
             stackTrace = StackTraceUtil.DUMMY_STACK_TRACE;
         }
 
         AllocTaskData allocThreadData = getThreadData(event.getThread());
-        if (allocThreadData.getSamples() == null) {
+        if (allocThreadData.getSamples() == null)
+        {
             allocThreadData.setSamples(new HashMap<>());
         }
 
@@ -100,10 +111,13 @@ public class AllocationsExtractor extends Extractor {
         allocThreadData.allocations += 1;
     }
 
-    private List<TaskAllocations> buildThreadAllocations() {
+    private List<TaskAllocations> buildThreadAllocations()
+    {
         List<TaskAllocations> taskAllocations = new ArrayList<>();
-        for (AllocTaskData data : this.data.values()) {
-            if (data.allocations == 0) {
+        for (AllocTaskData data : this.data.values())
+        {
+            if (data.allocations == 0)
+            {
                 continue;
             }
 
@@ -113,7 +127,8 @@ public class AllocationsExtractor extends Extractor {
             ta.setName(data.getThread().getJavaName());
             threadAllocation.setTask(ta);
 
-            if (data.getSamples() != null) {
+            if (data.getSamples() != null)
+            {
                 threadAllocation.setAllocations(data.allocations);
                 threadAllocation.setSamples(data.getSamples().entrySet().stream().collect(
                         Collectors.toMap(
@@ -126,7 +141,8 @@ public class AllocationsExtractor extends Extractor {
             taskAllocations.add(threadAllocation);
         }
 
-        taskAllocations.sort((o1, o2) -> {
+        taskAllocations.sort((o1, o2) ->
+        {
             long delta = o2.getAllocations() - o1.getAllocations();
             return delta > 0 ? 1 : (delta == 0 ? 0 : -1);
         });
@@ -135,7 +151,8 @@ public class AllocationsExtractor extends Extractor {
     }
 
     @Override
-    public void fillResult(AnalysisResult result) {
+    public void fillResult(AnalysisResult result)
+    {
         DimensionResult<TaskAllocations> allocResult = new DimensionResult<>();
         allocResult.setList(buildThreadAllocations());
         result.setAllocations(allocResult);

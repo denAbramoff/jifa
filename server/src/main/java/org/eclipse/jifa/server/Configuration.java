@@ -16,13 +16,13 @@ import jakarta.annotation.PostConstruct;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.extern.slf4j.Slf4j;
+
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jifa.common.util.Validate;
 import org.eclipse.jifa.server.enums.FileTransferMethod;
 import org.eclipse.jifa.server.enums.Role;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
 
@@ -36,11 +36,10 @@ import static org.eclipse.jifa.server.Constant.DEFAULT_PORT;
 
 @ConfigurationProperties(prefix = "jifa", ignoreUnknownFields = false)
 @Validated
-@Getter
-@Setter
-@Slf4j
-public class Configuration {
 
+public class Configuration
+{
+    private static final Logger LOG = LoggerFactory.getLogger(Configuration.class);
     /**
      * The role of a jifa instance.
      *
@@ -174,34 +173,164 @@ public class Configuration {
     private boolean securityFiltersEnabled = true;
 
     @PostConstruct
-    private void init() {
-        if (role == Role.MASTER) {
-            if (storagePath == null || StringUtils.isAnyBlank(storagePVCName, serviceAccountName, elasticWorkerImage)) {
+    private void init()
+    {
+        if (role == Role.MASTER)
+        {
+            if (storagePath == null || StringUtils.isAnyBlank(storagePVCName, serviceAccountName, elasticWorkerImage))
+            {
                 storagePath = null;
                 storagePVCName = null;
                 serviceAccountName = null;
                 elasticWorkerImage = null;
             }
-        } else {
+        }
+        else
+        {
             Validate.notNull(storagePath, "jifa.storage-path must be set");
         }
 
-        if (storagePath != null) {
+        if (storagePath != null)
+        {
             storagePath = storagePath.toAbsolutePath();
-            if (Files.exists(storagePath) || storagePath.toFile().mkdirs()) {
+            if (Files.exists(storagePath) || storagePath.toFile().mkdirs())
+            {
                 Validate.isTrue(Files.isDirectory(storagePath), "jifa.storage-path must be a directory");
             }
         }
 
-        if (!allowLogin) {
-            if (!allowAnonymousAccess) {
+        if (!allowLogin)
+        {
+            if (!allowAnonymousAccess)
+            {
                 allowAnonymousAccess = true;
-                log.debug("Set jifa.allow-anonymous-access to true because jifa.allow-login is disabled");
+                LOG.debug("Set jifa.allow-anonymous-access to true because jifa.allow-login is disabled");
             }
-            if (allowRegistration) {
+            if (allowRegistration)
+            {
                 allowRegistration = false;
-                log.debug("Set jifa.registration to true because jifa.allow-login is disabled");
+                LOG.debug("Set jifa.registration to true because jifa.allow-login is disabled");
             }
         }
+    }
+
+    public Role getRole()
+    {
+        return role;
+    }
+
+    public int getPort()
+    {
+        return port;
+    }
+
+    public Path getStoragePath()
+    {
+        return storagePath;
+    }
+
+    public String getDatabaseHost()
+    {
+        return databaseHost;
+    }
+
+    public String getDatabaseName()
+    {
+        return databaseName;
+    }
+
+    public String getDatabaseUser()
+    {
+        return databaseUser;
+    }
+
+    public String getDatabasePassword()
+    {
+        return databasePassword;
+    }
+
+    public String getClusterNamespace()
+    {
+        return clusterNamespace;
+    }
+
+    public String getStoragePVCName()
+    {
+        return storagePVCName;
+    }
+
+    public String getServiceAccountName()
+    {
+        return serviceAccountName;
+    }
+
+    public String getImagePullSecretName()
+    {
+        return imagePullSecretName;
+    }
+
+    public String getElasticWorkerImage()
+    {
+        return elasticWorkerImage;
+    }
+
+    public String getElasticWorkerJVMOptions()
+    {
+        return elasticWorkerJVMOptions;
+    }
+
+    public int getElasticWorkerPort()
+    {
+        return elasticWorkerPort;
+    }
+
+    public int getElasticWorkerIdleThreshold()
+    {
+        return elasticWorkerIdleThreshold;
+    }
+
+    public boolean isAllowLogin()
+    {
+        return allowLogin;
+    }
+
+    public boolean isAllowAnonymousAccess()
+    {
+        return allowAnonymousAccess;
+    }
+
+    public boolean isAllowRegistration()
+    {
+        return allowRegistration;
+    }
+
+    public String getAdminUsername()
+    {
+        return adminUsername;
+    }
+
+    public String getAdminPassword()
+    {
+        return adminPassword;
+    }
+
+    public Path[] getInputFiles()
+    {
+        return inputFiles;
+    }
+
+    public boolean isOpenBrowserWhenReady()
+    {
+        return openBrowserWhenReady;
+    }
+
+    public Set<FileTransferMethod> getDisabledFileTransferMethods()
+    {
+        return disabledFileTransferMethods;
+    }
+
+    public boolean isSecurityFiltersEnabled()
+    {
+        return securityFiltersEnabled;
     }
 }

@@ -12,15 +12,21 @@
  ********************************************************************************/
 package org.eclipse.jifa.jfr.model;
 
-import lombok.Getter;
-import lombok.Setter;
-
-@Setter
-@Getter
-public class TaskAllocatedMemory extends TaskSum {
-    public TaskAllocatedMemory() {
+public class TaskAllocatedMemory extends TaskSum
+{
+    private long allocatedMemory;
+    public TaskAllocatedMemory()
+    {
         super(null);
     }
 
-    private long allocatedMemory;
+    public long getAllocatedMemory()
+    {
+        return allocatedMemory;
+    }
+
+    public void setAllocatedMemory(long allocatedMemory)
+    {
+        this.allocatedMemory = allocatedMemory;
+    }
 }

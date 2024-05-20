@@ -12,22 +12,20 @@
  ********************************************************************************/
 package org.eclipse.jifa.jfr.model.jfr;
 
-import lombok.Getter;
-import lombok.Setter;
 import org.eclipse.jifa.jfr.model.symbol.SymbolBase;
 
 import java.util.Objects;
 
-@Setter
-@Getter
-public class RecordedFrame extends SymbolBase {
+public class RecordedFrame extends SymbolBase
+{
     private boolean javaFrame;
     private String type;
     private int bytecodeIndex;
     private RecordedMethod method;
     private int lineNumber;
 
-    public RecordedFrame(boolean javaFrame, String type, int bytecodeIndex, int lineNumber, RecordedMethod method) {
+    public RecordedFrame(boolean javaFrame, String type, int bytecodeIndex, int lineNumber, RecordedMethod method)
+    {
         this.javaFrame = javaFrame;
         this.type = type;
         this.bytecodeIndex = bytecodeIndex;
@@ -35,15 +33,66 @@ public class RecordedFrame extends SymbolBase {
         this.method = method;
     }
 
-    public RecordedFrame() {
+    public RecordedFrame()
+    {
     }
 
-    public boolean isEquals(Object b) {
-        if (!(b instanceof RecordedFrame)) {
+    public boolean isJavaFrame()
+    {
+        return javaFrame;
+    }
+
+    public void setJavaFrame(boolean javaFrame)
+    {
+        this.javaFrame = javaFrame;
+    }
+
+    public String getType()
+    {
+        return type;
+    }
+
+    public void setType(String type)
+    {
+        this.type = type;
+    }
+
+    public int getBytecodeIndex()
+    {
+        return bytecodeIndex;
+    }
+
+    public void setBytecodeIndex(int bytecodeIndex)
+    {
+        this.bytecodeIndex = bytecodeIndex;
+    }
+
+    public RecordedMethod getMethod()
+    {
+        return method;
+    }
+
+    public void setMethod(RecordedMethod method)
+    {
+        this.method = method;
+    }
+
+    public int getLineNumber()
+    {
+        return lineNumber;
+    }
+
+    public void setLineNumber(int lineNumber)
+    {
+        this.lineNumber = lineNumber;
+    }
+
+    public boolean isEquals(Object b)
+    {
+        if (!(b instanceof RecordedFrame f2))
+        {
             return false;
         }
-
-        RecordedFrame f2 = (RecordedFrame) b;
 
         return bytecodeIndex == f2.getBytecodeIndex()
                 && lineNumber == f2.getLineNumber()
@@ -52,7 +101,8 @@ public class RecordedFrame extends SymbolBase {
                 && Objects.equals(type, f2.getType());
     }
 
-    public int genHashCode() {
+    public int genHashCode()
+    {
         return Objects.hash(javaFrame, type, bytecodeIndex, method, lineNumber);
     }
 }

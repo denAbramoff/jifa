@@ -1,11 +1,11 @@
 FROM node:18 AS build
-RUN apt-get update && apt-get install openjdk-17-jdk -y
+RUN apt-get update && apt-get install openjdk-21-jdk -y
 WORKDIR /workspace/
 COPY . /workspace/
 RUN --mount=type=cache,target=/root/.gradle ./gradlew clean build -x test
 RUN mkdir -p server/build/dependency && (cd server/build/dependency; jar -xf ../libs/jifa.jar)
 
-FROM eclipse-temurin:17-jdk
+FROM eclipse-temurin:21-jdk
 VOLUME /tmp
 ARG DEPENDENCY=/workspace/server/build/dependency
 COPY --from=build ${DEPENDENCY}/BOOT-INF/lib /jifa/lib

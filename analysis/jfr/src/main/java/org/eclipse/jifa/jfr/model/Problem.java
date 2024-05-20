@@ -12,11 +12,11 @@
  ********************************************************************************/
 package org.eclipse.jifa.jfr.model;
 
-import lombok.Getter;
-import lombok.Setter;
 
-@Setter
-@Getter
+
+
+
+
 public class Problem {
 
     private String summary;

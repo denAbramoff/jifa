@@ -13,15 +13,13 @@
 
 package org.eclipse.jifa.tda.model;
 
-import lombok.Data;
 import org.eclipse.jifa.tda.enums.SourceType;
 
 import java.util.Arrays;
 import java.util.Objects;
 
-@Data
-public class Frame {
-
+public class Frame
+{
     private String clazz;
 
     private String method;
@@ -38,21 +36,93 @@ public class Frame {
 
     private Monitor[] monitors;
 
+    public String getClazz()
+    {
+        return clazz;
+    }
+
+    public void setClazz(String clazz)
+    {
+        this.clazz = clazz;
+    }
+
+    public String getMethod()
+    {
+        return method;
+    }
+
+    public void setMethod(String method)
+    {
+        this.method = method;
+    }
+
+    public String getModule()
+    {
+        return module;
+    }
+
+    public void setModule(String module)
+    {
+        this.module = module;
+    }
+
+    public SourceType getSourceType()
+    {
+        return sourceType;
+    }
+
+    public void setSourceType(SourceType sourceType)
+    {
+        this.sourceType = sourceType;
+    }
+
+    public String getSource()
+    {
+        return source;
+    }
+
+    public void setSource(String source)
+    {
+        this.source = source;
+    }
+
+    public int getLine()
+    {
+        return line;
+    }
+
+    public void setLine(int line)
+    {
+        this.line = line;
+    }
+
+    public Monitor[] getMonitors()
+    {
+        return monitors;
+    }
+
+    public void setMonitors(Monitor[] monitors)
+    {
+        this.monitors = monitors;
+    }
+
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(Object o)
+    {
         if (this == o)
             return true;
         if (o == null || getClass() != o.getClass())
             return false;
-        Frame frame = (Frame) o;
+        Frame frame = (Frame)o;
         return line == frame.line && Objects.equals(clazz, frame.clazz) &&
-               Objects.equals(method, frame.method) && Objects.equals(module, frame.module) &&
-               sourceType == frame.sourceType && Objects.equals(source, frame.source) &&
-               Arrays.equals(monitors, frame.monitors);
+                Objects.equals(method, frame.method) && Objects.equals(module, frame.module) &&
+                sourceType == frame.sourceType && Objects.equals(source, frame.source) &&
+                Arrays.equals(monitors, frame.monitors);
     }
 
     @Override
-    public int hashCode() {
+    public int hashCode()
+    {
         int result = Objects.hash(clazz, method, module, sourceType, source, line);
         result = 31 * result + Arrays.hashCode(monitors);
         return result;

@@ -84,7 +84,7 @@ function pollProgress() {
     .then(async (data) => {
       let percent = data.percent;
       if (data.message) {
-        log.value = data.message;
+        LOG.value = data.message;
       }
 
       await nextTick();
@@ -109,7 +109,7 @@ function pollProgress() {
               showClose: false,
               onClose: () => {
                 analysis.setPhase(Phase.SUCCESS);
-                log.value = '';
+                LOG.value = '';
               }
             }),
           500
@@ -123,11 +123,11 @@ function pollProgress() {
 
 function handleError(e?) {
   if (e instanceof AxiosError) {
-    log.value = e.response?.data?.message ? e.response.data.message : e;
+    LOG.value = e.response?.data?.message ? e.response.data.message : e;
   } else if (e.message) {
-    log.value = e.message;
+    LOG.value = e.message;
   } else if (e) {
-    log.value = e;
+    LOG.value = e;
   }
   analysis.setPhase(Phase.FAILURE);
 }

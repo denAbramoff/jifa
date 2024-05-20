@@ -26,26 +26,32 @@ import org.eclipse.jifa.jfr.model.StackTrace;
 import java.util.ArrayList;
 import java.util.List;
 
-public class StackTraceUtil {
+public class StackTraceUtil
+{
     public static final RecordedStackTrace DUMMY_STACK_TRACE = StackTraceUtil.newDummyStackTrace("", "", "NO Frame");
 
     // FIXME: need cache
-    public static StackTrace build(RecordedStackTrace stackTrace, SymbolTable<SymbolBase> symbols) {
+    public static StackTrace build(RecordedStackTrace stackTrace, SymbolTable<SymbolBase> symbols)
+    {
         StackTrace result = new StackTrace();
         result.setTruncated(stackTrace.isTruncated());
 
         DescriptorUtil util = new DescriptorUtil();
         List<RecordedFrame> srcFrames = stackTrace.getFrames();
         Frame[] dstFrames = new Frame[srcFrames.size()];
-        for (int i = 0; i < srcFrames.size(); i++) {
+        for (int i = 0; i < srcFrames.size(); i++)
+        {
             RecordedFrame frame = srcFrames.get(i);
             Frame dstFrame;
-            if (frame.isJavaFrame()) {
+            if (frame.isJavaFrame())
+            {
                 dstFrame = new JavaFrame();
-                ((JavaFrame) dstFrame).setJavaFrame(frame.isJavaFrame());
-                ((JavaFrame) dstFrame).setType(JavaFrame.Type.typeOf(frame.getType()));
-                ((JavaFrame) dstFrame).setBci(frame.getBytecodeIndex());
-            } else {
+                ((JavaFrame)dstFrame).setJavaFrame(frame.isJavaFrame());
+                ((JavaFrame)dstFrame).setType(JavaFrame.Type.typeOf(frame.getType()));
+                ((JavaFrame)dstFrame).setBci(frame.getBytecodeIndex());
+            }
+            else
+            {
                 dstFrame = new Frame();
             }
 
@@ -58,17 +64,23 @@ public class StackTraceUtil {
 
             dstMethod.setModifiers(method.getModifiers());
             dstMethod.setHidden(method.isHidden());
-            if (symbols.isContains(dstMethod)) {
-                dstMethod = (JavaMethod) symbols.get(dstMethod);
-            } else {
+            if (symbols.isContains(dstMethod))
+            {
+                dstMethod = (JavaMethod)symbols.get(dstMethod);
+            }
+            else
+            {
                 symbols.put(dstMethod);
             }
 
             dstFrame.setMethod(dstMethod);
             dstFrame.setLine(frame.getLineNumber());
-            if (symbols.isContains(dstFrame)) {
-                dstFrame = (Frame) symbols.get(dstFrame);
-            } else {
+            if (symbols.isContains(dstFrame))
+            {
+                dstFrame = (Frame)symbols.get(dstFrame);
+            }
+            else
+            {
                 symbols.put(dstFrame);
             }
 
@@ -76,16 +88,20 @@ public class StackTraceUtil {
         }
 
         result.setFrames(dstFrames);
-        if (symbols.isContains(result)) {
-            result = (StackTrace) symbols.get(result);
-        } else {
+        if (symbols.isContains(result))
+        {
+            result = (StackTrace)symbols.get(result);
+        }
+        else
+        {
             symbols.put(result);
         }
 
         return result;
     }
 
-    public static RecordedStackTrace newDummyStackTrace(String packageName, String className, String methodName) {
+    public static RecordedStackTrace newDummyStackTrace(String packageName, String className, String methodName)
+    {
         RecordedStackTrace st = new RecordedStackTrace();
         List<RecordedFrame> list = new ArrayList<>();
         RecordedFrame f = new RecordedFrame();

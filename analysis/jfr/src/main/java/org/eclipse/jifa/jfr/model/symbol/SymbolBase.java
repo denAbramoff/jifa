@@ -12,31 +12,48 @@
  ********************************************************************************/
 package org.eclipse.jifa.jfr.model.symbol;
 
-public abstract class SymbolBase {
+public abstract class SymbolBase
+{
     private Integer hashCode = null;
+
+    public Integer getHashCode()
+    {
+        return hashCode;
+    }
+
+    public void setHashCode(Integer hashCode)
+    {
+        this.hashCode = hashCode;
+    }
 
     public abstract int genHashCode();
 
     public abstract boolean isEquals(Object b);
 
-    public boolean equals(Object b) {
-        if (this == b) {
+    public boolean equals(Object b)
+    {
+        if (this == b)
+        {
             return true;
         }
 
-        if (b == null) {
+        if (b == null)
+        {
             return false;
         }
 
-        if (!(b instanceof SymbolBase)) {
+        if (!(b instanceof SymbolBase))
+        {
             return false;
         }
 
         return isEquals(b);
     }
 
-    public int hashCode() {
-        if (hashCode == null) {
+    public int hashCode()
+    {
+        if (hashCode == null)
+        {
             hashCode = genHashCode();
         }
 

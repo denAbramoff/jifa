@@ -12,18 +12,26 @@
  ********************************************************************************/
 package org.eclipse.jifa.jfr.model;
 
-import lombok.Getter;
-import lombok.Setter;
-
-@Setter
-@Getter
-public class TaskCount extends TaskResultBase {
+public class TaskCount extends TaskResultBase
+{
     private long count;
 
-    public TaskCount() {
+    public TaskCount()
+    {
     }
 
-    public TaskCount(Task task) {
+    public TaskCount(Task task)
+    {
         super(task);
+    }
+
+    public long getCount()
+    {
+        return count;
+    }
+
+    public void setCount(long count)
+    {
+        this.count = count;
     }
 }

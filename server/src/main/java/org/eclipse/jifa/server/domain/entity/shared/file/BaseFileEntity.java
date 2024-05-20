@@ -18,17 +18,15 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.MappedSuperclass;
-import lombok.Getter;
-import lombok.Setter;
+
 import org.eclipse.jifa.server.domain.entity.shared.BaseEntity;
 import org.eclipse.jifa.server.domain.entity.shared.user.UserEntity;
 import org.eclipse.jifa.server.enums.FileType;
 
 @MappedSuperclass
-@Getter
-@Setter
-public class BaseFileEntity extends BaseEntity {
 
+public class BaseFileEntity extends BaseEntity
+{
     @Column(unique = true, nullable = false, updatable = false, length = 64)
     private String uniqueName;
 
@@ -41,4 +39,44 @@ public class BaseFileEntity extends BaseEntity {
     @Column(nullable = false, updatable = false)
     @Enumerated(EnumType.STRING)
     private FileType type;
+
+    public String getUniqueName()
+    {
+        return uniqueName;
+    }
+
+    public void setUniqueName(String uniqueName)
+    {
+        this.uniqueName = uniqueName;
+    }
+
+    public UserEntity getUser()
+    {
+        return user;
+    }
+
+    public void setUser(UserEntity user)
+    {
+        this.user = user;
+    }
+
+    public String getOriginalName()
+    {
+        return originalName;
+    }
+
+    public void setOriginalName(String originalName)
+    {
+        this.originalName = originalName;
+    }
+
+    public FileType getType()
+    {
+        return type;
+    }
+
+    public void setType(FileType type)
+    {
+        this.type = type;
+    }
 }

@@ -24,7 +24,8 @@ import org.eclipse.mat.snapshot.model.IObject;
 import static org.eclipse.jifa.hda.api.Model.DominatorTree;
 
 @UseAccessor
-public class VirtualDefaultItem extends DominatorTree.DefaultItem {
+public class VirtualDefaultItem extends DominatorTree.DefaultItem
+{
     static final int COLUMN_LABEL = 0;
     static final int COLUMN_SHALLOW = 1;
     static final int COLUMN_RETAINED = 2;
@@ -36,7 +37,9 @@ public class VirtualDefaultItem extends DominatorTree.DefaultItem {
 
     transient final int parentObjectId;
 
-    public VirtualDefaultItem(final ISnapshot snapshot, final IStructuredResult results, final Object e, final int parentObjectId) {
+    public VirtualDefaultItem(final ISnapshot snapshot, final IStructuredResult results, final Object e,
+            final int parentObjectId)
+    {
         this.snapshot = snapshot;
         this.results = results;
         this.e = e;
@@ -45,11 +48,16 @@ public class VirtualDefaultItem extends DominatorTree.DefaultItem {
     }
 
     @Override
-    public String getPrefix() {
-        if (parentObjectId >= 0) {
-            try {
+    public String getPrefix()
+    {
+        if (parentObjectId >= 0)
+        {
+            try
+            {
                 return Helper.prefix(snapshot, parentObjectId, objectId);
-            } catch (SnapshotException se) {
+            }
+            catch (SnapshotException se)
+            {
                 throw new AnalysisException(se);
             }
         }
@@ -57,51 +65,64 @@ public class VirtualDefaultItem extends DominatorTree.DefaultItem {
     }
 
     @Override
-    public String getSuffix() {
-        try {
+    public String getSuffix()
+    {
+        try
+        {
             IObject object = snapshot.getObject(objectId);
             return Helper.suffix(object.getGCRootInfo());
-        } catch (SnapshotException se) {
+        }
+        catch (SnapshotException se)
+        {
             throw new AnalysisException(se);
         }
     }
 
     @Override
-    public int getObjectId() {
+    public int getObjectId()
+    {
         return objectId;
     }
 
     @Override
-    public int getObjectType() {
-        try {
+    public int getObjectType()
+    {
+        try
+        {
             return HeapDumpAnalyzerImpl.typeOf(snapshot.getObject(objectId));
-        } catch (SnapshotException se) {
+        }
+        catch (SnapshotException se)
+        {
             throw new AnalysisException(se);
         }
     }
 
-    @Override
-    public boolean isGCRoot() {
+    public boolean isGCRoot()
+    {
         return snapshot.isGCRoot(objectId);
     }
 
     @Override
-    public String getLabel() {
-        return EscapeUtil.unescapeLabel((String) results.getColumnValue(e, COLUMN_LABEL));
+    public String getLabel()
+    {
+        return EscapeUtil.unescapeLabel((String)results.getColumnValue(e, COLUMN_LABEL));
     }
 
     @Override
-    public long getShallowSize() {
-        return ((Bytes) results.getColumnValue(e, COLUMN_SHALLOW)).getValue();
+    public long getShallowSize()
+    {
+        return ((Bytes)results.getColumnValue(e, COLUMN_SHALLOW)).getValue();
     }
 
     @Override
-    public long getRetainedSize() {
-        return ((Bytes) results.getColumnValue(e, COLUMN_RETAINED)).getValue();
+    public long getRetainedSize()
+    {
+        return ((Bytes)results.getColumnValue(e, COLUMN_RETAINED)).getValue();
     }
 
     @Override
-    public double getPercent() {
-        return (Double) results.getColumnValue(e, COLUMN_PERCENT);
+    public double getPercent()
+    {
+        return (Double)results.getColumnValue(e, COLUMN_PERCENT);
     }
 }

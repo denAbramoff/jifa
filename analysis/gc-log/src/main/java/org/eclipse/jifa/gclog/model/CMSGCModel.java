@@ -13,7 +13,7 @@
 
 package org.eclipse.jifa.gclog.model;
 
-import lombok.extern.slf4j.Slf4j;
+
 import org.eclipse.jifa.gclog.event.GCEvent;
 import org.eclipse.jifa.gclog.event.evnetInfo.GCEventBooleanType;
 import org.eclipse.jifa.gclog.model.modeInfo.GCCollectorType;
@@ -34,7 +34,7 @@ import static org.eclipse.jifa.gclog.model.GCEventType.CMS_INITIAL_MARK;
 import static org.eclipse.jifa.gclog.model.GCEventType.FULL_GC;
 import static org.eclipse.jifa.gclog.model.GCEventType.YOUNG_GC;
 
-@Slf4j
+
 public class CMSGCModel extends GenerationalGCModel {
     private static GCCollectorType collector = GCCollectorType.CMS;
 

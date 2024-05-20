@@ -20,9 +20,10 @@ import java.lang.annotation.Target;
 
 import static org.eclipse.jifa.server.enums.Role.MASTER;
 
-@Target({ElementType.TYPE, ElementType.METHOD})
+@Target({ ElementType.TYPE, ElementType.METHOD })
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @ConditionalOnRole(MASTER)
-public @interface Master {
+public @interface Master
+{
 }

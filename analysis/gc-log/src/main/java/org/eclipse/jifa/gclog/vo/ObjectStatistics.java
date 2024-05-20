@@ -13,19 +13,42 @@
 
 package org.eclipse.jifa.gclog.vo;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
 import static org.eclipse.jifa.gclog.util.Constant.UNKNOWN_DOUBLE;
 import static org.eclipse.jifa.gclog.util.Constant.UNKNOWN_INT;
 
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
-public class ObjectStatistics {
+public class ObjectStatistics
+{
     private double objectCreationSpeed = UNKNOWN_DOUBLE; // B/ms
     private double objectPromotionSpeed = UNKNOWN_DOUBLE; // B/ms
     private long objectPromotionAvg = UNKNOWN_INT; // B
     private long objectPromotionMax = UNKNOWN_INT; // B
+
+    public ObjectStatistics(double objectCreationSpeed, double objectPromotionSpeed, long objectPromotionAvg,
+            long objectPromotionMax)
+    {
+        this.objectCreationSpeed = objectCreationSpeed;
+        this.objectPromotionSpeed = objectPromotionSpeed;
+        this.objectPromotionAvg = objectPromotionAvg;
+        this.objectPromotionMax = objectPromotionMax;
+    }
+
+    public double getObjectCreationSpeed()
+    {
+        return objectCreationSpeed;
+    }
+
+    public double getObjectPromotionSpeed()
+    {
+        return objectPromotionSpeed;
+    }
+
+    public long getObjectPromotionAvg()
+    {
+        return objectPromotionAvg;
+    }
+
+    public long getObjectPromotionMax()
+    {
+        return objectPromotionMax;
+    }
 }

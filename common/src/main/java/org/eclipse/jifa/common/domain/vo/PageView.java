@@ -12,8 +12,6 @@
  ********************************************************************************/
 package org.eclipse.jifa.common.domain.vo;
 
-import lombok.Getter;
-import lombok.Setter;
 import org.eclipse.jifa.common.domain.request.PagingRequest;
 
 import java.util.Collections;
@@ -24,9 +22,9 @@ import java.util.List;
  *
  * @param <T> the type of data
  */
-@Getter
-@Setter
-public class PageView<T> {
+
+public class PageView<T>
+{
 
     private static final PageView<?> EMPTY = new PageView<>(null, 0, Collections.emptyList());
 
@@ -37,8 +35,9 @@ public class PageView<T> {
      * @return empty page view
      */
     @SuppressWarnings("unchecked")
-    public static <T> PageView<T> empty() {
-        return (PageView<T>) EMPTY;
+    public static <T> PageView<T> empty()
+    {
+        return (PageView<T>)EMPTY;
     }
 
     private List<T> data;
@@ -56,7 +55,8 @@ public class PageView<T> {
      * @param totalSize total size
      * @param data      data
      */
-    public PageView(PagingRequest request, int totalSize, List<T> data) {
+    public PageView(PagingRequest request, int totalSize, List<T> data)
+    {
         this.data = data;
         this.page = request != null ? request.getPage() : 0;
         this.pageSize = request != null ? request.getPageSize() : 0;
@@ -71,10 +71,51 @@ public class PageView<T> {
      * @param totalSize total size
      * @param data      data
      */
-    public PageView(int page, int pageSize, int totalSize, List<T> data) {
+    public PageView(int page, int pageSize, int totalSize, List<T> data)
+    {
         this.data = data;
         this.page = page;
         this.pageSize = pageSize;
+        this.totalSize = totalSize;
+    }
+
+    public List<T> getData()
+    {
+        return data;
+    }
+
+    public void setData(List<T> data)
+    {
+        this.data = data;
+    }
+
+    public int getPage()
+    {
+        return page;
+    }
+
+    public void setPage(int page)
+    {
+        this.page = page;
+    }
+
+    public int getPageSize()
+    {
+        return pageSize;
+    }
+
+    public void setPageSize(int pageSize)
+    {
+        this.pageSize = pageSize;
+    }
+
+    public int getTotalSize()
+    {
+        return totalSize;
+    }
+
+    public void setTotalSize(int totalSize)
+    {
         this.totalSize = totalSize;
     }
 }

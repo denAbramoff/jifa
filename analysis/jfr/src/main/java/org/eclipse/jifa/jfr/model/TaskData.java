@@ -12,21 +12,39 @@
  ********************************************************************************/
 package org.eclipse.jifa.jfr.model;
 
-import lombok.Getter;
-import lombok.Setter;
 import org.eclipse.jifa.jfr.model.jfr.RecordedStackTrace;
 import org.eclipse.jifa.jfr.model.jfr.RecordedThread;
 
 import java.util.Map;
 
-@Setter
-@Getter
-public class TaskData {
-    public TaskData(RecordedThread thread) {
+public class TaskData
+{
+    public TaskData(RecordedThread thread)
+    {
         this.thread = thread;
     }
 
     private RecordedThread thread;
 
     private Map<RecordedStackTrace, Long> samples;
+
+    public RecordedThread getThread()
+    {
+        return thread;
+    }
+
+    public void setThread(RecordedThread thread)
+    {
+        this.thread = thread;
+    }
+
+    public Map<RecordedStackTrace, Long> getSamples()
+    {
+        return samples;
+    }
+
+    public void setSamples(Map<RecordedStackTrace, Long> samples)
+    {
+        this.samples = samples;
+    }
 }

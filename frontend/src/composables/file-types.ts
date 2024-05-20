@@ -10,7 +10,7 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  ********************************************************************************/
-import GCLog from '@/components/gclog/GCLog.vue';
+import GCLog from '@/components/gclog/GCLOG.vue';
 import GCLogToolBar from '@/components/gclog/Toolbar.vue';
 
 import HeapDump from '@/components/heapdump/HeapDump.vue';

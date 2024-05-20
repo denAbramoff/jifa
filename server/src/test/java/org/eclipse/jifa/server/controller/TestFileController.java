@@ -51,8 +51,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(value = FileController.class, excludeAutoConfiguration = {SecurityAutoConfiguration.class})
-public class TestFileController {
+@WebMvcTest(value = FileController.class, excludeAutoConfiguration = { SecurityAutoConfiguration.class })
+public class TestFileController
+{
 
     @Autowired
     private MockMvc mvc;
@@ -61,52 +62,56 @@ public class TestFileController {
     private FileService fileService;
 
     @Test
-    public void testGetFiles() throws Exception {
+    public void testGetFiles() throws Exception
+    {
         FileView fv = new FileView(7,
-                                   "uniqueName",
-                                   "originalName",
-                                   FileType.GC_LOG,
-                                   1024,
-                                   LocalDateTime.now());
+                "uniqueName",
+                "originalName",
+                FileType.GC_LOG,
+                1024,
+                LocalDateTime.now());
         PageView<FileView> pv = PageViewBuilder.build(List.of(fv), new PagingRequest(1, 16));
 
         Mockito.when(fileService.getUserFileViews(FileType.GC_LOG, 1, 16))
-               .thenReturn(pv);
+                .thenReturn(pv);
 
         mvc.perform(get(Constant.HTTP_API_PREFIX + "/files")
-                            .queryParam("type", FileType.GC_LOG.name())
-                            .queryParam("page", "1")
-                            .queryParam("pageSize", "16"))
-           .andExpect(status().isOk())
-           .andExpect(content().json(GSON.toJson(pv)));
+                        .queryParam("type", FileType.GC_LOG.name())
+                        .queryParam("page", "1")
+                        .queryParam("pageSize", "16"))
+                .andExpect(status().isOk())
+                .andExpect(content().json(GSON.toJson(pv)));
     }
 
     @Test
-    public void testGetFile() throws Exception {
+    public void testGetFile() throws Exception
+    {
         FileView fv = new FileView(1,
-                                   "uniqueName",
-                                   "originalName",
-                                   FileType.GC_LOG,
-                                   1024,
-                                   LocalDateTime.now());
+                "uniqueName",
+                "originalName",
+                FileType.GC_LOG,
+                1024,
+                LocalDateTime.now());
 
         Mockito.when(fileService.getFileViewById(1)).thenReturn(fv);
 
         mvc.perform(get(Constant.HTTP_API_PREFIX + "/files/1"))
-           .andExpect(status().isOk())
-           .andExpect(content().json(GSON.toJson(fv)));
+                .andExpect(status().isOk())
+                .andExpect(content().json(GSON.toJson(fv)));
     }
 
     @Test
-    public void testDeleteFile() throws Exception {
+    public void testDeleteFile() throws Exception
+    {
         Mockito.doNothing().when(fileService).deleteById(1);
 
         mvc.perform(delete(Constant.HTTP_API_PREFIX + "/files/1"))
-           .andExpect(status().isOk());
+                .andExpect(status().isOk());
     }
 
     @Test
-    public void testTransfer() throws Throwable {
+    public void testTransfer() throws Throwable
+    {
         Mockito.doReturn(1L).when(fileService).handleTransferRequest(Mockito.any());
 
         FileTransferRequest request = new FileTransferRequest();
@@ -114,43 +119,46 @@ public class TestFileController {
         request.setMethod(FileTransferMethod.URL);
         request.setUrl("https://example.org/data.txt");
         mvc.perform(post(Constant.HTTP_API_PREFIX + "/files/transfer")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(GSON.toJson(request)))
-           .andExpect(status().isOk());
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(GSON.toJson(request)))
+                .andExpect(status().isOk());
     }
 
     @Test
-    public void testGetTransferProgress() throws Exception {
+    public void testGetTransferProgress() throws Exception
+    {
         FileTransferProgress progress = new FileTransferProgress(FileTransferState.SUCCESS, 1024, 1024, "", 1L);
         Mockito.doReturn(progress).when(fileService).getTransferProgress(1);
 
         mvc.perform(get(Constant.HTTP_API_PREFIX + "/files/transfer/1"))
-           .andExpect(status().isOk())
-           .andExpect(content().json(GSON.toJson(progress)));
+                .andExpect(status().isOk())
+                .andExpect(content().json(GSON.toJson(progress)));
     }
 
     @Test
-    public void testUpload() throws Throwable {
+    public void testUpload() throws Throwable
+    {
         Mockito.when(fileService.handleUploadRequest(Mockito.eq(FileType.THREAD_DUMP),
-                                                     Mockito.any(MultipartFile.class))).thenReturn(1L);
+                Mockito.any(MultipartFile.class))).thenReturn(1L);
         mvc.perform(multipart(Constant.HTTP_API_PREFIX + "/files/upload")
-                            .file(new MockMultipartFile("file", "filename", null, new byte[]{1, 2, 3}))
-                            .queryParam("type", FileType.THREAD_DUMP.name()))
-           .andExpect(status().isOk())
-           .andExpect(content().json(Long.toString(1L)));
+                        .file(new MockMultipartFile("file", "filename", null, new byte[] { 1, 2, 3 }))
+                        .queryParam("type", FileType.THREAD_DUMP.name()))
+                .andExpect(status().isOk())
+                .andExpect(content().json(Long.toString(1L)));
     }
 
     @Test
-    public void testDownload() throws Throwable {
+    public void testDownload() throws Throwable
+    {
         File tempFile = File.createTempFile("test", "txt");
         tempFile.deleteOnExit();
         String content = UUID.randomUUID().toString();
         FileUtils.writeStringToFile(tempFile, content, StandardCharsets.UTF_8);
         Mockito.when(fileService.handleDownloadRequest(Mockito.eq(1L)))
-               .thenReturn(new NamedResource("test.txt", new FileSystemResource(tempFile.toPath().toAbsolutePath())));
+                .thenReturn(new NamedResource("test.txt", new FileSystemResource(tempFile.toPath().toAbsolutePath())));
 
         mvc.perform(get(Constant.HTTP_API_PREFIX + "/files/1/download"))
-           .andExpect(content().string(content))
-           .andReturn();
+                .andExpect(content().string(content))
+                .andReturn();
     }
 }

@@ -12,15 +12,12 @@
  ********************************************************************************/
 package org.eclipse.jifa.jfr.model;
 
-import lombok.Getter;
-import lombok.Setter;
 import org.eclipse.jifa.jfr.model.symbol.SymbolBase;
 
 import java.util.Objects;
 
-@Setter
-@Getter
-public class Method extends SymbolBase {
+public class Method extends SymbolBase
+{
     private String packageName;
 
     private String type;
@@ -31,12 +28,65 @@ public class Method extends SymbolBase {
 
     private String string;
 
-    public int genHashCode() {
+    public String getPackageName()
+    {
+        return packageName;
+    }
+
+    public void setPackageName(String packageName)
+    {
+        this.packageName = packageName;
+    }
+
+    public String getType()
+    {
+        return type;
+    }
+
+    public void setType(String type)
+    {
+        this.type = type;
+    }
+
+    public String getName()
+    {
+        return name;
+    }
+
+    public void setName(String name)
+    {
+        this.name = name;
+    }
+
+    public String getDescriptor()
+    {
+        return descriptor;
+    }
+
+    public void setDescriptor(String descriptor)
+    {
+        this.descriptor = descriptor;
+    }
+
+    public String getString()
+    {
+        return string;
+    }
+
+    public void setString(String string)
+    {
+        this.string = string;
+    }
+
+    public int genHashCode()
+    {
         return Objects.hash(packageName, type, name, descriptor);
     }
 
-    public boolean isEquals(Object b) {
-        if (!(b instanceof Method m2)) {
+    public boolean isEquals(Object b)
+    {
+        if (!(b instanceof Method m2))
+        {
             return false;
         }
 
@@ -46,23 +96,30 @@ public class Method extends SymbolBase {
                 && Objects.equals(descriptor, m2.getDescriptor());
     }
 
-    public String toString(boolean includeDescriptor) {
-        if (string != null) {
+    public String toString(boolean includeDescriptor)
+    {
+        if (string != null)
+        {
             return string;
         }
 
         String str;
-        if (this.descriptor != null && !this.descriptor.isEmpty() && includeDescriptor) {
+        if (this.descriptor != null && !this.descriptor.isEmpty() && includeDescriptor)
+        {
             str = String.format("%s%s", this.name, this.descriptor);
-        } else {
+        }
+        else
+        {
             str = this.name;
         }
 
-        if (this.type != null && !this.type.isEmpty()) {
+        if (this.type != null && !this.type.isEmpty())
+        {
             str = String.format("%s.%s", this.type, str);
         }
 
-        if (this.packageName != null && !this.packageName.isEmpty()) {
+        if (this.packageName != null && !this.packageName.isEmpty())
+        {
             str = String.format("%s.%s", this.packageName, str);
         }
 
@@ -71,7 +128,8 @@ public class Method extends SymbolBase {
         return str;
     }
 
-    public String toString() {
+    public String toString()
+    {
         return toString(true);
     }
 }

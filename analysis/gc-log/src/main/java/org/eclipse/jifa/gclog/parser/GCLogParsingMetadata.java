@@ -13,14 +13,10 @@
 
 package org.eclipse.jifa.gclog.parser;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
+
 import org.eclipse.jifa.gclog.model.modeInfo.GCCollectorType;
 import org.eclipse.jifa.gclog.model.modeInfo.GCLogStyle;
 
-@Data
-@AllArgsConstructor
-public class GCLogParsingMetadata {
-    private GCCollectorType collector;
-    private GCLogStyle style;
+public record GCLogParsingMetadata(GCCollectorType collector, GCLogStyle style)
+{
 }

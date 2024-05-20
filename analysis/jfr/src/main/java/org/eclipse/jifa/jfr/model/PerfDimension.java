@@ -12,10 +12,10 @@
  ********************************************************************************/
 package org.eclipse.jifa.jfr.model;
 
-import lombok.Getter;
+
 import org.eclipse.jifa.jfr.enums.Unit;
 
-@Getter
+
 public class PerfDimension extends LeafPerfDimension {
     private final LeafPerfDimension[] subDimensions;
 

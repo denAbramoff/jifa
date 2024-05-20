@@ -18,19 +18,16 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
-import lombok.Getter;
-import lombok.Setter;
+
 import org.eclipse.jifa.server.enums.ElasticWorkerPurpose;
 import org.eclipse.jifa.server.enums.ElasticWorkerState;
 
 @SuppressWarnings("JpaDataSourceORMInspection")
 @Table(name = "elastic_workers",
-        uniqueConstraints = {@UniqueConstraint(columnNames = {"purpose", "referenceId"})})
+        uniqueConstraints = { @UniqueConstraint(columnNames = { "purpose", "referenceId" }) })
 @Entity
-@Getter
-@Setter
-public class ElasticWorkerEntity extends WorkerEntity {
-
+public class ElasticWorkerEntity extends WorkerEntity
+{
     public static final int MAX_FAILURE_MESSAGE_LENGTH = 1024;
 
     @Column(nullable = false, updatable = false)
@@ -46,4 +43,44 @@ public class ElasticWorkerEntity extends WorkerEntity {
 
     @Column(length = 1024)
     private String failureMessage;
+
+    public ElasticWorkerPurpose getPurpose()
+    {
+        return purpose;
+    }
+
+    public void setPurpose(ElasticWorkerPurpose purpose)
+    {
+        this.purpose = purpose;
+    }
+
+    public long getReferenceId()
+    {
+        return referenceId;
+    }
+
+    public void setReferenceId(long referenceId)
+    {
+        this.referenceId = referenceId;
+    }
+
+    public ElasticWorkerState getState()
+    {
+        return state;
+    }
+
+    public void setState(ElasticWorkerState state)
+    {
+        this.state = state;
+    }
+
+    public String getFailureMessage()
+    {
+        return failureMessage;
+    }
+
+    public void setFailureMessage(String failureMessage)
+    {
+        this.failureMessage = failureMessage;
+    }
 }

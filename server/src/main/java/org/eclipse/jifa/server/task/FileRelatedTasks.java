@@ -18,6 +18,7 @@ import org.eclipse.jifa.server.domain.entity.shared.file.TransferringFileEntity;
 import org.eclipse.jifa.server.enums.FileTransferState;
 import org.eclipse.jifa.server.enums.Role;
 import org.eclipse.jifa.server.repository.TransferringFileRepo;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -27,32 +28,37 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-@ConditionalOnRole({Role.MASTER, Role.STANDALONE_WORKER})
+@ConditionalOnRole({ Role.MASTER, Role.STANDALONE_WORKER })
 @Component
-public class FileRelatedTasks extends ConfigurationAccessor {
-
+public class FileRelatedTasks extends ConfigurationAccessor
+{
     private final LockSupport lockSupport;
-
     private final TransferringFileRepo transferringFileRepo;
-
     private final TaskScheduler taskScheduler;
 
-    public FileRelatedTasks(LockSupport lockSupport, TransferringFileRepo transferringFileRepo, TaskScheduler taskScheduler) {
+    @Autowired
+    public FileRelatedTasks(LockSupport lockSupport, TransferringFileRepo transferringFileRepo,
+            TaskScheduler taskScheduler)
+    {
         this.lockSupport = lockSupport;
         this.transferringFileRepo = transferringFileRepo;
         this.taskScheduler = taskScheduler;
     }
 
     @Scheduled(initialDelay = 1, fixedDelay = 1, timeUnit = TimeUnit.MINUTES)
-    void processTimeoutTransferringFiles() {
-        lockSupport.runUnderLockIfMaster(() -> {
-            List<TransferringFileEntity> files = transferringFileRepo.findAllByLastModifiedTimeBefore(LocalDateTime.now().minusMinutes(5));
-            for (TransferringFileEntity file : files) {
+    void processTimeoutTransferringFiles()
+    {
+        lockSupport.runUnderLockIfMaster(() ->
+        {
+            List<TransferringFileEntity> files = transferringFileRepo.findAllByLastModifiedTimeBefore(
+                    LocalDateTime.now().minusMinutes(5));
+            for (TransferringFileEntity file : files)
+            {
                 file.setTransferState(FileTransferState.FAILURE);
                 file.setFailureMessage("Timeout");
                 transferringFileRepo.save(file);
                 taskScheduler.schedule(() -> transferringFileRepo.deleteById(file.getId()),
-                                       Instant.now().plusSeconds(30));
+                        Instant.now().plusSeconds(30));
             }
         }, this.getClass().getSimpleName() + "#processTimeoutTransferringFiles");
     }

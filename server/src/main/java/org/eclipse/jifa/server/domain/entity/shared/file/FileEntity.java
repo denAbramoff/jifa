@@ -15,16 +15,22 @@ package org.eclipse.jifa.server.domain.entity.shared.file;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
-import lombok.Getter;
-import lombok.Setter;
 
 @SuppressWarnings("JpaDataSourceORMInspection")
 @Table(name = "files")
 @Entity
-@Getter
-@Setter
-public class FileEntity extends BaseFileEntity {
-
+public class FileEntity extends BaseFileEntity
+{
     @Column(nullable = false, updatable = false)
     private long size;
+
+    public long getSize()
+    {
+        return size;
+    }
+
+    public void setSize(long size)
+    {
+        this.size = size;
+    }
 }

@@ -12,16 +12,8 @@
  ********************************************************************************/
 package org.eclipse.jifa.gclog.fragment;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-
 import java.util.Map;
 
-@AllArgsConstructor
-@Getter
-public class Metric {
-    long timestamp;
-    Map<String, String> label;
-    String name;
-    double value;
+public record Metric(long timestamp, Map<String, String> label, String name, double value)
+{
 }

@@ -12,11 +12,17 @@
  ********************************************************************************/
 package org.eclipse.jifa.jfr.model;
 
-import lombok.Getter;
-import lombok.Setter;
-
-@Setter
-@Getter
-public class TaskAllocations extends TaskCount {
+public class TaskAllocations extends TaskCount
+{
     private long allocations;
+
+    public long getAllocations()
+    {
+        return allocations;
+    }
+
+    public void setAllocations(long allocations)
+    {
+        this.allocations = allocations;
+    }
 }

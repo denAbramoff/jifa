@@ -12,39 +12,63 @@
  ********************************************************************************/
 package org.eclipse.jifa.jfr.model.jfr;
 
-import lombok.Getter;
-import lombok.Setter;
 import org.eclipse.jifa.jfr.model.symbol.SymbolBase;
 
 import java.util.Objects;
 
-public class RecordedClass extends SymbolBase {
-    @Setter
-    @Getter
+public class RecordedClass extends SymbolBase
+{
     private String packageName;
-    @Setter
-    @Getter
+
     private String name;
     private String fullName;
 
-    public String getFullName() {
-        if (fullName == null) {
+    public String getPackageName()
+    {
+        return packageName;
+    }
+
+    public void setPackageName(String packageName)
+    {
+        this.packageName = packageName;
+    }
+
+    public String getName()
+    {
+        return name;
+    }
+
+    public void setName(String name)
+    {
+        this.name = name;
+    }
+
+    public void setFullName(String fullName)
+    {
+        this.fullName = fullName;
+    }
+
+    public String getFullName()
+    {
+        if (fullName == null)
+        {
             fullName = packageName + "." + name;
         }
         return fullName;
     }
 
-    public boolean isEquals(Object b) {
-        if (!(b instanceof RecordedClass)) {
+    public boolean isEquals(Object b)
+    {
+        if (!(b instanceof RecordedClass c2))
+        {
             return false;
         }
-
-        RecordedClass c2 = (RecordedClass) b;
 
         return Objects.equals(packageName, c2.getPackageName()) && Objects.equals(name, c2.getName());
     }
 
-    public int genHashCode() {
+    public int genHashCode()
+    {
         return Objects.hash(packageName, name);
     }
 }

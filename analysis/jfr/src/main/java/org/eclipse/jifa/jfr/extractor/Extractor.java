@@ -21,8 +21,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
 
-public abstract class Extractor extends EventVisitor {
-    private static final Map<String, BiConsumer<Extractor, RecordedEvent>> DISPATCHER = new HashMap<>() {
+public abstract class Extractor extends EventVisitor
+{
+    private static final Map<String, BiConsumer<Extractor, RecordedEvent>> DISPATCHER = new HashMap<>()
+    {
         {
             put(EventConstant.GARBAGE_COLLECTION, EventVisitor::visitGarbageCollection);
             put(EventConstant.UNSIGNED_INT_FLAG, EventVisitor::visitUnsignedIntFlag);
@@ -60,17 +62,21 @@ public abstract class Extractor extends EventVisitor {
 
     private final List<String> interested;
 
-    Extractor(JFRAnalysisContext context, List<String> interested) {
+    Extractor(JFRAnalysisContext context, List<String> interested)
+    {
         this.context = context;
         this.interested = interested;
     }
 
-    private boolean accept(RecordedEvent event) {
+    private boolean accept(RecordedEvent event)
+    {
         return interested.contains(event.getEventType().name());
     }
 
-    public void process(RecordedEvent event) {
-        if (accept(event)) {
+    public void process(RecordedEvent event)
+    {
+        if (accept(event))
+        {
             DISPATCHER.get(event.getEventType().name()).accept(this, event);
         }
     }

@@ -12,7 +12,6 @@
  ********************************************************************************/
 package org.eclipse.jifa.jfr.extractor;
 
-import lombok.extern.slf4j.Slf4j;
 import org.eclipse.jifa.jfr.common.EventConstant;
 import org.eclipse.jifa.jfr.model.AnalysisResult;
 import org.eclipse.jifa.jfr.model.jfr.RecordedEvent;
@@ -22,43 +21,50 @@ import org.eclipse.jifa.jfr.util.StackTraceUtil;
 import org.eclipse.jifa.jfr.model.DimensionResult;
 import org.eclipse.jifa.jfr.model.TaskData;
 import org.eclipse.jifa.jfr.model.TaskSum;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
-@Slf4j
-public class WallClockExtractor extends Extractor {
+public class WallClockExtractor extends Extractor
+{
+    private static final Logger LOG = LoggerFactory.getLogger(WallClockExtractor.class);
     private static final int ASYNC_PROFILER_DEFAULT_INTERVAL = 50 * 1000 * 1000;
 
-    private static final List<String> INTERESTED = Collections.unmodifiableList(new ArrayList<>() {
-        {
-            add(EventConstant.ACTIVE_SETTING);
-            add(EventConstant.WALL_CLOCK_SAMPLE);
-        }
-    });
+    private static final List<String> INTERESTED = List.of(EventConstant.ACTIVE_SETTING,
+            EventConstant.WALL_CLOCK_SAMPLE);
 
-    static class TaskWallClockData extends TaskData {
+    static class TaskWallClockData extends TaskData
+    {
         private long begin = 0;
         private long end = 0;
         private long sampleCount = 0;
 
-        TaskWallClockData(RecordedThread thread) {
+        TaskWallClockData(RecordedThread thread)
+        {
             super(thread);
         }
 
-        void updateTime(long time) {
-            if (begin == 0 || time < begin) {
+        void updateTime(long time)
+        {
+            if (begin == 0 || time < begin)
+            {
                 begin = time;
             }
-            if (end == 0 || time > end) {
+            if (end == 0 || time > end)
+            {
                 end = time;
             }
         }
 
-        long getDuration() {
+        long getDuration()
+        {
             return end - begin;
         }
     }
+
+    private static final String VALUE = "value";
 
     private final Map<Long, TaskWallClockData> data = new HashMap<>();
     private long methodSampleEventId = -1;
@@ -66,53 +72,66 @@ public class WallClockExtractor extends Extractor {
 
     private boolean isWallClockEvents = false;
 
-    public WallClockExtractor(JFRAnalysisContext context) {
+    public WallClockExtractor(JFRAnalysisContext context)
+    {
         super(context, INTERESTED);
 
         Long id = context.getEventTypeId(EventConstant.WALL_CLOCK_SAMPLE);
-        if (id != null) {
+        if (id != null)
+        {
             methodSampleEventId = context.getEventTypeId(EventConstant.WALL_CLOCK_SAMPLE);
         }
     }
 
-    TaskWallClockData getThreadData(RecordedThread thread) {
+    TaskWallClockData getThreadData(RecordedThread thread)
+    {
         return data.computeIfAbsent(thread.getJavaThreadId(), i -> new TaskWallClockData(thread));
     }
 
     @Override
-    void visitActiveSetting(RecordedEvent event) {
-        if (EventConstant.EVENT.equals(event.getString("name")) && EventConstant.WALL.equals(event.getString("value"))) {
+    void visitActiveSetting(RecordedEvent event)
+    {
+        if (EventConstant.EVENT.equals(event.getString("name")) && EventConstant.WALL.equals(event.getString(VALUE)))
+        {
             this.isWallClockEvents = true;
         }
 
-        if (event.getActiveSetting().eventId() == methodSampleEventId) {
-            if (EventConstant.WALL.equals(event.getString("name"))) {
+        if (event.getActiveSetting().eventId() == methodSampleEventId)
+        {
+            if (EventConstant.WALL.equals(event.getString("name")))
+            {
                 this.isWallClockEvents = true;
-                this.interval = Long.parseLong(event.getString("value")) * 1000 * 1000;
+                this.interval = Long.parseLong(event.getString(VALUE)) * 1000 * 1000;
             }
-            if (EventConstant.INTERVAL.equals(event.getString("name"))) {
-                this.interval = Long.parseLong(event.getString("value")) * 1000 * 1000;
+            if (EventConstant.INTERVAL.equals(event.getString("name")))
+            {
+                this.interval = Long.parseLong(event.getString(VALUE)) * 1000 * 1000;
             }
         }
     }
 
     @Override
-    void visitExecutionSample(RecordedEvent event) {
+    void visitExecutionSample(RecordedEvent event)
+    {
         RecordedStackTrace stackTrace = event.getStackTrace();
-        if (stackTrace == null) {
+        if (stackTrace == null)
+        {
             return;
         }
 
         RecordedThread thread = event.getThread("eventThread");
-        if (thread == null) {
+        if (thread == null)
+        {
             thread = event.getThread("sampledThread");
         }
-        if (thread == null) {
+        if (thread == null)
+        {
             return;
         }
         TaskWallClockData taskWallClockData = getThreadData(thread);
 
-        if (taskWallClockData.getSamples() == null) {
+        if (taskWallClockData.getSamples() == null)
+        {
             taskWallClockData.setSamples(new HashMap<>());
         }
         taskWallClockData.updateTime(event.getStartTimeNanos());
@@ -120,19 +139,24 @@ public class WallClockExtractor extends Extractor {
         taskWallClockData.sampleCount++;
     }
 
-    private List<TaskSum> buildThreadWallClock() {
+    private List<TaskSum> buildThreadWallClock()
+    {
         List<TaskSum> taskSumList = new ArrayList<>();
-        if (!isWallClockEvents) {
+        if (!isWallClockEvents)
+        {
             return taskSumList;
         }
 
-        if (this.interval <= 0) {
+        if (this.interval <= 0)
+        {
             this.interval = ASYNC_PROFILER_DEFAULT_INTERVAL;
-            log.warn("use default interval: " + ASYNC_PROFILER_DEFAULT_INTERVAL / 1000 / 1000 + " ms");
+            LOG.warn("use default interval: " + ASYNC_PROFILER_DEFAULT_INTERVAL / 1000 / 1000 + " ms");
         }
         Map<Long, TaskSum> map = new HashMap<>();
-        for (TaskWallClockData data : this.data.values()) {
-            if (data.getSamples() == null) {
+        for (TaskWallClockData data : this.data.values())
+        {
+            if (data.getSamples() == null)
+            {
                 continue;
             }
             TaskSum taskSum = new TaskSum();
@@ -148,11 +172,10 @@ public class WallClockExtractor extends Extractor {
             map.put(data.getThread().getJavaThreadId(), taskSum);
         }
 
-        map.forEach((k, v) -> {
-            taskSumList.add(v);
-        });
+        map.forEach((k, v) -> taskSumList.add(v));
 
-        taskSumList.sort((o1, o2) -> {
+        taskSumList.sort((o1, o2) ->
+        {
             long delta = o2.getSum() - o1.getSum();
             return delta > 0 ? 1 : (delta == 0 ? 0 : -1);
         });
@@ -161,7 +184,8 @@ public class WallClockExtractor extends Extractor {
     }
 
     @Override
-    public void fillResult(AnalysisResult result) {
+    public void fillResult(AnalysisResult result)
+    {
         DimensionResult<TaskSum> wallClockResult = new DimensionResult<>();
         wallClockResult.setList(buildThreadWallClock());
         result.setWallClock(wallClockResult);

@@ -14,14 +14,13 @@
 package org.eclipse.jifa.tda.vo;
 
 import com.google.gson.annotations.SerializedName;
-import lombok.Data;
+
 import org.eclipse.jifa.tda.enums.SourceType;
 
 import java.util.List;
 
-@Data
-public class VFrame {
-
+public class VFrame
+{
     private int id;
 
     @SerializedName("class")
@@ -44,4 +43,114 @@ public class VFrame {
     private List<VMonitor> monitors;
 
     private boolean end;
+
+    public int getId()
+    {
+        return id;
+    }
+
+    public void setId(int id)
+    {
+        this.id = id;
+    }
+
+    public String getClazz()
+    {
+        return clazz;
+    }
+
+    public void setClazz(String clazz)
+    {
+        this.clazz = clazz;
+    }
+
+    public String getMethod()
+    {
+        return method;
+    }
+
+    public void setMethod(String method)
+    {
+        this.method = method;
+    }
+
+    public String getModule()
+    {
+        return module;
+    }
+
+    public void setModule(String module)
+    {
+        this.module = module;
+    }
+
+    public SourceType getSourceType()
+    {
+        return sourceType;
+    }
+
+    public void setSourceType(SourceType sourceType)
+    {
+        this.sourceType = sourceType;
+    }
+
+    public String getSource()
+    {
+        return source;
+    }
+
+    public void setSource(String source)
+    {
+        this.source = source;
+    }
+
+    public int getLine()
+    {
+        return line;
+    }
+
+    public void setLine(int line)
+    {
+        this.line = line;
+    }
+
+    public int getWeight()
+    {
+        return weight;
+    }
+
+    public void setWeight(int weight)
+    {
+        this.weight = weight;
+    }
+
+    public VMonitor getWait()
+    {
+        return wait;
+    }
+
+    public void setWait(VMonitor wait)
+    {
+        this.wait = wait;
+    }
+
+    public List<VMonitor> getMonitors()
+    {
+        return monitors;
+    }
+
+    public void setMonitors(List<VMonitor> monitors)
+    {
+        this.monitors = monitors;
+    }
+
+    public boolean isEnd()
+    {
+        return end;
+    }
+
+    public void setEnd(boolean end)
+    {
+        this.end = end;
+    }
 }

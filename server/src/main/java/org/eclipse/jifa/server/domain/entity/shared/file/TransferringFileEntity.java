@@ -17,8 +17,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Table;
-import lombok.Getter;
-import lombok.Setter;
+
 import org.eclipse.jifa.server.enums.FileTransferState;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -27,10 +26,8 @@ import java.time.LocalDateTime;
 @SuppressWarnings("JpaDataSourceORMInspection")
 @Table(name = "transferring_files")
 @Entity
-@Getter
-@Setter
-public class TransferringFileEntity extends BaseFileEntity {
-
+public class TransferringFileEntity extends BaseFileEntity
+{
     public static final int MAX_FAILURE_MESSAGE_LENGTH = 1024;
 
     @Column(nullable = false)
@@ -50,4 +47,53 @@ public class TransferringFileEntity extends BaseFileEntity {
     @UpdateTimestamp
     private LocalDateTime lastModifiedTime;
 
+    public FileTransferState getTransferState()
+    {
+        return transferState;
+    }
+
+    public void setTransferState(FileTransferState transferState)
+    {
+        this.transferState = transferState;
+    }
+
+    public long getTotalSize()
+    {
+        return totalSize;
+    }
+
+    public void setTotalSize(long totalSize)
+    {
+        this.totalSize = totalSize;
+    }
+
+    public long getTransferredSize()
+    {
+        return transferredSize;
+    }
+
+    public void setTransferredSize(long transferredSize)
+    {
+        this.transferredSize = transferredSize;
+    }
+
+    public String getFailureMessage()
+    {
+        return failureMessage;
+    }
+
+    public void setFailureMessage(String failureMessage)
+    {
+        this.failureMessage = failureMessage;
+    }
+
+    public LocalDateTime getLastModifiedTime()
+    {
+        return lastModifiedTime;
+    }
+
+    public void setLastModifiedTime(LocalDateTime lastModifiedTime)
+    {
+        this.lastModifiedTime = lastModifiedTime;
+    }
 }

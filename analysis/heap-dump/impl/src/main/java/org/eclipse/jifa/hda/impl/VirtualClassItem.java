@@ -24,7 +24,8 @@ import org.eclipse.mat.snapshot.ISnapshot;
 import static org.eclipse.jifa.hda.api.Model.DominatorTree;
 
 @UseAccessor
-public class VirtualClassItem extends DominatorTree.ClassItem {
+public class VirtualClassItem extends DominatorTree.ClassItem
+{
     static final int COLUMN_LABEL = 0;
     static final int COLUMN_OBJECTS = 1;
     static final int COLUMN_SHALLOW = 2;
@@ -35,7 +36,8 @@ public class VirtualClassItem extends DominatorTree.ClassItem {
     transient final IStructuredResult results;
     transient final Object e;
 
-    public VirtualClassItem(final ISnapshot snapshot, final IStructuredResult results, final Object e) {
+    public VirtualClassItem(final ISnapshot snapshot, final IStructuredResult results, final Object e)
+    {
         this.snapshot = snapshot;
         this.results = results;
         this.e = e;
@@ -43,56 +45,68 @@ public class VirtualClassItem extends DominatorTree.ClassItem {
     }
 
     @Override
-    public String getSuffix() {
+    public String getSuffix()
+    {
         return null;
     }
 
     @Override
-    public int getObjectId() {
+    public int getObjectId()
+    {
         return objectId;
     }
 
     @Override
-    public int getObjectType() {
-        try {
+    public int getObjectType()
+    {
+        try
+        {
             return HeapDumpAnalyzerImpl.typeOf(snapshot.getObject(objectId));
-        } catch (SnapshotException se) {
+        }
+        catch (SnapshotException se)
+        {
             throw new AnalysisException(se);
         }
     }
 
-    @Override
-    public boolean isGCRoot() {
+    public boolean isGCRoot()
+    {
         return snapshot.isGCRoot(objectId);
     }
 
     @Override
-    public String getLabel() {
-        return EscapeUtil.unescapeLabel((String) results.getColumnValue(e, COLUMN_LABEL));
+    public String getLabel()
+    {
+        return EscapeUtil.unescapeLabel((String)results.getColumnValue(e, COLUMN_LABEL));
     }
 
     @Override
-    public int getObjects() {
-        return (Integer) results.getColumnValue(e, COLUMN_OBJECTS);
+    public int getObjects()
+    {
+        return (Integer)results.getColumnValue(e, COLUMN_OBJECTS);
     }
 
     @Override
-    public int[] getObjectIds() {
-        return ((IContextObjectSet) results.getContext(e)).getObjectIds();
+    public int[] getObjectIds()
+    {
+        return ((IContextObjectSet)results.getContext(e)).getObjectIds();
     }
 
     @Override
-    public long getShallowSize() {
-        return ((Bytes) results.getColumnValue(e, COLUMN_SHALLOW)).getValue();
+    public long getShallowSize()
+    {
+        return ((Bytes)results.getColumnValue(e, COLUMN_SHALLOW)).getValue();
     }
 
     @Override
-    public long getRetainedSize() {
-        return ((Bytes) results.getColumnValue(e, COLUMN_RETAINED)).getValue();
+    public long getRetainedSize()
+    {
+        return ((Bytes)results.getColumnValue(e, COLUMN_RETAINED)).getValue();
     }
 
     @Override
-    public double getPercent() {
-        return (Double) results.getColumnValue(e, COLUMN_PERCENT);
+    public double getPercent()
+    {
+        return (Double)results.getColumnValue(e, COLUMN_PERCENT);
     }
 }

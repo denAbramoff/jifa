@@ -13,45 +13,58 @@
 
 package org.eclipse.jifa.tda.model;
 
-import lombok.Data;
-
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
-@Data
-public class Pool<O> {
-
+public class Pool<O>
+{
     Map<O, O> map;
 
-    public Pool() {
+    public Pool()
+    {
         map = new ConcurrentHashMap<>();
     }
 
-    public O add(O o) {
+    public O add(O o)
+    {
         return map.computeIfAbsent(o, k -> k);
     }
 
-    public int size() {
+    public int size()
+    {
         return map.size();
     }
 
-    public void freeze() {
+    public void freeze()
+    {
         map = null;
     }
 
+    public Map<O, O> getMap()
+    {
+        return map;
+    }
+
+    public void setMap(Map<O, O> map)
+    {
+        this.map = map;
+    }
+
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(Object o)
+    {
         if (this == o)
             return true;
         if (o == null || getClass() != o.getClass())
             return false;
-        Pool<?> pool = (Pool<?>) o;
+        Pool<?> pool = (Pool<?>)o;
         return Objects.equals(map, pool.map);
     }
 
     @Override
-    public int hashCode() {
+    public int hashCode()
+    {
         return Objects.hash(map);
     }
 }

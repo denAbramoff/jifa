@@ -12,14 +12,14 @@
  ********************************************************************************/
 package org.eclipse.jifa.common.domain.request;
 
-import lombok.Getter;
 import org.eclipse.jifa.common.util.Validate;
 
 /**
  * Paging request
  */
-@Getter
-public class PagingRequest {
+
+public class PagingRequest
+{
 
     // page index starts with 1
     private int page;
@@ -33,16 +33,28 @@ public class PagingRequest {
      * @param page     page index, starts with 1
      * @param pageSize page size, must be greater than 0
      */
-    public PagingRequest(int page, int pageSize) {
+    public PagingRequest(int page, int pageSize)
+    {
         Validate.isTrue(page >= 1 && pageSize >= 1);
         this.page = page;
         this.pageSize = pageSize;
     }
 
+    public int getPage()
+    {
+        return page;
+    }
+
+    public int getPageSize()
+    {
+        return pageSize;
+    }
+
     /**
      * @return from index (inclusive), starts with 0
      */
-    public int from() {
+    public int from()
+    {
         return (page - 1) * pageSize;
     }
 
@@ -50,7 +62,8 @@ public class PagingRequest {
      * @param totalSize total size of the elements
      * @return end index (exclusive)
      */
-    public int to(int totalSize) {
+    public int to(int totalSize)
+    {
         return Math.min(from() + pageSize, totalSize);
     }
 }

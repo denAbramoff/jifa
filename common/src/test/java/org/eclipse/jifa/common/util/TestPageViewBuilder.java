@@ -13,6 +13,7 @@
 package org.eclipse.jifa.common.util;
 
 import com.google.common.collect.Lists;
+
 import org.eclipse.jifa.common.domain.request.PagingRequest;
 import org.eclipse.jifa.common.domain.vo.PageView;
 import org.junit.jupiter.api.Test;
@@ -23,22 +24,27 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class TestPageViewBuilder {
+public class TestPageViewBuilder
+{
 
     @Test
-    public void test() {
+    public void test()
+    {
         {
             List<Integer> list = new ArrayList<>();
             list.add(1);
             list.add(2);
-            PageView<Integer> pv = PageViewBuilder.build(new PageViewBuilder.Callback<Integer>() {
+            PageView<Integer> pv = PageViewBuilder.build(new PageViewBuilder.Callback<Integer>()
+            {
                 @Override
-                public int totalSize() {
+                public int totalSize()
+                {
                     return list.size();
                 }
 
                 @Override
-                public Integer get(int index) {
+                public Integer get(int index)
+                {
                     return list.get(index);
                 }
             }, new PagingRequest(1, 1), i -> i + 1);
@@ -47,7 +53,7 @@ public class TestPageViewBuilder {
             assertEquals(1, pv.getPage());
             assertEquals(1, pv.getPageSize());
             assertEquals(1, pv.getData().size());
-            assertEquals(2, pv.getData().get(0));
+            assertEquals(2, pv.getData().getFirst());
         }
 
         {
@@ -80,7 +86,8 @@ public class TestPageViewBuilder {
             list.add(3);
             list.add(2);
             list.add(1);
-            PageView<Integer> pv = PageViewBuilder.build(list, new PagingRequest(1, 3), i -> i + 1, i -> i * 2, Integer::compareTo);
+            PageView<Integer> pv = PageViewBuilder.build(list, new PagingRequest(1, 3), i -> i + 1, i -> i * 2,
+                    Integer::compareTo);
 
             assertEquals(4, pv.getData().get(0));
             assertEquals(6, pv.getData().get(1));
@@ -88,7 +95,7 @@ public class TestPageViewBuilder {
         }
 
         {
-            int[] ints = {6, 5, 4, 3, 2, 1};
+            int[] ints = { 6, 5, 4, 3, 2, 1 };
             PageView<Integer> pv = PageViewBuilder.build(ints, new PagingRequest(1, 4), i -> i * i);
 
             assertEquals(6, pv.getTotalSize());
@@ -99,7 +106,7 @@ public class TestPageViewBuilder {
         }
 
         {
-            String[] strings = {"6", "5", "4", "3", "2", "1"};
+            String[] strings = { "6", "5", "4", "3", "2", "1" };
             PageView<String> pv = PageViewBuilder.build(strings, new PagingRequest(1, 2), i -> i + i);
 
             assertEquals(6, pv.getTotalSize());
@@ -110,11 +117,11 @@ public class TestPageViewBuilder {
         {
             List<String> list = Lists.newArrayList("a", "b", "c");
             StringBuilder sb = new StringBuilder();
-            PageView<String> pv = PageViewBuilder.<String, String>fromList(list)
-                                                 .beforeMap(sb::append)
-                                                 .map(s -> s + s)
-                                                 .paging(new PagingRequest(1, 2))
-                                                 .done();
+            PageView<String> pv = PageViewBuilder.<String, String> fromList(list)
+                    .beforeMap(sb::append)
+                    .map(s -> s + s)
+                    .paging(new PagingRequest(1, 2))
+                    .done();
             assertEquals("abc", sb.toString());
             assertEquals(3, pv.getTotalSize());
             assertEquals("aa", pv.getData().get(0));
@@ -124,13 +131,13 @@ public class TestPageViewBuilder {
         {
             List<String> list = Lists.newArrayList("a", "b", "c");
             StringBuilder sb = new StringBuilder();
-            PageView<String> pv = PageViewBuilder.<String, String>fromList(list)
-                                                 .beforeMap(sb::append)
-                                                 .map(s -> s + s)
-                                                 .filter(s -> !s.equals("aa"))
-                                                 .sort(Comparator.reverseOrder())
-                                                 .paging(new PagingRequest(1, 2))
-                                                 .done();
+            PageView<String> pv = PageViewBuilder.<String, String> fromList(list)
+                    .beforeMap(sb::append)
+                    .map(s -> s + s)
+                    .filter(s -> !s.equals("aa"))
+                    .sort(Comparator.reverseOrder())
+                    .paging(new PagingRequest(1, 2))
+                    .done();
             assertEquals("abc", sb.toString());
             assertEquals(2, pv.getTotalSize());
             assertEquals("cc", pv.getData().get(0));

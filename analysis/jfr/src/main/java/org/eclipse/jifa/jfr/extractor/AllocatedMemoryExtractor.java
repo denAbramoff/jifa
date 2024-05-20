@@ -26,40 +26,50 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class AllocatedMemoryExtractor extends AllocationsExtractor {
-    public AllocatedMemoryExtractor(JFRAnalysisContext context) {
+public class AllocatedMemoryExtractor extends AllocationsExtractor
+{
+    public AllocatedMemoryExtractor(JFRAnalysisContext context)
+    {
         super(context);
     }
 
     @Override
-    void visitObjectAllocationInNewTLAB(RecordedEvent event) {
-        if (this.useObjectAllocationSample) {
+    void visitObjectAllocationInNewTLAB(RecordedEvent event)
+    {
+        if (this.useObjectAllocationSample)
+        {
             return;
         }
         this.visitTLABEvent(event, "tlabSize");
     }
 
     @Override
-    void visitObjectAllocationOutsideTLAB(RecordedEvent event) {
-        if (this.useObjectAllocationSample) {
+    void visitObjectAllocationOutsideTLAB(RecordedEvent event)
+    {
+        if (this.useObjectAllocationSample)
+        {
             return;
         }
         this.visitTLABEvent(event, "allocationSize");
     }
 
     @Override
-    void visitObjectAllocationSample(RecordedEvent event) {
+    void visitObjectAllocationSample(RecordedEvent event)
+    {
         this.visitTLABEvent(event, "weight");
     }
 
-    void visitTLABEvent(RecordedEvent event, String fieldName) {
+    void visitTLABEvent(RecordedEvent event, String fieldName)
+    {
         RecordedStackTrace stackTrace = event.getStackTrace();
-        if (stackTrace == null) {
+        if (stackTrace == null)
+        {
             stackTrace = StackTraceUtil.DUMMY_STACK_TRACE;
         }
 
         AllocationsExtractor.AllocTaskData allocThreadData = getThreadData(event.getThread());
-        if (allocThreadData.getSamples() == null) {
+        if (allocThreadData.getSamples() == null)
+        {
             allocThreadData.setSamples(new HashMap<>());
         }
 
@@ -69,11 +79,14 @@ public class AllocatedMemoryExtractor extends AllocationsExtractor {
         allocThreadData.allocatedMemory += eventTotal;
     }
 
-    private List<TaskAllocatedMemory> buildThreadAllocatedMemory() {
+    private List<TaskAllocatedMemory> buildThreadAllocatedMemory()
+    {
         List<TaskAllocatedMemory> taskAllocatedMemoryList = new ArrayList<>();
 
-        for (AllocTaskData data : this.data.values()) {
-            if (data.allocatedMemory == 0) {
+        for (AllocTaskData data : this.data.values())
+        {
+            if (data.allocatedMemory == 0)
+            {
                 continue;
             }
 
@@ -83,7 +96,8 @@ public class AllocatedMemoryExtractor extends AllocationsExtractor {
             ta.setName(data.getThread().getJavaName());
             taskAllocatedMemory.setTask(ta);
 
-            if (data.getSamples() != null) {
+            if (data.getSamples() != null)
+            {
                 taskAllocatedMemory.setAllocatedMemory(data.allocatedMemory);
                 taskAllocatedMemory.setSamples(data.getSamples().entrySet().stream().collect(
                         Collectors.toMap(
@@ -96,7 +110,8 @@ public class AllocatedMemoryExtractor extends AllocationsExtractor {
             taskAllocatedMemoryList.add(taskAllocatedMemory);
         }
 
-        taskAllocatedMemoryList.sort((o1, o2) -> {
+        taskAllocatedMemoryList.sort((o1, o2) ->
+        {
             long delta = o2.getAllocatedMemory() - o1.getAllocatedMemory();
             return delta > 0 ? 1 : (delta == 0 ? 0 : -1);
         });
@@ -105,7 +120,8 @@ public class AllocatedMemoryExtractor extends AllocationsExtractor {
     }
 
     @Override
-    public void fillResult(AnalysisResult result) {
+    public void fillResult(AnalysisResult result)
+    {
         DimensionResult<TaskAllocatedMemory> memResult = new DimensionResult<>();
         memResult.setList(buildThreadAllocatedMemory());
         result.setAllocatedMemory(memResult);

@@ -17,7 +17,7 @@ export default {
   gcCause: 'GC Cause',
   clickToChooseTime: 'Click To Custom',
   gclogFilePlaceholder:
-    'Fill with the URL of analysis page of the file. To choose the time range of analysis, please config it in the page of that file in advance. You can compare two time ranges of one GC log.',
+    'Fill with the URL of analysis page of the file. To choose the time range of analysis, please config it in the page of that file in advance. You can compare two time ranges of one GC LOG.',
   stwTooltip: 'The Java program stops the world in this phase',
   analysisConfig: 'Analysis Config',
   gclogCompare: 'Compare GC Logs',
@@ -330,7 +330,7 @@ export default {
         'Expand young generation. G1 adjusts young generation size dynamically to meet pause time target. If current pause time is long, consider optimizing pause time, or increase pause time target(increase -XX:MaxGCPauseMillis, default: 200ms). You can also increase the minimum size of young generation(set -XX:+UnlockExperimentalVMOptions，increase -XX:G1NewSizePercent, default: 5，young generation is at least 5% of the heap).',
       checkFastObjectAllocation: 'Optimize code that allocates objects fast.',
       useMoreDetailedLoggingUnified:
-        'If available information is still not enough to find the cause of the problem, consider using debug level GC log for more details (change gc* to gc*=debug in option -Xlog. It is not recommended to keep using debug level because it prints too many logs.).'
+        'If available information is still not enough to find the cause of the problem, consider using debug level GC log for more details (change gc* to gc*=debug in option -XLOG. It is not recommended to keep using debug level because it prints too many logs.).'
     }
   },
 

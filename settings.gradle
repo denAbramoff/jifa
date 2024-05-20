@@ -13,7 +13,6 @@
 rootProject.name = 'jifa'
 
 include ':common'
-include ':analysis:base'
 include ':analysis:heap-dump:api'
 include ':analysis:heap-dump:impl'
 include ':analysis:heap-dump:eclipse-mat-deps'

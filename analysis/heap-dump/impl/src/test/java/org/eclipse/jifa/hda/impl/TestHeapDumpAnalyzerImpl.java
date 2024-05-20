@@ -13,7 +13,7 @@
 package org.eclipse.jifa.hda.impl;
 
 import com.sun.management.HotSpotDiagnosticMXBean;
-import lombok.extern.slf4j.Slf4j;
+
 import org.apache.commons.io.FileUtils;
 import org.eclipse.jifa.analysis.listener.ProgressListener;
 import org.eclipse.jifa.hda.api.HeapDumpAnalyzer;
@@ -31,7 +31,7 @@ import java.nio.file.Path;
 import java.util.Collections;
 import java.util.Map;
 
-@Slf4j
+
 public class TestHeapDumpAnalyzerImpl {
 
     private static Path DIRECTORY;

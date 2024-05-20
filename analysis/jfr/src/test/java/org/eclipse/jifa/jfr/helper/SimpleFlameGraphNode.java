@@ -12,15 +12,11 @@
  ********************************************************************************/
 package org.eclipse.jifa.jfr.helper;
 
-import lombok.Getter;
-import lombok.Setter;
-
 import java.math.BigDecimal;
 import java.util.List;
 
-@Setter
-@Getter
-public class SimpleFlameGraphNode {
+public class SimpleFlameGraphNode
+{
     private String name;
     private BigDecimal value;
 
@@ -28,4 +24,54 @@ public class SimpleFlameGraphNode {
     private List<SimpleFlameGraphNode> children;
 
     private boolean print = false;
+
+    public String getName()
+    {
+        return name;
+    }
+
+    public void setName(String name)
+    {
+        this.name = name;
+    }
+
+    public BigDecimal getValue()
+    {
+        return value;
+    }
+
+    public void setValue(BigDecimal value)
+    {
+        this.value = value;
+    }
+
+    public SimpleFlameGraphNode getParent()
+    {
+        return parent;
+    }
+
+    public void setParent(SimpleFlameGraphNode parent)
+    {
+        this.parent = parent;
+    }
+
+    public List<SimpleFlameGraphNode> getChildren()
+    {
+        return children;
+    }
+
+    public void setChildren(List<SimpleFlameGraphNode> children)
+    {
+        this.children = children;
+    }
+
+    public boolean isPrint()
+    {
+        return print;
+    }
+
+    public void setPrint(boolean print)
+    {
+        this.print = print;
+    }
 }

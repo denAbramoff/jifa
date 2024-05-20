@@ -22,29 +22,30 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class ThreadParkExtractor extends SumExtractor {
-    protected static final List<String> INTERESTED = Collections.unmodifiableList(new ArrayList<>() {
-        {
-            add(EventConstant.THREAD_PARK);
-        }
-    });
+public class ThreadParkExtractor extends SumExtractor
+{
+    protected static final List<String> INTERESTED = List.of(EventConstant.THREAD_PARK);
 
-    public ThreadParkExtractor(JFRAnalysisContext context) {
+    public ThreadParkExtractor(JFRAnalysisContext context)
+    {
         super(context, INTERESTED);
     }
 
     @Override
-    void visitThreadPark(RecordedEvent event) {
+    void visitThreadPark(RecordedEvent event)
+    {
         visitEvent(event);
     }
 
-    private void visitEvent(RecordedEvent event) {
+    private void visitEvent(RecordedEvent event)
+    {
         long eventValue = event.getDurationNano();
         visitEvent(event, eventValue);
     }
 
     @Override
-    public void fillResult(AnalysisResult result) {
+    public void fillResult(AnalysisResult result)
+    {
         DimensionResult<TaskSum> tsResult = new DimensionResult<>();
         tsResult.setList(buildTaskSums());
         result.setThreadPark(tsResult);

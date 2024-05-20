@@ -12,36 +12,62 @@
  ********************************************************************************/
 package org.eclipse.jifa.jfr.model;
 
-import lombok.Getter;
-import lombok.Setter;
 import org.eclipse.jifa.jfr.model.Method;
 
 import java.util.Objects;
 
-@Setter
-@Getter
-public class JavaMethod extends Method {
+public class JavaMethod extends Method
+{
     private int modifiers;
     private boolean hidden;
 
-    public int genHashCode() {
+    public int getModifiers()
+    {
+        return modifiers;
+    }
+
+    public void setModifiers(int modifiers)
+    {
+        this.modifiers = modifiers;
+    }
+
+    public boolean isHidden()
+    {
+        return hidden;
+    }
+
+    public void setHidden(boolean hidden)
+    {
+        this.hidden = hidden;
+    }
+
+    public int genHashCode()
+    {
         return Objects.hash(modifiers, hidden, getPackageName(), getType(), getName(), getDescriptor());
     }
 
-    public boolean equals(Object b) {
-        if (this == b) {
+    @Override
+    public int hashCode()
+    {
+        return genHashCode();
+    }
+
+    public boolean equals(Object b)
+    {
+        if (this == b)
+        {
             return true;
         }
 
-        if (b == null) {
+        if (b == null)
+        {
             return false;
         }
 
-        if (!(b instanceof JavaMethod)) {
+        if (!(b instanceof JavaMethod m2))
+        {
             return false;
         }
-
-        JavaMethod m2 = (JavaMethod) b;
 
         return modifiers == m2.modifiers && hidden == m2.hidden && super.equals(m2);
     }

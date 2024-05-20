@@ -12,59 +12,70 @@
  ********************************************************************************/
 package org.eclipse.jifa.gclog.fragment;
 
-import lombok.NoArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.eclipse.jifa.gclog.model.GCModel;
 import org.eclipse.jifa.gclog.parser.GCLogParser;
 import org.eclipse.jifa.gclog.parser.GCLogParserFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-@NoArgsConstructor
-@Slf4j
-public class GCLogAnalyzer {
+public class GCLogAnalyzer
+{
+    private static final Logger LOG = LoggerFactory.getLogger(GCLogAnalyzer.class);
     private final Map<Map<String, String>, GCLogParser> parserMap = new ConcurrentHashMap<>();
 
-    public List<Metric> parseToMetrics(List<String> rawContext, Map<String, String> instanceId, long startTime, long endTime) throws Exception {
+    public List<Metric> parseToMetrics(List<String> rawContext, Map<String, String> instanceId, long startTime,
+            long endTime) throws Exception
+    {
         Context context = new Context(rawContext);
         BufferedReader br = context.toBufferedReader();
         GCLogParser parser = selectParser(instanceId, br);
         GCModel model = parser.parse(br);
         br.close();
-        if (!model.isEmpty()) {
+        if (!model.isEmpty())
+        {
             model.calculateDerivedInfo(null);
             return new GCModelConverter().toMetrics(model, instanceId, startTime, endTime);
         }
         return null;
     }
 
-    public GCModel parseToGCModel(List<String> rawContext, Map<String, String> instanceId) {
+    public GCModel parseToGCModel(List<String> rawContext, Map<String, String> instanceId)
+    {
         Context context = new Context(rawContext);
         BufferedReader br = context.toBufferedReader();
         GCModel model = null;
-        try {
+        try
+        {
             GCLogParser parser = selectParser(instanceId, br);
             model = parser.parse(br);
             br.close();
-            if (!model.isEmpty()) {
+            if (!model.isEmpty())
+            {
                 model.calculateDerivedInfo(null);
-            } else {
+            }
+            else
+            {
                 model = null;
             }
-        } catch (Exception e) {
-            log.error("fail to parse context ");
-            log.error(e.getMessage());
-            model = null;
-        } finally {
-            return model;
         }
+        catch (Exception e)
+        {
+            LOG.error("fail to parse context ");
+            LOG.error(e.getMessage());
+            model = null;
+        }
+        return model;
     }
 
-    private GCLogParser selectParser(Map<String, String> instanceId, BufferedReader br) throws IOException {
+    private GCLogParser selectParser(Map<String, String> instanceId, BufferedReader br) throws IOException
+    {
         GCLogParser parser = parserMap.get(instanceId);
-        if (parser == null) {
+        if (parser == null)
+        {
             GCLogParserFactory logParserFactory = new GCLogParserFactory();
             // max length in hotspot
             int MAX_SINGLE_LINE_LENGTH = 2048;
@@ -76,4 +87,3 @@ public class GCLogAnalyzer {
         return parser;
     }
 }
-

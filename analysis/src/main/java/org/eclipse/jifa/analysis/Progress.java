@@ -12,28 +12,49 @@
  ********************************************************************************/
 package org.eclipse.jifa.analysis;
 
-import lombok.Getter;
-import lombok.Setter;
-
 /**
  * The progress
  */
-@Getter
-@Setter
-public class Progress {
-
+public class Progress
+{
     private State state;
-
     private double percent = 0;
-
     private String message;
 
-    public enum State {
+    public State getState()
+    {
+        return state;
+    }
 
+    public void setState(State state)
+    {
+        this.state = state;
+    }
+
+    public double getPercent()
+    {
+        return percent;
+    }
+
+    public void setPercent(double percent)
+    {
+        this.percent = percent;
+    }
+
+    public String getMessage()
+    {
+        return message;
+    }
+
+    public void setMessage(String message)
+    {
+        this.message = message;
+    }
+
+    public enum State
+    {
         IN_PROGRESS,
-
         SUCCESS,
-
         FAILURE,
     }
 }

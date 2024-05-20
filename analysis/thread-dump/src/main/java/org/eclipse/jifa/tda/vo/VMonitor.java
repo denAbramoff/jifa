@@ -14,14 +14,11 @@
 package org.eclipse.jifa.tda.vo;
 
 import com.google.gson.annotations.SerializedName;
-import lombok.AllArgsConstructor;
-import lombok.Data;
+
 import org.eclipse.jifa.tda.enums.MonitorState;
 
-@Data
-@AllArgsConstructor
-public class VMonitor {
-
+public class VMonitor
+{
     private int id;
 
     private long address;
@@ -33,10 +30,62 @@ public class VMonitor {
 
     private MonitorState state;
 
-    public VMonitor(int id, long address, boolean classInstance, String clazz) {
+    public VMonitor(int id, long address, boolean classInstance, String clazz, MonitorState state)
+    {
         this.id = id;
         this.address = address;
         this.classInstance = classInstance;
         this.clazz = clazz;
+        this.state = state;
+    }
+
+    public int getId()
+    {
+        return id;
+    }
+
+    public void setId(int id)
+    {
+        this.id = id;
+    }
+
+    public long getAddress()
+    {
+        return address;
+    }
+
+    public void setAddress(long address)
+    {
+        this.address = address;
+    }
+
+    public boolean isClassInstance()
+    {
+        return classInstance;
+    }
+
+    public void setClassInstance(boolean classInstance)
+    {
+        this.classInstance = classInstance;
+    }
+
+    public String getClazz()
+    {
+        return clazz;
+    }
+
+    public void setClazz(String clazz)
+    {
+        this.clazz = clazz;
+    }
+
+    public MonitorState getState()
+    {
+        return state;
+    }
+
+    public void setState(MonitorState state)
+    {
+        this.state = state;
     }
 }

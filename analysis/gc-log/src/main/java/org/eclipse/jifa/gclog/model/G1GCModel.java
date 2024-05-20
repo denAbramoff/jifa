@@ -46,7 +46,8 @@ import static org.eclipse.jifa.gclog.model.GCEventType.G1_REMARK;
 import static org.eclipse.jifa.gclog.model.GCEventType.YOUNG_GC;
 import static org.eclipse.jifa.gclog.util.Constant.UNKNOWN_INT;
 
-public class G1GCModel extends GCModel {
+public class G1GCModel extends org.eclipse.jifa.gclog.model.GCModel
+{
     private long heapRegionSize = UNKNOWN_INT;   // in b
     private boolean regionSizeExact = false;
     private static GCCollectorType collector = GCCollectorType.G1;

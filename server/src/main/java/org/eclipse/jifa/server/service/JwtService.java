@@ -16,8 +16,8 @@ import org.eclipse.jifa.server.domain.entity.shared.user.UserEntity;
 import org.eclipse.jifa.server.domain.security.JifaAuthenticationToken;
 import org.springframework.security.oauth2.jwt.Jwt;
 
-public interface JwtService {
-
+public interface JwtService
+{
     JifaAuthenticationToken generateToken(UserEntity user);
 
     JifaAuthenticationToken refreshToken();

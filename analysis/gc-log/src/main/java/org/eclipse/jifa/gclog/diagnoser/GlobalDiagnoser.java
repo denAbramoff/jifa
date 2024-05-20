@@ -13,10 +13,6 @@
 
 package org.eclipse.jifa.gclog.diagnoser;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
 import org.eclipse.jifa.common.domain.exception.CommonException;
 import org.eclipse.jifa.common.domain.exception.ShouldNotReachHereException;
 import org.eclipse.jifa.gclog.event.TimedEvent;
@@ -67,7 +63,8 @@ import static org.eclipse.jifa.gclog.util.Constant.UNKNOWN_DOUBLE;
  * and give appropriate suggestion if necessary.
  * 2. Try to find accurate cause and give "the best" suggestion for those serious based on local diagnose.
  */
-public class GlobalDiagnoser {
+public class GlobalDiagnoser
+{
     private GCModel model;
     private AnalysisConfig config;
 
@@ -76,22 +73,29 @@ public class GlobalDiagnoser {
     private List<AbnormalPoint> mergedMostSeriousProblemList = new ArrayList<>();
     private AbnormalPoint mostSerious = AbnormalPoint.LEAST_SERIOUS;
 
-    public GlobalDiagnoser(GCModel model, AnalysisConfig config) {
+    public GlobalDiagnoser(GCModel model, AnalysisConfig config)
+    {
         this.model = model;
         this.config = config;
     }
 
-    public GlobalAbnormalInfo diagnose() {
+    public GlobalAbnormalInfo diagnose()
+    {
         findAllAbnormalPoints();
         mergeTimeRanges();
         return generateVo();
     }
 
-    private void findAllAbnormalPoints() {
-        for (Method rule : globalDiagnoseRules) {
-            try {
+    private void findAllAbnormalPoints()
+    {
+        for (Method rule : globalDiagnoseRules)
+        {
+            try
+            {
                 rule.invoke(this);
-            } catch (Exception e) {
+            }
+            catch (Exception e)
+            {
                 throw new ShouldNotReachHereException();
             }
         }
@@ -102,49 +106,63 @@ public class GlobalDiagnoser {
     private static long EXTEND_TIME = 150 * 1000;
 
     // allow changing this value for testing
-    public static void setExtendTime(long extendTime) {
+    public static void setExtendTime(long extendTime)
+    {
         EXTEND_TIME = extendTime;
     }
 
-    private void mergeTimeRanges() {
-        if (mostSerious == AbnormalPoint.LEAST_SERIOUS) {
+    private void mergeTimeRanges()
+    {
+        if (mostSerious == AbnormalPoint.LEAST_SERIOUS)
+        {
             return;
         }
-        AbnormalPoint first = mostSeriousProblemList.get(0);
+        AbnormalPoint first = mostSeriousProblemList.getFirst();
         mostSeriousProblemList.sort(Comparator.comparingDouble(ab -> ab.getSite().getStartTime()));
         double start = UNKNOWN_DOUBLE;
         double end = UNKNOWN_DOUBLE;
-        for (AbnormalPoint ab : mostSeriousProblemList) {
-            if (start == UNKNOWN_DOUBLE) {
+        for (AbnormalPoint ab : mostSeriousProblemList)
+        {
+            if (start == UNKNOWN_DOUBLE)
+            {
                 start = ab.getSite().getStartTime();
                 end = Math.max(ab.getSite().getStartTime(), ab.getSite().getEndTime());
-            } else if (ab.getSite().getStartTime() - end <= 2 * EXTEND_TIME) {
+            }
+            else if (ab.getSite().getStartTime() - end <= 2 * EXTEND_TIME)
+            {
                 end = Math.max(Math.max(ab.getSite().getStartTime(), ab.getSite().getEndTime()), end);
-            } else {
+            }
+            else
+            {
                 AbnormalPoint merged = new AbnormalPoint(first.getType(), newByStartEnd(start, end));
                 mergedMostSeriousProblemList.add(merged);
                 start = ab.getSite().getStartTime();
                 end = Math.max(ab.getSite().getStartTime(), ab.getSite().getEndTime());
             }
         }
-        if (start != UNKNOWN_DOUBLE) {
+        if (start != UNKNOWN_DOUBLE)
+        {
             AbnormalPoint merged = new AbnormalPoint(first.getType(), newByStartEnd(start, end));
             mergedMostSeriousProblemList.add(merged);
         }
     }
 
-    private GlobalAbnormalInfo generateVo() {
+    private GlobalAbnormalInfo generateVo()
+    {
         MostSeriousProblemSummary summary = null;
-        if (mostSerious != AbnormalPoint.LEAST_SERIOUS) {
-            AbnormalPoint first = mergedMostSeriousProblemList.get(0);
+        if (mostSerious != AbnormalPoint.LEAST_SERIOUS)
+        {
+            AbnormalPoint first = mergedMostSeriousProblemList.getFirst();
             first.generateDefaultSuggestions(model);
             summary = new MostSeriousProblemSummary(
                     mergedMostSeriousProblemList.stream()
-                            .sorted((ab1, ab2) -> Double.compare(ab2.getSite().getDuration(), ab1.getSite().getDuration()))
+                            .sorted((ab1, ab2) -> Double.compare(ab2.getSite().getDuration(),
+                                    ab1.getSite().getDuration()))
                             .limit(3)
                             .sorted(Comparator.comparingDouble(ab -> ab.getSite().getStartTime()))
                             .map(ab -> new TimeRange(
-                                    Math.max(ab.getSite().getStartTime() - EXTEND_TIME, config.getTimeRange().getStart()),
+                                    Math.max(ab.getSite().getStartTime() - EXTEND_TIME,
+                                            config.getTimeRange().getStart()),
                                     Math.min(ab.getSite().getEndTime() + EXTEND_TIME, config.getTimeRange().getEnd())
                             ))
                             .collect(Collectors.toList()),
@@ -157,18 +175,23 @@ public class GlobalDiagnoser {
 
     private static List<Method> globalDiagnoseRules = new ArrayList<>();
 
-    static {
+    static
+    {
         initializeRules();
     }
 
-    private static void initializeRules() {
+    private static void initializeRules()
+    {
         Method[] methods = GlobalDiagnoser.class.getDeclaredMethods();
-        for (Method method : methods) {
-            if (method.getAnnotation(GlobalDiagnoseRule.class) != null) {
+        for (Method method : methods)
+        {
+            if (method.getAnnotation(GlobalDiagnoseRule.class) != null)
+            {
                 method.setAccessible(true);
                 int mod = method.getModifiers();
                 if (Modifier.isAbstract(mod) || Modifier.isFinal(mod) ||
-                        !(Modifier.isPublic(mod) || Modifier.isProtected(mod))) {
+                        !(Modifier.isPublic(mod) || Modifier.isProtected(mod)))
+                {
                     throw new CommonException("Illegal method modifier: " + method);
                 }
                 globalDiagnoseRules.add(method);
@@ -177,13 +200,18 @@ public class GlobalDiagnoser {
     }
 
     @GlobalDiagnoseRule
-    protected void longGCPause() {
-        model.iterateEventsWithinTimeRange(model.getAllEvents(), config.getTimeRange(), event -> {
-            event.pauseEventOrPhasesDo(pauseEvent -> {
-                if (pauseEvent.getPause() <= config.getLongPauseThreshold()) {
+    protected void longGCPause()
+    {
+        model.iterateEventsWithinTimeRange(model.getAllEvents(), config.getTimeRange(), event ->
+        {
+            event.pauseEventOrPhasesDo(pauseEvent ->
+            {
+                if (pauseEvent.getPause() <= config.getLongPauseThreshold())
+                {
                     return;
                 }
-                if (pauseEvent.isYoungGC()) {
+                if (pauseEvent.isYoungGC())
+                {
                     addAbnormalPoint(new AbnormalPoint(LONG_YOUNG_GC_PAUSE, pauseEvent));
                 }
             });
@@ -191,103 +219,121 @@ public class GlobalDiagnoser {
     }
 
     @GlobalDiagnoseRule
-    protected void allocationStall() {
-        if (model.getCollectorType() != GCCollectorType.ZGC) {
+    protected void allocationStall()
+    {
+        if (model.getCollectorType() != GCCollectorType.ZGC)
+        {
             return;
         }
-        ZGCModel zModel = (ZGCModel) model;
-        model.iterateEventsWithinTimeRange(zModel.getAllocationStalls(), config.getTimeRange(), stall -> {
-            addAbnormalPoint(new AbnormalPoint(ALLOCATION_STALL, stall));
-        });
+        ZGCModel zModel = (ZGCModel)model;
+        model.iterateEventsWithinTimeRange(zModel.getAllocationStalls(), config.getTimeRange(), stall ->
+                addAbnormalPoint(new AbnormalPoint(ALLOCATION_STALL, stall))
+        );
     }
 
     @GlobalDiagnoseRule
-    protected void outOfMemory() {
-        model.iterateEventsWithinTimeRange(model.getOoms(), config.getTimeRange(), oom -> {
-            addAbnormalPoint(new AbnormalPoint(AbnormalType.OUT_OF_MEMORY, oom));
-        });
+    protected void outOfMemory()
+    {
+        model.iterateEventsWithinTimeRange(model.getOoms(), config.getTimeRange(), oom ->
+            addAbnormalPoint(new AbnormalPoint(AbnormalType.OUT_OF_MEMORY, oom))
+        );
     }
 
     @GlobalDiagnoseRule
-    protected void longRemark() {
-        model.iterateEventsWithinTimeRange(model.getAllEvents(), config.getTimeRange(), remark -> {
+    protected void longRemark()
+    {
+        model.iterateEventsWithinTimeRange(model.getAllEvents(), config.getTimeRange(), remark ->
+        {
             GCEventType type = remark.getEventType();
-            if (remark.getPause() < config.getLongPauseThreshold()) {
+            if (remark.getPause() < config.getLongPauseThreshold())
+            {
                 return;
             }
-            if (type == CMS_FINAL_REMARK) {
+            if (type == CMS_FINAL_REMARK)
+            {
                 addAbnormalPoint(new AbnormalPoint(LONG_CMS_REMARK, remark));
-            } else if (type == G1_REMARK) {
+            }
+            else if (type == G1_REMARK)
+            {
                 addAbnormalPoint(new AbnormalPoint(LONG_G1_REMARK, remark));
             }
         });
     }
 
     @GlobalDiagnoseRule
-    protected void frequentYoungGC() {
+    protected void frequentYoungGC()
+    {
         DoubleData interval = new DoubleData();
-        model.iterateEventsWithinTimeRange(model.getGcEvents(), config.getTimeRange(), event -> {
-            if (event.isYoungGC() && event.getInterval() != UNKNOWN_DOUBLE) {
+        model.iterateEventsWithinTimeRange(model.getGcEvents(), config.getTimeRange(), event ->
+        {
+            if (event.isYoungGC() && event.getInterval() != UNKNOWN_DOUBLE)
+            {
                 interval.add(event.getInterval());
             }
         });
-        if (interval.getN() > 0 && interval.average() < config.getYoungGCFrequentIntervalThreshold()) {
+        if (interval.getN() > 0 && interval.average() < config.getYoungGCFrequentIntervalThreshold())
+        {
             addAbnormalPoint(new AbnormalPoint(FREQUENT_YOUNG_GC, TimedEvent.fromTimeRange(config.getTimeRange())));
         }
     }
 
     @GlobalDiagnoseRule
-    protected void fullGC() {
+    protected void fullGC()
+    {
         boolean shouldAvoidFullGC = model.shouldAvoidFullGC();
-        model.iterateEventsWithinTimeRange(model.getGcEvents(), config.getTimeRange(), event -> {
-            if (event.getEventType() != FULL_GC) {
+        model.iterateEventsWithinTimeRange(model.getGcEvents(), config.getTimeRange(), event ->
+        {
+            if (event.getEventType() != FULL_GC)
+            {
                 return;
             }
             GCCause cause = event.getCause();
-            if (cause != null) {
-                if (cause.isMetaspaceFullGCCause()) {
+            if (cause != null)
+            {
+                if (cause.isMetaspaceFullGCCause())
+                {
                     addAbnormalPoint(new AbnormalPoint(METASPACE_FULL_GC, event));
-                } else if (shouldAvoidFullGC && cause.isHeapMemoryTriggeredFullGCCause()) {
+                }
+                else if (shouldAvoidFullGC && cause.isHeapMemoryTriggeredFullGCCause())
+                {
                     addAbnormalPoint(new AbnormalPoint(HEAP_MEMORY_FULL_GC, event));
-                } else if (cause == GCCause.SYSTEM_GC) {
+                }
+                else if (cause == GCCause.SYSTEM_GC)
+                {
                     addAbnormalPoint(new AbnormalPoint(AbnormalType.SYSTEM_GC, event));
                 }
             }
         });
     }
 
-    private void addAbnormalPoint(AbnormalPoint point) {
+    private void addAbnormalPoint(AbnormalPoint point)
+    {
         allProblems.put(point.getType().getName(), point.getSite().getStartTime());
         int compare = AbnormalPoint.compareByImportance.compare(point, mostSerious);
-        if (compare < 0) {
+        if (compare < 0)
+        {
             mostSeriousProblemList.clear();
             mostSerious = point;
         }
-        if (compare <= 0) {
+        if (compare <= 0)
+        {
             mostSeriousProblemList.add(point);
         }
     }
 
     @Retention(RetentionPolicy.RUNTIME)
     @Target(ElementType.METHOD)
-    private @interface GlobalDiagnoseRule {
+    private @interface GlobalDiagnoseRule
+    {
     }
 
-    @Data
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class GlobalAbnormalInfo {
-        private MostSeriousProblemSummary mostSeriousProblem;
-        private Map<String, List<Double>> seriousProblems;
+    public record GlobalAbnormalInfo(MostSeriousProblemSummary mostSeriousProblem,
+                                     Map<String, List<Double>> seriousProblems)
+    {
     }
 
-    @Data
-    @NoArgsConstructor
-    @AllArgsConstructor
-    @ToString
-    public static class MostSeriousProblemSummary {
-        private List<TimeRange> sites;
-        private I18nStringView problem;
-        private List<I18nStringView> suggestions;
+    public record MostSeriousProblemSummary(List<TimeRange> sites, I18nStringView problem,
+                                            List<I18nStringView> suggestions)
+    {
     }
 }

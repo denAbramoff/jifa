@@ -18,22 +18,39 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
-import lombok.Getter;
-import lombok.Setter;
+
 import org.eclipse.jifa.server.domain.entity.shared.BaseEntity;
 
 @SuppressWarnings("JpaDataSourceORMInspection")
 @Table(name = "static_worker_labels",
-        uniqueConstraints = {@UniqueConstraint(columnNames = {"static_worker_id", "label"})})
+        uniqueConstraints = { @UniqueConstraint(columnNames = { "static_worker_id", "label" }) })
 @Entity
-@Getter
-@Setter
-public class StaticWorkerLabelEntity extends BaseEntity {
-
+public class StaticWorkerLabelEntity extends BaseEntity
+{
     @ManyToOne(optional = false)
     @JoinColumn(name = "static_worker_id")
     private StaticWorkerEntity staticWorker;
 
     @Column(nullable = false, length = 64)
     private String label;
+
+    public StaticWorkerEntity getStaticWorker()
+    {
+        return staticWorker;
+    }
+
+    public void setStaticWorker(StaticWorkerEntity staticWorker)
+    {
+        this.staticWorker = staticWorker;
+    }
+
+    public String getLabel()
+    {
+        return label;
+    }
+
+    public void setLabel(String label)
+    {
+        this.label = label;
+    }
 }

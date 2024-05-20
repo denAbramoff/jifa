@@ -16,6 +16,7 @@ import org.eclipse.jifa.server.condition.Master;
 import org.eclipse.jifa.server.domain.entity.cluster.GlobalLockEntity;
 import org.eclipse.jifa.server.repository.GlobalLockRepo;
 import org.eclipse.jifa.server.service.DistributedLockService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -28,67 +29,85 @@ import java.util.concurrent.TimeUnit;
 
 @Master
 @Service
-public class DistributedLockServiceImpl implements DistributedLockService {
-
+public class DistributedLockServiceImpl implements DistributedLockService
+{
     private final GlobalLockRepo globalLockRepo;
 
     private final Map<String, LockInfo> activeLocks;
 
-    public DistributedLockServiceImpl(GlobalLockRepo globalLockRepo) {
+    @Autowired
+    public DistributedLockServiceImpl(GlobalLockRepo globalLockRepo)
+    {
         this.globalLockRepo = globalLockRepo;
         activeLocks = new ConcurrentHashMap<>();
     }
 
     @Override
-    public boolean lock(String id, int validity) {
-        if (validity < MINIMAL_VALIDITY) {
+    public boolean lock(String id, int validity)
+    {
+        if (validity < MINIMAL_VALIDITY)
+        {
             throw new IllegalArgumentException("Illegal validity");
         }
 
-        try {
+        try
+        {
             String name = decorate(id);
             globalLockRepo.deleteIfExpired(name, LocalDateTime.now());
-            if (globalLockRepo.findByUniqueName(name).isPresent()) {
+            if (globalLockRepo.findByUniqueName(name).isPresent())
+            {
                 return false;
             }
 
             GlobalLockEntity globalLock = new GlobalLockEntity();
             globalLock.setUniqueName(name);
-            globalLock.setExpiryAt(LocalDateTime.now().plus(validity, ChronoUnit.SECONDS));
+            globalLock.setExpiryAt(LocalDateTime.now().plusSeconds(validity));
             globalLock = globalLockRepo.save(globalLock);
 
             activeLocks.put(name, new LockInfo(globalLock.getId(), validity));
             return true;
-        } catch (DataIntegrityViolationException ignored) {
+        }
+        catch (DataIntegrityViolationException ignored)
+        {
             return false;
         }
     }
 
     @Override
-    public void unlock(String id) {
+    public void unlock(String id)
+    {
         String name = decorate(id);
         activeLocks.remove(name);
         globalLockRepo.deleteByUniqueName(name);
     }
 
     @Scheduled(fixedRate = 2, timeUnit = TimeUnit.SECONDS)
-    private void refreshExpiryAt() {
-        activeLocks.forEach((name, info) -> {
-            try {
-                globalLockRepo.updateExpiryAtById(LocalDateTime.now().plus(info.validity, ChronoUnit.SECONDS), info.id);
-            } catch (Throwable ignored) {
+    private void refreshExpiryAt()
+    {
+        activeLocks.forEach((name, info) ->
+        {
+            try
+            {
+                globalLockRepo.updateExpiryAtById(LocalDateTime.now().plusSeconds(info.validity), info.id);
+            }
+            catch (Throwable ignored)
+            {
+                //do notning
             }
         });
     }
 
-    private String decorate(String id) {
-        if (id == null) {
+    private static String decorate(String id)
+    {
+        if (id == null)
+        {
             throw new IllegalArgumentException("id is required");
         }
         return id + "#LOCK";
     }
 
-    private record LockInfo(long id, int validity) {
+    private record LockInfo(long id, int validity)
+    {
     }
 }
 

@@ -110,7 +110,8 @@ import static org.eclipse.jifa.hda.impl.AnalysisContext.ClassLoaderExplorerData;
 import static org.eclipse.jifa.hda.impl.AnalysisContext.DirectByteBufferData;
 
 @SuppressWarnings("unchecked")
-public class HeapDumpAnalyzerImpl implements HeapDumpAnalyzer {
+public class HeapDumpAnalyzerImpl implements HeapDumpAnalyzer
+{
 
     private static final Cleaner CLEANER = Cleaner.create();
 
@@ -120,63 +121,82 @@ public class HeapDumpAnalyzerImpl implements HeapDumpAnalyzer {
 
     private final Cleaner.Cleanable cleaner;
 
-    public HeapDumpAnalyzerImpl(AnalysisContext context) {
+    public HeapDumpAnalyzerImpl(AnalysisContext context)
+    {
         this.context = context;
         this.cleaner = CLEANER.register(this, () -> $(() -> SnapshotFactory.dispose(context.snapshot)));
     }
 
-    static {
-        try {
+    static
+    {
+        try
+        {
             java.lang.reflect.Field field = SnapshotFactory.class.getDeclaredField("factory");
             field.setAccessible(true);
             Object factory = field.get(null);
             field = factory.getClass().getDeclaredField("snapshotCache");
             field.setAccessible(true);
             field.set(factory, new ConcurrentHashMap<>());
-        } catch (Throwable t) {
+        }
+        catch (Throwable t)
+        {
             throw new AnalysisException(t);
         }
     }
 
-    public static int typeOf(IObject object) {
-        if (object instanceof IClass) {
+    public static int typeOf(IObject object)
+    {
+        if (object instanceof IClass)
+        {
             return JavaObject.CLASS_TYPE;
         }
 
-        if (object instanceof IClassLoader) {
+        if (object instanceof IClassLoader)
+        {
             return JavaObject.CLASS_LOADER_TYPE;
         }
 
-        if (object.getClazz().isArrayType()) {
+        if (object.getClazz().isArrayType())
+        {
             return JavaObject.ARRAY_TYPE;
         }
         return JavaObject.NORMAL_TYPE;
     }
 
-    private static int getClassReferrerType(URL icon) {
-        if (icon == Icons.CLASS_IN || icon == Icons.CLASS_OUT) {
+    private static int getClassReferrerType(URL icon)
+    {
+        if (icon == Icons.CLASS_IN || icon == Icons.CLASS_OUT)
+        {
             return ClassReferrer.Type.NEW;
-        } else if (icon == Icons.CLASS_IN_MIXED || icon == Icons.CLASS_OUT_MIXED) {
+        }
+        else if (icon == Icons.CLASS_IN_MIXED || icon == Icons.CLASS_OUT_MIXED)
+        {
             return ClassReferrer.Type.MIXED;
-        } else if (icon == Icons.CLASS_IN_OLD || icon == Icons.CLASS_OUT_OLD) {
+        }
+        else if (icon == Icons.CLASS_IN_OLD || icon == Icons.CLASS_OUT_OLD)
+        {
             return ClassReferrer.Type.OLD_FAD;
         }
         throw new AnalysisException("Should not reach here");
     }
 
     private static Map<IClass, Set<String>> convert(AnalysisContext context,
-                                                    List<String> excludes) throws SnapshotException {
+            List<String> excludes) throws SnapshotException
+    {
         Map<IClass, Set<String>> excludeMap = null;
 
-        if (excludes != null && !excludes.isEmpty()) {
+        if (excludes != null && !excludes.isEmpty())
+        {
             excludeMap = new HashMap<>();
 
-            for (String entry : excludes) {
+            for (String entry : excludes)
+            {
                 String pattern = entry;
                 Set<String> fields = null;
                 int colon = entry.indexOf(':');
 
-                if (colon >= 0) {
+                if (colon >= 0)
+                {
                     fields = new HashSet<>();
 
                     StringTokenizer tokens = new StringTokenizer(entry.substring(colon + 1), ",");
@@ -194,86 +214,107 @@ public class HeapDumpAnalyzerImpl implements HeapDumpAnalyzer {
         return excludeMap;
     }
 
-    private static <V> V $(RV<V> rv) {
-        try {
+    private static <V> V $(RV<V> rv)
+    {
+        try
+        {
             return rv.run();
-        } catch (RuntimeException t) {
+        }
+        catch (RuntimeException t)
+        {
             throw t;
-        } catch (Throwable t) {
+        }
+        catch (Throwable t)
+        {
             throw new AnalysisException(t);
         }
     }
 
-    private static void $(R e) {
-        $(() -> {
+    private static void $(R e)
+    {
+        $(() ->
+        {
             e.run();
             return null;
         });
     }
 
     @Override
-    public void dispose() {
+    public void dispose()
+    {
         cleaner.clean();
     }
 
     @Override
-    public Overview.Details getDetails() {
-        return $(() -> {
-                     SnapshotInfo snapshotInfo = context.snapshot.getSnapshotInfo();
-                     return new Overview.Details(snapshotInfo.getJvmInfo(), snapshotInfo.getIdentifierSize(),
-                                                 snapshotInfo.getCreationDate().getTime(), snapshotInfo.getNumberOfObjects(),
-                                                 snapshotInfo.getNumberOfGCRoots(), snapshotInfo.getNumberOfClasses(),
-                                                 snapshotInfo.getNumberOfClassLoaders(), snapshotInfo.getUsedHeapSize(),
-                                                 false);
-                 }
-                );
+    public Overview.Details getDetails()
+    {
+        return $(() ->
+                {
+                    SnapshotInfo snapshotInfo = context.snapshot.getSnapshotInfo();
+                    return new Overview.Details(snapshotInfo.getJvmInfo(), snapshotInfo.getIdentifierSize(),
+                            snapshotInfo.getCreationDate().getTime(), snapshotInfo.getNumberOfObjects(),
+                            snapshotInfo.getNumberOfGCRoots(), snapshotInfo.getNumberOfClasses(),
+                            snapshotInfo.getNumberOfClassLoaders(), snapshotInfo.getUsedHeapSize(),
+                            false);
+                }
+        );
     }
 
     private <Res extends IResult> Res queryByCommand(AnalysisContext context,
-                                                     String command) throws SnapshotException {
+            String command) throws SnapshotException
+    {
         return queryByCommand(context, command, null, NoOpProgressListener);
     }
 
     @Cacheable
     protected <Res extends IResult> Res queryByCommand(AnalysisContext context,
-                                                       String command,
-                                                       Map<String, Object> args) throws SnapshotException {
+            String command,
+            Map<String, Object> args) throws SnapshotException
+    {
         return queryByCommand(context, command, args, NoOpProgressListener);
     }
 
     private <Res extends IResult> Res queryByCommand(AnalysisContext context, String command,
-                                                     ProgressListener listener) throws SnapshotException {
+            ProgressListener listener) throws SnapshotException
+    {
         return queryByCommand(context, command, null, listener);
     }
 
     @SuppressWarnings("unchecked")
     private <Res extends IResult> Res queryByCommand(AnalysisContext context, String command,
-                                                     Map<String, Object> args,
-                                                     ProgressListener listener) throws SnapshotException {
+            Map<String, Object> args,
+            ProgressListener listener) throws SnapshotException
+    {
         SnapshotQuery query = SnapshotQuery.parse(command, context.snapshot);
-        if (args != null) {
+        if (args != null)
+        {
             args.forEach((k, v) -> $(() -> query.setArgument(k, v)));
         }
-        return (Res) query.execute(new ProgressListenerImpl(listener));
+        return (Res)query.execute(new ProgressListenerImpl(listener));
     }
 
     @Override
-    public Map<String, String> getSystemProperties() {
-        return $(() -> {
+    public Map<String, String> getSystemProperties()
+    {
+        return $(() ->
+        {
             IResultTable result = queryByCommand(context, "system_properties");
             Map<String, String> map = new HashMap<>();
             int count = result.getRowCount();
-            for (int i = 0; i < count; i++) {
+            for (int i = 0; i < count; i++)
+            {
                 Object row = result.getRow(i);
-                map.put((String) result.getColumnValue(row, 1), (String) result.getColumnValue(row, 2));
+                map.put((String)result.getColumnValue(row, 1), (String)result.getColumnValue(row, 2));
             }
             return map;
         });
     }
 
     @Override
-    public JavaObject getObjectInfo(int objectId) {
-        return $(() -> {
+    public JavaObject getObjectInfo(int objectId)
+    {
+        return $(() ->
+        {
             JavaObject ho = new JavaObject();
             IObject object = context.snapshot.getObject(objectId);
             ho.setObjectId(objectId);
@@ -281,7 +322,7 @@ public class HeapDumpAnalyzerImpl implements HeapDumpAnalyzer {
             ho.setShallowSize(object.getUsedHeapSize());
             ho.setRetainedSize(object.getRetainedHeapSize());
             ho.setObjectType(typeOf(object));
-            ho.setGCRoot(context.snapshot.isGCRoot(objectId));
+            ho.setgCRoot(context.snapshot.isGCRoot(objectId));
             ho.setHasOutbound(true);
             ho.setSuffix(Helper.suffix(context.snapshot, objectId));
             return ho;
@@ -289,18 +330,20 @@ public class HeapDumpAnalyzerImpl implements HeapDumpAnalyzer {
     }
 
     @Override
-    public InspectorView getInspectorView(int objectId) {
-        return $(() -> {
+    public InspectorView getInspectorView(int objectId)
+    {
+        return $(() ->
+        {
             InspectorView view = new InspectorView();
 
             ISnapshot snapshot = context.snapshot;
             IObject object = snapshot.getObject(objectId);
 
             view.setObjectAddress(object.getObjectAddress());
-            IClass iClass = object instanceof IClass ? (IClass) object : object.getClazz();
+            IClass iClass = object instanceof IClass cl ? cl : object.getClazz();
             view.setName(iClass.getName());
             view.setObjectType(typeOf(object));
-            view.setGCRoot(snapshot.isGCRoot(objectId));
+            view.setgCRoot(snapshot.isGCRoot(objectId));
 
             // class name and address of the object
             IClass clazz = object.getClazz();
@@ -308,7 +351,8 @@ public class HeapDumpAnalyzerImpl implements HeapDumpAnalyzer {
             view.setClassGCRoot(clazz.getGCRootInfo() != null);
 
             // super class name
-            if (iClass.getSuperClass() != null) {
+            if (iClass.getSuperClass() != null)
+            {
                 view.setSuperClassName(iClass.getSuperClass().getName());
             }
 
@@ -328,25 +372,34 @@ public class HeapDumpAnalyzerImpl implements HeapDumpAnalyzer {
         });
     }
 
-    private String getObjectValue(IObject o) {
+    private String getObjectValue(IObject o)
+    {
         String text = o.getClassSpecificName();
         return text != null ? EscapeUtil.unescapeJava(text) : o.getTechnicalName();
     }
 
-    private PageView<Model.FieldView> buildPageViewOfFields(List<Field> fields, int page, int pageSize) {
-        return PageViewBuilder.build(fields, new PagingRequest(page, pageSize), field -> {
+    private PageView<Model.FieldView> buildPageViewOfFields(List<Field> fields, int page, int pageSize)
+    {
+        return PageViewBuilder.build(fields, new PagingRequest(page, pageSize), field ->
+        {
             Model.FieldView fv = new Model.FieldView();
             fv.fieldType = field.getType();
             fv.name = field.getName();
             Object value = field.getValue();
-            if (value instanceof ObjectReference) {
-                try {
-                    fv.objectId = ((ObjectReference) value).getObjectId();
-                    fv.value = getObjectValue(((ObjectReference) value).getObject());
-                } catch (SnapshotException e) {
+            if (value instanceof ObjectReference objectReference)
+            {
+                try
+                {
+                    fv.objectId = objectReference.getObjectId();
+                    fv.value = getObjectValue(((ObjectReference)value).getObject());
+                }
+                catch (SnapshotException e)
+                {
                     throw new AnalysisException(e);
                 }
-            } else if (value != null) {
+            }
+            else if (value != null)
+            {
                 fv.value = value.toString();
             }
             return fv;
@@ -354,34 +407,41 @@ public class HeapDumpAnalyzerImpl implements HeapDumpAnalyzer {
     }
 
     @Override
-    public PageView<Model.FieldView> getFields(int objectId, int page, int pageSize) {
-        return $(() -> {
+    public PageView<Model.FieldView> getFields(int objectId, int page, int pageSize)
+    {
+        return $(() ->
+        {
             ISnapshot snapshot = context.snapshot;
             IObject object = snapshot.getObject(objectId);
 
             PagingRequest pagingRequest = new PagingRequest(page, pageSize);
-            if (object instanceof IPrimitiveArray) {
+            if (object instanceof IPrimitiveArray pa)
+            {
                 List<Model.FieldView> fvs = new ArrayList<>();
-                IPrimitiveArray pa = (IPrimitiveArray) object;
                 int firstIndex = (pagingRequest.getPage() - 1) * pagingRequest.getPageSize();
                 int lastIndex = Math.min(firstIndex + pagingRequest.getPageSize(), pa.getLength());
-                for (int i = firstIndex; i < lastIndex; i++) {
+                for (int i = firstIndex; i < lastIndex; i++)
+                {
                     fvs.add(new Model.FieldView(pa.getType(), "[" + i + "]", pa.getValueAt(i).toString()));
                 }
                 return new PageView<>(pagingRequest, pa.getLength(), fvs);
-            } else if (object instanceof IObjectArray) {
+            }
+            else if (object instanceof IObjectArray oa)
+            {
                 List<Model.FieldView> fvs = new ArrayList<>();
-                IObjectArray oa = (IObjectArray) object;
                 int firstIndex = (pagingRequest.getPage() - 1) * pagingRequest.getPageSize();
                 int lastIndex = Math.min(firstIndex + pagingRequest.getPageSize(), oa.getLength());
-                for (int i = firstIndex; i < lastIndex; i++) {
+                for (int i = firstIndex; i < lastIndex; i++)
+                {
                     long[] refs = oa.getReferenceArray(i, 1);
                     int refObjectId = 0;
-                    if (refs[0] != 0) {
+                    if (refs[0] != 0)
+                    {
                         refObjectId = snapshot.mapAddressToId(refs[0]);
                     }
                     String value = null;
-                    if (refObjectId != 0) {
+                    if (refObjectId != 0)
+                    {
                         value = getObjectValue(snapshot.getObject(refObjectId));
                     }
                     fvs.add(new Model.FieldView(IObject.Type.OBJECT, "[" + i + "]", value, refObjectId));
@@ -391,18 +451,25 @@ public class HeapDumpAnalyzerImpl implements HeapDumpAnalyzer {
 
             List<Field> fields = new ArrayList<>();
             boolean isClass = object instanceof IClass;
-            IClass clazz = isClass ? (IClass) object : object.getClazz();
-            if (object instanceof IInstance) {
-                fields.addAll(((IInstance) object).getFields());
-            } else if (object instanceof IClass) {
-                do {
+            IClass clazz = isClass ? (IClass)object : object.getClazz();
+            if (object instanceof IInstance iInstance)
+            {
+                fields.addAll(iInstance.getFields());
+            }
+            else if (object instanceof IClass)
+            {
+                do
+                {
                     List<Field> staticFields = clazz.getStaticFields();
-                    for (Field staticField : staticFields) {
-                        if (staticField.getName().startsWith("<")) {
+                    for (Field staticField : staticFields)
+                    {
+                        if (staticField.getName().startsWith("<"))
+                        {
                             fields.add(staticField);
                         }
                     }
-                } while ((clazz = clazz.getSuperClass()) != null);
+                }
+                while ((clazz = clazz.getSuperClass()) != null);
 
             }
             return buildPageViewOfFields(fields, page, pageSize);
@@ -412,34 +479,43 @@ public class HeapDumpAnalyzerImpl implements HeapDumpAnalyzer {
 
     @Override
     public PageView<Model.FieldView> getStaticFields(int objectId, int page,
-                                                     int pageSize) {
-        return $(() -> {
+            int pageSize)
+    {
+        return $(() ->
+        {
             ISnapshot snapshot = context.snapshot;
             IObject object = snapshot.getObject(objectId);
             boolean isClass = object instanceof IClass;
-            IClass clazz = isClass ? (IClass) object : object.getClazz();
+            IClass clazz = isClass ? (IClass)object : object.getClazz();
 
             List<Field> fields = new ArrayList<>();
-            do {
+            do
+            {
                 List<Field> staticFields = clazz.getStaticFields();
-                for (Field staticField : staticFields) {
-                    if (!staticField.getName().startsWith("<")) {
+                for (Field staticField : staticFields)
+                {
+                    if (!staticField.getName().startsWith("<"))
+                    {
                         fields.add(staticField);
                     }
                 }
-            } while (!isClass && (clazz = clazz.getSuperClass()) != null);
+            }
+            while (!isClass && (clazz = clazz.getSuperClass()) != null);
             return buildPageViewOfFields(fields, page, pageSize);
         });
     }
 
     @Override
-    public int mapAddressToId(long address) {
+    public int mapAddressToId(long address)
+    {
         return $(() -> context.snapshot.mapAddressToId(address));
     }
 
     @Override
-    public String getObjectValue(int objectId) {
-        return $(() -> {
+    public String getObjectValue(int objectId)
+    {
+        return $(() ->
+        {
             IObject object = context.snapshot.getObject(objectId);
             String text = object.getClassSpecificName();
             return text != null ? EscapeUtil.unescapeJava(text) : EMPTY_STRING;
@@ -447,8 +523,10 @@ public class HeapDumpAnalyzerImpl implements HeapDumpAnalyzer {
     }
 
     @Override
-    public List<Overview.BigObject> getBiggestObjects() {
-        return $(() -> {
+    public List<Overview.BigObject> getBiggestObjects()
+    {
+        return $(() ->
+        {
             IResultPie result = queryByCommand(context, "pie_biggest_objects");
 
             List<? extends IResultPie.Slice> slices = result.getSlices();
@@ -457,20 +535,24 @@ public class HeapDumpAnalyzerImpl implements HeapDumpAnalyzer {
                     .map(slice -> new Overview.BigObject(slice.getLabel(), slice.getContext() != null
                             ? slice.getContext().getObjectId() :
                             Helper.ILLEGAL_OBJECT_ID,
-                                                         slice.getValue(), slice.getDescription()))
-                    .collect(Collectors.toList());
+                            slice.getValue(), slice.getDescription()))
+                    .toList();
         });
     }
 
-    private ClassLoaderExplorerData queryClassLoader(AnalysisContext context) throws Exception {
+    private ClassLoaderExplorerData queryClassLoader(AnalysisContext context) throws Exception
+    {
         ClassLoaderExplorerData classLoaderExplorerData = context.classLoaderExplorerData.get();
-        if (classLoaderExplorerData != null) {
+        if (classLoaderExplorerData != null)
+        {
             return classLoaderExplorerData;
         }
         //noinspection SynchronizationOnLocalVariableOrMethodParameter
-        synchronized (context) {
+        synchronized (context)
+        {
             classLoaderExplorerData = context.classLoaderExplorerData.get();
-            if (classLoaderExplorerData != null) {
+            if (classLoaderExplorerData != null)
+            {
                 return classLoaderExplorerData;
             }
             IResultTree result = queryByCommand(context, "ClassLoaderExplorerQuery");
@@ -478,18 +560,20 @@ public class HeapDumpAnalyzerImpl implements HeapDumpAnalyzer {
             classLoaderExplorerData.result = result;
 
             Map<Integer, Object> classLoaderIdMap = new HashMap<>();
-            for (Object r : result.getElements()) {
+            for (Object r : result.getElements())
+            {
                 classLoaderIdMap.put(result.getContext(r).getObjectId(), r);
             }
             classLoaderExplorerData.classLoaderIdMap = classLoaderIdMap;
 
             classLoaderExplorerData.items = result.getElements();
-            classLoaderExplorerData.items.sort((Comparator<Object>) (o1, o2) -> Integer
-                    .compare((int) result.getColumnValue(o2, 1), (int) result.getColumnValue(o1, 1)));
+            classLoaderExplorerData.items.sort((Comparator<Object>)(o1, o2) -> Integer
+                    .compare((int)result.getColumnValue(o2, 1), (int)result.getColumnValue(o1, 1)));
 
-            for (Object item : classLoaderExplorerData.items) {
-                classLoaderExplorerData.definedClasses += (int) result.getColumnValue(item, 1);
-                classLoaderExplorerData.numberOfInstances += (int) result.getColumnValue(item, 2);
+            for (Object item : classLoaderExplorerData.items)
+            {
+                classLoaderExplorerData.definedClasses += (int)result.getColumnValue(item, 1);
+                classLoaderExplorerData.numberOfInstances += (int)result.getColumnValue(item, 2);
             }
             context.classLoaderExplorerData = new SoftReference<>(classLoaderExplorerData);
             return classLoaderExplorerData;
@@ -497,8 +581,10 @@ public class HeapDumpAnalyzerImpl implements HeapDumpAnalyzer {
     }
 
     @Override
-    public Model.ClassLoader.Summary getSummaryOfClassLoaders() {
-        return $(() -> {
+    public Model.ClassLoader.Summary getSummaryOfClassLoaders()
+    {
+        return $(() ->
+        {
             ClassLoaderExplorerData data = queryClassLoader(context);
             Model.ClassLoader.Summary summary =
                     new Model.ClassLoader.Summary();
@@ -510,17 +596,20 @@ public class HeapDumpAnalyzerImpl implements HeapDumpAnalyzer {
     }
 
     @Override
-    public PageView<Model.ClassLoader.Item> getClassLoaders(int page, int pageSize) {
-        return $(() -> {
+    public PageView<Model.ClassLoader.Item> getClassLoaders(int page, int pageSize)
+    {
+        return $(() ->
+        {
             ClassLoaderExplorerData data = queryClassLoader(context);
             IResultTree result = data.result;
-            return PageViewBuilder.build(data.items, new PagingRequest(page, pageSize), e -> {
+            return PageViewBuilder.build(data.items, new PagingRequest(page, pageSize), e ->
+            {
                 Model.ClassLoader.Item r = new Model.ClassLoader.Item();
                 r.setObjectId(result.getContext(e).getObjectId());
-                r.setPrefix(((IDecorator) result).prefix(e));
-                r.setLabel((String) result.getColumnValue(e, 0));
-                r.setDefinedClasses((Integer) result.getColumnValue(e, 1));
-                r.setNumberOfInstances((Integer) result.getColumnValue(e, 2));
+                r.setPrefix(((IDecorator)result).prefix(e));
+                r.setLabel((String)result.getColumnValue(e, 0));
+                r.setDefinedClasses((Integer)result.getColumnValue(e, 1));
+                r.setNumberOfInstances((Integer)result.getColumnValue(e, 2));
                 r.setClassLoader(true);
                 // FIXME
                 r.setHasParent(false);
@@ -530,21 +619,25 @@ public class HeapDumpAnalyzerImpl implements HeapDumpAnalyzer {
     }
 
     @Override
-    public PageView<Model.ClassLoader.Item> getChildrenOfClassLoader(int classLoaderId, int page, int pageSize) {
-        return $(() -> {
+    public PageView<Model.ClassLoader.Item> getChildrenOfClassLoader(int classLoaderId, int page, int pageSize)
+    {
+        return $(() ->
+        {
             ClassLoaderExplorerData data = queryClassLoader(context);
             IResultTree result = data.result;
             Object o = data.classLoaderIdMap.get(classLoaderId);
             List<?> children = result.getChildren(o);
-            return PageViewBuilder.build(children, new PagingRequest(page, pageSize), e -> {
+            return PageViewBuilder.build(children, new PagingRequest(page, pageSize), e ->
+            {
                 Model.ClassLoader.Item r = new Model.ClassLoader.Item();
                 r.setObjectId(result.getContext(e).getObjectId());
-                r.setPrefix(((IDecorator) result).prefix(e));
-                r.setLabel((String) result.getColumnValue(e, 0));
-                r.setNumberOfInstances((Integer) result.getColumnValue(e, 2));
-                if (!(e instanceof IClass)) {
+                r.setPrefix(((IDecorator)result).prefix(e));
+                r.setLabel((String)result.getColumnValue(e, 0));
+                r.setNumberOfInstances((Integer)result.getColumnValue(e, 2));
+                if (!(e instanceof IClass))
+                {
                     r.setClassLoader(true);
-                    r.setDefinedClasses((Integer) result.getColumnValue(e, 1));
+                    r.setDefinedClasses((Integer)result.getColumnValue(e, 1));
                     // FIXME
                     r.setHasParent(false);
                 }
@@ -554,20 +647,24 @@ public class HeapDumpAnalyzerImpl implements HeapDumpAnalyzer {
     }
 
     @Override
-    public UnreachableObject.Summary getSummaryOfUnreachableObjects() {
-        return $(() -> {
+    public UnreachableObject.Summary getSummaryOfUnreachableObjects()
+    {
+        return $(() ->
+        {
             UnreachableObjectsHistogram histogram =
-                    (UnreachableObjectsHistogram) context.snapshot.getSnapshotInfo().getProperty(
+                    (UnreachableObjectsHistogram)context.snapshot.getSnapshotInfo().getProperty(
                             UnreachableObjectsHistogram.class.getName());
             UnreachableObject.Summary summary =
                     new UnreachableObject.Summary();
-            if (histogram != null) {
+            if (histogram != null)
+            {
                 summary.setTotalSize(histogram.getRowCount());
                 int objects = 0;
                 long shallowSize = 0;
-                for (Object record : histogram.getRecords()) {
-                    objects += (Integer) histogram.getColumnValue(record, 1);
-                    shallowSize += ((Bytes) histogram.getColumnValue(record, 2)).getValue();
+                for (Object record : histogram.getRecords())
+                {
+                    objects += (Integer)histogram.getColumnValue(record, 1);
+                    shallowSize += ((Bytes)histogram.getColumnValue(record, 2)).getValue();
                 }
 
                 summary.setObjects(objects);
@@ -578,65 +675,77 @@ public class HeapDumpAnalyzerImpl implements HeapDumpAnalyzer {
     }
 
     @Override
-    public PageView<UnreachableObject.Item> getUnreachableObjects(int page, int pageSize) {
-        return $(() -> {
+    public PageView<UnreachableObject.Item> getUnreachableObjects(int page, int pageSize)
+    {
+        return $(() ->
+        {
             UnreachableObjectsHistogram histogram =
-                    (UnreachableObjectsHistogram) context.snapshot.getSnapshotInfo().getProperty(
+                    (UnreachableObjectsHistogram)context.snapshot.getSnapshotInfo().getProperty(
                             UnreachableObjectsHistogram.class.getName());
 
             List<?> total = new ArrayList<>(histogram.getRecords());
-            total.sort((Comparator<Object>) (o1, o2) -> {
-                long v2 = ((Bytes) histogram.getColumnValue(o2, 2)).getValue();
-                long v1 = ((Bytes) histogram.getColumnValue(o1, 2)).getValue();
+            total.sort((Comparator<Object>)(o1, o2) ->
+            {
+                long v2 = ((Bytes)histogram.getColumnValue(o2, 2)).getValue();
+                long v1 = ((Bytes)histogram.getColumnValue(o1, 2)).getValue();
                 return Long.compare(v2, v1);
             });
 
-            return PageViewBuilder.build(total, new PagingRequest(page, pageSize), record -> {
+            return PageViewBuilder.build(total, new PagingRequest(page, pageSize), record ->
+            {
                 UnreachableObject.Item r = new UnreachableObject.Item();
-                r.setClassName((String) histogram.getColumnValue(record, 0));
+                r.setClassName((String)histogram.getColumnValue(record, 0));
                 r.setObjectId(Helper.fetchObjectId(histogram.getContext(record)));
-                r.setObjects((Integer) histogram.getColumnValue(record, 1));
-                r.setShallowSize(((Bytes) histogram.getColumnValue(record, 2)).getValue());
+                r.setObjects((Integer)histogram.getColumnValue(record, 1));
+                r.setShallowSize(((Bytes)histogram.getColumnValue(record, 2)).getValue());
                 return r;
             });
         });
     }
 
     private DirectByteBufferData queryDirectByteBufferData(
-            AnalysisContext context) throws SnapshotException {
+            AnalysisContext context) throws SnapshotException
+    {
         DirectByteBufferData data = context.directByteBufferData.get();
-        if (data != null) {
+        if (data != null)
+        {
             return data;
         }
 
         //noinspection SynchronizationOnLocalVariableOrMethodParameter
-        synchronized (context) {
+        synchronized (context)
+        {
             data = context.directByteBufferData.get();
-            if (data != null) {
+            if (data != null)
+            {
                 return data;
             }
 
             data = new DirectByteBufferData();
             IResult result = queryByCommand(context, "oql", DirectByteBufferData.ARGS);
             IResultTable table;
-            if (result instanceof IResultTable) {
-                table = (IResultTable) result;
+            if (result instanceof IResultTable)
+            {
+                table = (IResultTable)result;
 
                 RefinedResultBuilder builder =
                         new RefinedResultBuilder(new SnapshotQueryContext(context.snapshot), table);
                 builder.setSortOrder(3, Column.SortDirection.DESC);
-                data.resultContext = (RefinedTable) builder.build();
+                data.resultContext = (RefinedTable)builder.build();
                 DirectByteBuffer.Summary summary = new DirectByteBuffer.Summary();
                 summary.totalSize = data.resultContext.getRowCount();
 
-                for (int i = 0; i < summary.totalSize; i++) {
+                for (int i = 0; i < summary.totalSize; i++)
+                {
                     Object row = data.resultContext.getRow(i);
                     summary.position += data.position(row);
                     summary.limit += data.limit(row);
                     summary.capacity += data.capacity(row);
                 }
                 data.summary = summary;
-            } else {
+            }
+            else
+            {
                 data.summary = new DirectByteBuffer.Summary();
             }
             context.directByteBufferData = new SoftReference<>(data);
@@ -645,26 +754,33 @@ public class HeapDumpAnalyzerImpl implements HeapDumpAnalyzer {
     }
 
     @Override
-    public DirectByteBuffer.Summary getSummaryOfDirectByteBuffers() {
+    public DirectByteBuffer.Summary getSummaryOfDirectByteBuffers()
+    {
         return $(() -> queryDirectByteBufferData(context).summary);
     }
 
     @Override
-    public PageView<DirectByteBuffer.Item> getDirectByteBuffers(int page, int pageSize) {
-        return $(() -> {
+    public PageView<DirectByteBuffer.Item> getDirectByteBuffers(int page, int pageSize)
+    {
+        return $(() ->
+        {
             DirectByteBufferData data = queryDirectByteBufferData(context);
             RefinedTable resultContext = data.resultContext;
-            return PageViewBuilder.build(new PageViewBuilder.Callback<Object>() {
+            return PageViewBuilder.build(new PageViewBuilder.Callback<Object>()
+            {
                 @Override
-                public int totalSize() {
+                public int totalSize()
+                {
                     return data.summary.totalSize;
                 }
 
                 @Override
-                public Object get(int index) {
+                public Object get(int index)
+                {
                     return resultContext.getRow(index);
                 }
-            }, new PagingRequest(page, pageSize), row -> {
+            }, new PagingRequest(page, pageSize), row ->
+            {
                 DirectByteBuffer.Item item = new DirectByteBuffer.Item();
                 item.objectId = resultContext.getContext(row).getObjectId();
                 item.label = data.label(row);
@@ -677,12 +793,15 @@ public class HeapDumpAnalyzerImpl implements HeapDumpAnalyzer {
     }
 
     private PageView<JavaObject> queryIOBoundsOfObject(AnalysisContext context, int objectId, int page,
-                                                       int pageSize, boolean outbound) throws SnapshotException {
+            int pageSize, boolean outbound) throws SnapshotException
+    {
         ISnapshot snapshot = context.snapshot;
         int[] ids = outbound ? snapshot.getOutboundReferentIds(objectId) : snapshot.getInboundRefererIds(objectId);
 
-        return PageViewBuilder.build(ids, new PagingRequest(page, pageSize), id -> {
-            try {
+        return PageViewBuilder.build(ids, new PagingRequest(page, pageSize), id ->
+        {
+            try
+            {
                 JavaObject o = new JavaObject();
                 IObject object = context.snapshot.getObject(id);
                 o.setObjectId(id);
@@ -690,69 +809,82 @@ public class HeapDumpAnalyzerImpl implements HeapDumpAnalyzer {
                 o.setShallowSize(object.getUsedHeapSize());
                 o.setRetainedSize(object.getRetainedHeapSize());
                 o.setObjectType(typeOf(object));
-                o.setGCRoot(snapshot.isGCRoot(id));
+                o.setgCRoot(snapshot.isGCRoot(id));
                 o.setHasOutbound(true);
                 o.setHasInbound(true);
                 o.setPrefix(Helper.prefix(snapshot, outbound ? objectId : id, outbound ? id : objectId));
                 o.setSuffix(Helper.suffix(snapshot, id));
                 return o;
-            } catch (Exception e) {
+            }
+            catch (Exception e)
+            {
                 throw new RuntimeException(e);
             }
         });
     }
 
     @Override
-    public PageView<JavaObject> getOutboundOfObject(int objectId, int page, int pageSize) {
+    public PageView<JavaObject> getOutboundOfObject(int objectId, int page, int pageSize)
+    {
         return $(() -> queryIOBoundsOfObject(context, objectId, page, pageSize, true));
     }
 
     @Override
-    public PageView<JavaObject> getInboundOfObject(int objectId, int page, int pageSize) {
+    public PageView<JavaObject> getInboundOfObject(int objectId, int page, int pageSize)
+    {
         return $(() -> queryIOBoundsOfObject(context, objectId, page, pageSize, false));
     }
 
     @Override
-    public List<GCRoot.Item> getGCRoots() {
-        return $(() -> {
+    public List<GCRoot.Item> getGCRoots()
+    {
+        return $(() ->
+        {
             IResultTree tree = queryByCommand(context, "gc_roots");
-            return tree.getElements().stream().map(e -> {
+            return tree.getElements().stream().map(e ->
+            {
                 GCRoot.Item item = new GCRoot.Item();
-                item.setClassName((String) tree.getColumnValue(e, 0));
-                item.setObjects((Integer) tree.getColumnValue(e, 1));
+                item.setClassName((String)tree.getColumnValue(e, 0));
+                item.setObjects((Integer)tree.getColumnValue(e, 1));
                 return item;
             }).collect(Collectors.toList());
         });
     }
 
     @Override
-    public PageView<TheString.Item> getStrings(String pattern, int page, int pageSize) {
-        return $(() -> {
+    public PageView<TheString.Item> getStrings(String pattern, int page, int pageSize)
+    {
+        return $(() ->
+        {
             IResultTree tree = queryByCommand(context, "find_strings java.lang.String -pattern " +
-                                                       (pattern == null || pattern.equals("") ? ".*" : ".*" + pattern + ".*"));
+                    (pattern == null || pattern.equals("") ? ".*" : ".*" + pattern + ".*"));
             List<?> strings = tree.getElements();
-            return PageViewBuilder.build(strings, new PagingRequest(page, pageSize), node -> {
+            return PageViewBuilder.build(strings, new PagingRequest(page, pageSize), node ->
+            {
                 TheString.Item item = new TheString.Item();
                 int id = tree.getContext(node).getObjectId();
                 item.setObjectId(id);
-                item.setLabel((String) tree.getColumnValue(node, 0));
-                item.setShallowSize(((Bytes) tree.getColumnValue(node, 1)).getValue());
-                item.setRetainedSize(((Bytes) tree.getColumnValue(node, 2)).getValue());
+                item.setLabel((String)tree.getColumnValue(node, 0));
+                item.setShallowSize(((Bytes)tree.getColumnValue(node, 1)).getValue());
+                item.setRetainedSize(((Bytes)tree.getColumnValue(node, 2)).getValue());
                 return item;
             });
         });
     }
 
     @Override
-    public PageView<GCRoot.Item> getClassesOfGCRoot(int rootTypeIndex, int page, int pageSize) {
-        return $(() -> {
+    public PageView<GCRoot.Item> getClassesOfGCRoot(int rootTypeIndex, int page, int pageSize)
+    {
+        return $(() ->
+        {
             IResultTree tree = queryByCommand(context, "gc_roots");
             Object root = tree.getElements().get(rootTypeIndex);
             List<?> classes = tree.getChildren(root);
-            return PageViewBuilder.build(classes, new PagingRequest(page, pageSize), clazz -> {
+            return PageViewBuilder.build(classes, new PagingRequest(page, pageSize), clazz ->
+            {
                 GCRoot.Item item = new GCRoot.Item();
-                item.setClassName((String) tree.getColumnValue(clazz, 0));
-                item.setObjects((Integer) tree.getColumnValue(clazz, 1));
+                item.setClassName((String)tree.getColumnValue(clazz, 0));
+                item.setObjects((Integer)tree.getColumnValue(clazz, 1));
                 item.setObjectId(tree.getContext(clazz).getObjectId());
                 return item;
             });
@@ -760,8 +892,10 @@ public class HeapDumpAnalyzerImpl implements HeapDumpAnalyzer {
     }
 
     @Override
-    public PageView<JavaObject> getObjectsOfGCRoot(int rootTypeIndex, int classIndex, int page, int pageSize) {
-        return $(() -> {
+    public PageView<JavaObject> getObjectsOfGCRoot(int rootTypeIndex, int classIndex, int page, int pageSize)
+    {
+        return $(() ->
+        {
             IResultTree tree = queryByCommand(context, "gc_roots");
             Object root = tree.getElements().get(rootTypeIndex);
             List<?> classes = tree.getChildren(root);
@@ -769,90 +903,106 @@ public class HeapDumpAnalyzerImpl implements HeapDumpAnalyzer {
             List<?> objects = tree.getChildren(clazz);
 
             return PageViewBuilder.build(objects, new PagingRequest(page, pageSize),
-                                         o -> $(() -> {
-                                                    JavaObject ho = new JavaObject();
-                                                    int objectId = tree.getContext(o).getObjectId();
-                                                    IObject object = context.snapshot.getObject(objectId);
-                                                    ho.setLabel(object.getDisplayName());
-                                                    ho.setObjectId(objectId);
-                                                    ho.setShallowSize(object.getUsedHeapSize());
-                                                    ho.setRetainedSize(object.getRetainedHeapSize());
-                                                    ho.setObjectType(typeOf(object));
-                                                    ho.setGCRoot(context.snapshot.isGCRoot(objectId));
-                                                    ho.setSuffix(Helper.suffix(object.getGCRootInfo()));
-                                                    ho.setHasOutbound(true);
-                                                    ho.setHasInbound(true);
-                                                    return ho;
-                                                }
-                                               ));
+                    o -> $(() ->
+                            {
+                                JavaObject ho = new JavaObject();
+                                int objectId = tree.getContext(o).getObjectId();
+                                IObject object = context.snapshot.getObject(objectId);
+                                ho.setLabel(object.getDisplayName());
+                                ho.setObjectId(objectId);
+                                ho.setShallowSize(object.getUsedHeapSize());
+                                ho.setRetainedSize(object.getRetainedHeapSize());
+                                ho.setObjectType(typeOf(object));
+                                ho.setgCRoot(context.snapshot.isGCRoot(objectId));
+                                ho.setSuffix(Helper.suffix(object.getGCRootInfo()));
+                                ho.setHasOutbound(true);
+                                ho.setHasInbound(true);
+                                return ho;
+                            }
+                    ));
         });
     }
 
     private IResultTree queryIOBoundClassOfClassReference(AnalysisContext context, Object idOrIds,
-                                                          boolean outbound) throws SnapshotException {
+            boolean outbound) throws SnapshotException
+    {
         Map<String, Object> args = new HashMap<>();
-        if (idOrIds instanceof int[]) {
+        if (idOrIds instanceof int[])
+        {
             args.put("objects", idOrIds);
-        } else {
-            args.put("objects", new int[]{(Integer) idOrIds});
+        }
+        else
+        {
+            args.put("objects", new int[] { (Integer)idOrIds });
         }
         args.put("inbound", !outbound);
         return queryByCommand(context, "class_references", args);
     }
 
-    private ClassReferrer.Item buildClassReferenceItem(IResultTree result, Object row) {
+    private ClassReferrer.Item buildClassReferenceItem(IResultTree result, Object row)
+    {
         ClassReferrer.Item item = new ClassReferrer.Item();
-        item.label = (String) result.getColumnValue(row, 0);
-        item.objects = (Integer) result.getColumnValue(row, 1);
-        item.shallowSize = ((Bytes) result.getColumnValue(row, 2)).getValue();
-        IContextObjectSet context = (IContextObjectSet) result.getContext(row);
+        item.label = (String)result.getColumnValue(row, 0);
+        item.objects = (Integer)result.getColumnValue(row, 1);
+        item.shallowSize = ((Bytes)result.getColumnValue(row, 2)).getValue();
+        IContextObjectSet context = (IContextObjectSet)result.getContext(row);
         item.objectId = context.getObjectId();
         item.objectIds = context.getObjectIds();
-        item.setType(getClassReferrerType(((IIconProvider) result).getIcon(row)));
+        item.setType(getClassReferrerType(((IIconProvider)result).getIcon(row)));
         return item;
     }
 
     @Override
-    public ClassReferrer.Item getOutboundClassOfClassReference(int objectId) {
-        return $(() -> {
+    public ClassReferrer.Item getOutboundClassOfClassReference(int objectId)
+    {
+        return $(() ->
+        {
             IResultTree result = queryIOBoundClassOfClassReference(context, objectId, true);
             return buildClassReferenceItem(result, result.getElements().get(0));
         });
     }
 
     @Override
-    public ClassReferrer.Item getInboundClassOfClassReference(int objectId) {
-        return $(() -> {
+    public ClassReferrer.Item getInboundClassOfClassReference(int objectId)
+    {
+        return $(() ->
+        {
             IResultTree result = queryIOBoundClassOfClassReference(context, objectId, false);
             return buildClassReferenceItem(result, result.getElements().get(0));
         });
     }
 
     @Override
-    public PageView<ClassReferrer.Item> getOutboundsOfClassReference(int[] objectId, int page, int pageSize) {
-        return $(() -> {
+    public PageView<ClassReferrer.Item> getOutboundsOfClassReference(int[] objectId, int page, int pageSize)
+    {
+        return $(() ->
+        {
             IResultTree result = queryIOBoundClassOfClassReference(context, objectId, true);
             return PageViewBuilder
                     .build(result.getChildren(result.getElements().get(0)), new PagingRequest(page, pageSize),
-                           e -> buildClassReferenceItem(result, e));
+                            e -> buildClassReferenceItem(result, e));
         });
     }
 
     @Override
-    public PageView<ClassReferrer.Item> getInboundsOfClassReference(int[] objectId, int page, int pageSize) {
-        return $(() -> {
+    public PageView<ClassReferrer.Item> getInboundsOfClassReference(int[] objectId, int page, int pageSize)
+    {
+        return $(() ->
+        {
             IResultTree result = queryIOBoundClassOfClassReference(context, objectId, false);
             return PageViewBuilder
                     .build(result.getChildren(result.getElements().get(0)), new PagingRequest(page, pageSize),
-                           e -> buildClassReferenceItem(result, e));
+                            e -> buildClassReferenceItem(result, e));
         });
     }
 
     @Override
-    public Comparison.Summary getSummaryOfComparison(Path other) {
-        return $(() -> {
-            ISnapshot baselineSnapshot = ((HeapDumpAnalyzerImpl) PROVIDER.provide(other, Collections.emptyMap(),
-                                                                                  NoOpProgressListener)).context.snapshot;
+    public Comparison.Summary getSummaryOfComparison(Path other)
+    {
+        return $(() ->
+        {
+            ISnapshot baselineSnapshot = ((HeapDumpAnalyzerImpl)PROVIDER.provide(other, Collections.emptyMap(),
+                    NoOpProgressListener)).context.snapshot;
             ISnapshot targetSnapshot = context.snapshot;
             Histogram targetHistogram = targetSnapshot.getHistogram(new ProgressListenerImpl(NoOpProgressListener));
             Histogram baselineHistogram = baselineSnapshot.getHistogram(new ProgressListenerImpl(NoOpProgressListener));
@@ -860,9 +1010,10 @@ public class HeapDumpAnalyzerImpl implements HeapDumpAnalyzer {
 
             long totalObjects = 0;
             long totalShallowHeap = 0;
-            for (Object r : delta.getClassHistogramRecords()) {
-                totalObjects += (long) delta.getColumnValue(r, 1);
-                totalShallowHeap += ((Bytes) delta.getColumnValue(r, 2)).getValue();
+            for (Object r : delta.getClassHistogramRecords())
+            {
+                totalObjects += (long)delta.getColumnValue(r, 1);
+                totalShallowHeap += ((Bytes)delta.getColumnValue(r, 2)).getValue();
             }
 
             Comparison.Summary summary = new Comparison.Summary();
@@ -874,41 +1025,47 @@ public class HeapDumpAnalyzerImpl implements HeapDumpAnalyzer {
     }
 
     @Override
-    public PageView<Comparison.Item> getItemsOfComparison(Path other, int page, int pageSize) {
-        return $(() -> {
-            ISnapshot baselineSnapshot = ((HeapDumpAnalyzerImpl) PROVIDER.provide(other, Collections.emptyMap(),
-                                                                                  NoOpProgressListener)).context.snapshot;
+    public PageView<Comparison.Item> getItemsOfComparison(Path other, int page, int pageSize)
+    {
+        return $(() ->
+        {
+            ISnapshot baselineSnapshot = ((HeapDumpAnalyzerImpl)PROVIDER.provide(other, Collections.emptyMap(),
+                    NoOpProgressListener)).context.snapshot;
             ISnapshot targetSnapshot = context.snapshot;
             Histogram targetHistogram = targetSnapshot.getHistogram(new ProgressListenerImpl(NoOpProgressListener));
             Histogram baselineHistogram = baselineSnapshot.getHistogram(new ProgressListenerImpl(NoOpProgressListener));
             final Histogram delta = targetHistogram.diffWithBaseline(baselineHistogram);
 
             //noinspection
-            ((List<ClassHistogramRecord>) delta.getClassHistogramRecords()).sort((o1, o2) -> Long
-                    .compare(((Bytes) delta.getColumnValue(o2, 2)).getValue(),
-                             ((Bytes) delta.getColumnValue(o1, 2)).getValue()));
+            ((List<ClassHistogramRecord>)delta.getClassHistogramRecords()).sort((o1, o2) -> Long
+                    .compare(((Bytes)delta.getColumnValue(o2, 2)).getValue(),
+                            ((Bytes)delta.getColumnValue(o1, 2)).getValue()));
 
-            return PageViewBuilder.build(delta.getClassHistogramRecords(), new PagingRequest(page, pageSize), r -> {
+            return PageViewBuilder.build(delta.getClassHistogramRecords(), new PagingRequest(page, pageSize), r ->
+            {
                 Comparison.Item record = new Comparison.Item();
-                record.setClassName((String) delta.getColumnValue(r, 0));
-                record.setObjects((Long) delta.getColumnValue(r, 1));
-                record.setShallowSize(((Bytes) delta.getColumnValue(r, 2)).getValue());
+                record.setClassName((String)delta.getColumnValue(r, 0));
+                record.setObjects((Long)delta.getColumnValue(r, 1));
+                record.setShallowSize(((Bytes)delta.getColumnValue(r, 2)).getValue());
                 return record;
             });
         });
     }
 
     private IResultTree queryMultiplePath2GCRootsTreeByClassId(AnalysisContext context, int classId,
-                                                               GCRootPath.Grouping grouping)
-            throws Exception {
-        ClassImpl clazz = (ClassImpl) context.snapshot.getObject(classId);
+            GCRootPath.Grouping grouping)
+            throws Exception
+    {
+        ClassImpl clazz = (ClassImpl)context.snapshot.getObject(classId);
         return queryMultiplePath2GCRootsTreeByObjectIds(context, clazz.getObjectIds(), grouping);
     }
 
     private IResultTree queryMultiplePath2GCRootsTreeByObjectIds(AnalysisContext context, int[] objectIds,
-                                                                 GCRootPath.Grouping grouping)
-            throws Exception {
-        if (grouping != GCRootPath.Grouping.FROM_GC_ROOTS) {
+            GCRootPath.Grouping grouping)
+            throws Exception
+    {
+        if (grouping != GCRootPath.Grouping.FROM_GC_ROOTS)
+        {
             throw new CommonException("Unsupported grouping now");
         }
 
@@ -919,31 +1076,35 @@ public class HeapDumpAnalyzerImpl implements HeapDumpAnalyzer {
     }
 
     private PageView<GCRootPath.MergePathToGCRootsTreeNode> buildMergePathRootsNode(AnalysisContext context,
-                                                                                    IResultTree tree, List<?> elements,
-                                                                                    int page, int pageSize) {
+            IResultTree tree, List<?> elements,
+            int page, int pageSize)
+    {
 
-        return PageViewBuilder.build(elements, new PagingRequest(page, pageSize), element -> $(() -> {
+        return PageViewBuilder.build(elements, new PagingRequest(page, pageSize), element -> $(() ->
+        {
             ISnapshot snapshot = context.snapshot;
             GCRootPath.MergePathToGCRootsTreeNode record = new GCRootPath.MergePathToGCRootsTreeNode();
             int objectId = tree.getContext(element).getObjectId();
             IObject object = snapshot.getObject(objectId);
             record.setObjectId(tree.getContext(element).getObjectId());
             record.setObjectType(typeOf(object));
-            record.setGCRoot(snapshot.isGCRoot(objectId));
+            record.setgCRoot(snapshot.isGCRoot(objectId));
             record.setClassName(tree.getColumnValue(element, 0).toString());
             record.setSuffix(Helper.suffix(object.getGCRootInfo()));
-            record.setRefObjects((int) tree.getColumnValue(element, 1));
-            record.setShallowHeap(((Bytes) tree.getColumnValue(element, 2)).getValue());
-            record.setRefShallowHeap(((Bytes) tree.getColumnValue(element, 3)).getValue());
-            record.setRetainedHeap(((Bytes) tree.getColumnValue(element, 4)).getValue());
+            record.setRefObjects((int)tree.getColumnValue(element, 1));
+            record.setShallowHeap(((Bytes)tree.getColumnValue(element, 2)).getValue());
+            record.setRefShallowHeap(((Bytes)tree.getColumnValue(element, 3)).getValue());
+            record.setRetainedHeap(((Bytes)tree.getColumnValue(element, 4)).getValue());
             return record;
         }));
     }
 
     @Override
     public PageView<GCRootPath.MergePathToGCRootsTreeNode> getRootsOfMergePathToGCRootsByClassId(
-            int classId, GCRootPath.Grouping grouping, int page, int pageSize) {
-        return $(() -> {
+            int classId, GCRootPath.Grouping grouping, int page, int pageSize)
+    {
+        return $(() ->
+        {
             IResultTree tree = queryMultiplePath2GCRootsTreeByClassId(context, classId, grouping);
             return buildMergePathRootsNode(context, tree, tree.getElements(), page, pageSize);
         });
@@ -951,8 +1112,10 @@ public class HeapDumpAnalyzerImpl implements HeapDumpAnalyzer {
 
     @Override
     public PageView<GCRootPath.MergePathToGCRootsTreeNode> getRootsOfMergePathToGCRootsByObjectIds(
-            int[] objectIds, GCRootPath.Grouping grouping, int page, int pageSize) {
-        return $(() -> {
+            int[] objectIds, GCRootPath.Grouping grouping, int page, int pageSize)
+    {
+        return $(() ->
+        {
             IResultTree tree = queryMultiplePath2GCRootsTreeByObjectIds(context, objectIds, grouping);
             return buildMergePathRootsNode(context, tree, tree.getElements(), page, pageSize);
         });
@@ -961,8 +1124,10 @@ public class HeapDumpAnalyzerImpl implements HeapDumpAnalyzer {
     @Override
     public PageView<GCRootPath.MergePathToGCRootsTreeNode> getChildrenOfMergePathToGCRootsByClassId(
             int classId, int[] objectIdPathInGCPathTree, GCRootPath.Grouping grouping,
-            int page, int pageSize) {
-        return $(() -> {
+            int page, int pageSize)
+    {
+        return $(() ->
+        {
             IResultTree tree = queryMultiplePath2GCRootsTreeByClassId(context, classId, grouping);
             Object object = Helper.fetchObjectInResultTree(tree, objectIdPathInGCPathTree);
             List<?> elements = object == null ? Collections.emptyList() : tree.getChildren(object);
@@ -973,8 +1138,10 @@ public class HeapDumpAnalyzerImpl implements HeapDumpAnalyzer {
     @Override
     public PageView<GCRootPath.MergePathToGCRootsTreeNode> getChildrenOfMergePathToGCRootsByObjectIds(
             int[] objectIds, int[] objectIdPathInGCPathTree, GCRootPath.Grouping grouping,
-            int page, int pageSize) {
-        return $(() -> {
+            int page, int pageSize)
+    {
+        return $(() ->
+        {
             IResultTree tree = queryMultiplePath2GCRootsTreeByObjectIds(context, objectIds, grouping);
             Object object = Helper.fetchObjectInResultTree(tree, objectIdPathInGCPathTree);
             List<?> elements = object == null ? Collections.emptyList() : tree.getChildren(object);
@@ -983,8 +1150,10 @@ public class HeapDumpAnalyzerImpl implements HeapDumpAnalyzer {
     }
 
     @Override
-    public GCRootPath.Item getPathToGCRoots(int objectId, int skip, int count) {
-        return $(() -> {
+    public GCRootPath.Item getPathToGCRoots(int objectId, int skip, int count)
+    {
+        return $(() ->
+        {
             ISnapshot snapshot = context.snapshot;
             Map<IClass, Set<String>> excludeMap = convert(context, GCRootPath.EXCLUDES);
             IPathsFromGCRootsComputer computer = snapshot.getPathsFromGCRoots(objectId, excludeMap);
@@ -992,8 +1161,10 @@ public class HeapDumpAnalyzerImpl implements HeapDumpAnalyzer {
             int index = 0;
             int[] current;
             int get = 0;
-            while (get < count && (current = computer.getNextShortestPath()) != null) {
-                if (index < skip) {
+            while (get < count && (current = computer.getNextShortestPath()) != null)
+            {
+                if (index < skip)
+                {
                     index++;
                     continue;
                 }
@@ -1011,29 +1182,33 @@ public class HeapDumpAnalyzerImpl implements HeapDumpAnalyzer {
             origin.setObjectId(objectId);
             origin.setLabel(object.getDisplayName());
             origin.setSuffix(Helper.suffix(snapshot, objectId));
-            origin.setGCRoot(snapshot.isGCRoot(objectId));
+            origin.setgCRoot(snapshot.isGCRoot(objectId));
             origin.setObjectType(typeOf(object));
             origin.setShallowSize(object.getUsedHeapSize());
             origin.setRetainedSize(object.getRetainedHeapSize());
             item.setTree(origin);
 
-            if (paths.size() == 0) {
+            if (paths.size() == 0)
+            {
                 return item;
             }
 
-            for (int[] path : paths) {
+            for (int[] path : paths)
+            {
                 GCRootPath.Node parentNode = origin;
-                for (index = 1; index < path.length; index++) {
+                for (index = 1; index < path.length; index++)
+                {
                     int childId = path[index];
                     GCRootPath.Node childNode = parentNode.getChild(childId);
-                    if (childNode == null) {
+                    if (childNode == null)
+                    {
                         IObject childObj = snapshot.getObject(childId);
                         childNode = new GCRootPath.Node();
                         childNode.setObjectId(childId);
                         childNode.setPrefix(Helper.prefix(snapshot, childId, parentNode.getObjectId()));
                         childNode.setLabel(childObj.getDisplayName());
                         childNode.setSuffix(Helper.suffix(snapshot, childId));
-                        childNode.setGCRoot(snapshot.isGCRoot(childId));
+                        childNode.setgCRoot(snapshot.isGCRoot(childId));
                         childNode.setObjectType(typeOf(childObj));
                         childNode.setShallowSize(childObj.getUsedHeapSize());
                         childNode.setRetainedSize(childObj.getRetainedHeapSize());
@@ -1047,21 +1222,24 @@ public class HeapDumpAnalyzerImpl implements HeapDumpAnalyzer {
     }
 
     private LeakReport.ShortestPath buildPath(ISnapshot snapshot, RefinedTree rst,
-                                              Object row) throws SnapshotException {
+            Object row) throws SnapshotException
+    {
         LeakReport.ShortestPath shortestPath = new LeakReport.ShortestPath();
-        shortestPath.setLabel((String) rst.getColumnValue(row, 0));
-        shortestPath.setShallowSize(((Bytes) rst.getColumnValue(row, 1)).getValue());
-        shortestPath.setRetainedSize(((Bytes) rst.getColumnValue(row, 2)).getValue());
+        shortestPath.setLabel((String)rst.getColumnValue(row, 0));
+        shortestPath.setShallowSize(((Bytes)rst.getColumnValue(row, 1)).getValue());
+        shortestPath.setRetainedSize(((Bytes)rst.getColumnValue(row, 2)).getValue());
         int objectId = rst.getContext(row).getObjectId();
         shortestPath.setObjectId(objectId);
         IObject object = snapshot.getObject(objectId);
-        shortestPath.setGCRoot(snapshot.isGCRoot(objectId));
+        shortestPath.setgCRoot(snapshot.isGCRoot(objectId));
         shortestPath.setObjectType(typeOf(object));
 
-        if (rst.hasChildren(row)) {
+        if (rst.hasChildren(row))
+        {
             List<LeakReport.ShortestPath> children = new ArrayList<>();
             shortestPath.setChildren(children);
-            for (Object c : rst.getChildren(row)) {
+            for (Object c : rst.getChildren(row))
+            {
                 children.add(buildPath(snapshot, rst, c));
             }
         }
@@ -1069,13 +1247,18 @@ public class HeapDumpAnalyzerImpl implements HeapDumpAnalyzer {
     }
 
     @Override
-    public LeakReport getLeakReport() {
-        return $(() -> {
+    public LeakReport getLeakReport()
+    {
+        return $(() ->
+        {
             AnalysisContext.LeakReportData data = context.leakReportData.get();
-            if (data == null) {
-                synchronized (context) {
+            if (data == null)
+            {
+                synchronized (context)
+                {
                     data = context.leakReportData.get();
-                    if (data == null) {
+                    if (data == null)
+                    {
                         IResult result = queryByCommand(context, "leakhunter");
                         data = new AnalysisContext.LeakReportData();
                         data.result = result;
@@ -1085,69 +1268,83 @@ public class HeapDumpAnalyzerImpl implements HeapDumpAnalyzer {
             }
             IResult result = data.result;
             LeakReport report = new LeakReport();
-            if (result instanceof TextResult) {
-                report.setInfo(((TextResult) result).getText());
-            } else if (result instanceof SectionSpec) {
+            if (result instanceof TextResult)
+            {
+                report.setInfo(((TextResult)result).getText());
+            }
+            else if (result instanceof SectionSpec)
+            {
                 report.setUseful(true);
-                SectionSpec sectionSpec = (SectionSpec) result;
+                SectionSpec sectionSpec = (SectionSpec)result;
                 report.setName(sectionSpec.getName());
                 List<Spec> specs = sectionSpec.getChildren();
-                for (int i = 0; i < specs.size(); i++) {
-                    QuerySpec spec = (QuerySpec) specs.get(i);
+                for (int i = 0; i < specs.size(); i++)
+                {
+                    QuerySpec spec = (QuerySpec)specs.get(i);
                     String name = spec.getName();
-                    if (name == null || name.isEmpty()) {
+                    if (name == null || name.isEmpty())
+                    {
                         continue;
                     }
                     // LeakHunterQuery_Overview
-                    if (name.startsWith("Overview")) {
-                        IResultPie irtPie = (IResultPie) spec.getResult();
+                    if (name.startsWith("Overview"))
+                    {
+                        IResultPie irtPie = (IResultPie)spec.getResult();
                         List<? extends IResultPie.Slice> pieSlices = irtPie.getSlices();
 
                         List<LeakReport.Slice> slices = new ArrayList<>();
-                        for (IResultPie.Slice slice : pieSlices) {
+                        for (IResultPie.Slice slice : pieSlices)
+                        {
                             slices.add(
                                     new LeakReport.Slice(slice.getLabel(),
-                                                         Helper.fetchObjectId(slice.getContext()),
-                                                         slice.getValue(), slice.getDescription()));
+                                            Helper.fetchObjectId(slice.getContext()),
+                                            slice.getValue(), slice.getDescription()));
                         }
                         report.setSlices(slices);
                     }
                     // LeakHunterQuery_ProblemSuspect
                     // LeakHunterQuery_Hint
-                    else if (name.startsWith("Problem Suspect") || name.startsWith("Hint")) {
+                    else if (name.startsWith("Problem Suspect") || name.startsWith("Hint"))
+                    {
                         LeakReport.Record suspect = new LeakReport.Record();
                         suspect.setIndex(i);
                         suspect.setName(name);
-                        CompositeResult cr = (CompositeResult) spec.getResult();
+                        CompositeResult cr = (CompositeResult)spec.getResult();
                         List<CompositeResult.Entry> entries = cr.getResultEntries();
-                        for (CompositeResult.Entry entry : entries) {
+                        for (CompositeResult.Entry entry : entries)
+                        {
                             String entryName = entry.getName();
-                            if (entryName == null || entryName.isEmpty()) {
+                            if (entryName == null || entryName.isEmpty())
+                            {
                                 IResult r = entry.getResult();
                                 if (r instanceof QuerySpec &&
-                                    // LeakHunterQuery_ShortestPaths
-                                    ((QuerySpec) r).getName().equals("Shortest Paths To the Accumulation Point")) {
-                                    IResultTree tree = (IResultTree) ((QuerySpec) r).getResult();
+                                        // LeakHunterQuery_ShortestPaths
+                                        ((QuerySpec)r).getName().equals("Shortest Paths To the Accumulation Point"))
+                                {
+                                    IResultTree tree = (IResultTree)((QuerySpec)r).getResult();
                                     RefinedResultBuilder builder = new RefinedResultBuilder(
                                             new SnapshotQueryContext(context.snapshot), tree);
-                                    RefinedTree rst = (RefinedTree) builder.build();
+                                    RefinedTree rst = (RefinedTree)builder.build();
                                     List<?> elements = rst.getElements();
                                     List<LeakReport.ShortestPath> paths = new ArrayList<>();
                                     suspect.setPaths(paths);
-                                    for (Object row : elements) {
+                                    for (Object row : elements)
+                                    {
                                         paths.add(buildPath(context.snapshot, rst, row));
                                     }
                                 }
                             }
                             // LeakHunterQuery_Description
                             // LeakHunterQuery_Overview
-                            else if ((entryName.startsWith("Description") || entryName.startsWith("Overview"))) {
-                                TextResult desText = (TextResult) entry.getResult();
+                            else if ((entryName.startsWith("Description") || entryName.startsWith("Overview")))
+                            {
+                                TextResult desText = (TextResult)entry.getResult();
                                 suspect.setDesc(desText.getText());
                             }
                         }
                         List<LeakReport.Record> records = report.getRecords();
-                        if (records == null) {
+                        if (records == null)
+                        {
                             report.setRecords(records = new ArrayList<>());
                         }
                         records.add(suspect);
@@ -1159,8 +1356,10 @@ public class HeapDumpAnalyzerImpl implements HeapDumpAnalyzer {
     }
 
     @Cacheable
-    protected IResult getOQLResult(AnalysisContext context, String oql) {
-        return $(() -> {
+    protected IResult getOQLResult(AnalysisContext context, String oql)
+    {
+        return $(() ->
+        {
             Map<String, Object> args = new HashMap<>();
             args.put("queryString", oql);
             return queryByCommand(context, "oql", args);
@@ -1168,69 +1367,89 @@ public class HeapDumpAnalyzerImpl implements HeapDumpAnalyzer {
     }
 
     @Override
-    public CalciteSQLResult getCalciteSQLResult(String sql, String sortBy, boolean ascendingOrder, int page, int pageSize) {
-        return $(() -> {
+    public CalciteSQLResult getCalciteSQLResult(String sql, String sortBy, boolean ascendingOrder, int page,
+            int pageSize)
+    {
+        return $(() ->
+        {
             Map<String, Object> args = new HashMap<>();
             args.put("sql", sql);
             IResult result;
-            try {
+            try
+            {
                 result = queryByCommand(context, "calcite", args);
-            } catch (Throwable t) {
+            }
+            catch (Throwable t)
+            {
                 return new CalciteSQLResult.TextResult(t.getMessage());
             }
-            if (result instanceof IResultTree) {
+            if (result instanceof IResultTree)
+            {
                 return new CalciteSQLResult.TreeResult(
                         PageViewBuilder.build(
-                                ((IResultTree) result).getElements(),
+                                ((IResultTree)result).getElements(),
                                 new PagingRequest(page, pageSize),
-                                e -> $(() -> context.snapshot.getObject(((IResultTree) result).getContext(e).getObjectId())),
-                                o -> $(() -> {
+                                e -> $(() -> context.snapshot.getObject(
+                                        ((IResultTree)result).getContext(e).getObjectId())),
+                                o -> $(() ->
+                                {
                                     JavaObject jo = new JavaObject();
                                     jo.setObjectId(o.getObjectId());
                                     jo.setLabel(o.getDisplayName());
                                     jo.setSuffix(Helper.suffix(o.getGCRootInfo()));
                                     jo.setShallowSize(o.getUsedHeapSize());
                                     jo.setRetainedSize(o.getRetainedHeapSize());
-                                    jo.setGCRoot(context.snapshot.isGCRoot(o.getObjectId()));
+                                    jo.setgCRoot(context.snapshot.isGCRoot(o.getObjectId()));
                                     jo.setObjectType(typeOf(o));
                                     jo.setHasOutbound(true);
                                     return jo;
                                 }), IObjectSortHelper.sortBy(sortBy, ascendingOrder)));
-            } else if (result instanceof IResultTable) {
-                IResultTable table = (IResultTable) result;
+            }
+            else if (result instanceof IResultTable)
+            {
+                IResultTable table = (IResultTable)result;
                 Column[] columns = table.getColumns();
                 List<String> cs = Arrays.stream(columns).map(Column::getLabel).collect(Collectors.toList());
                 PageView<CalciteSQLResult.TableResult.Entry> pv =
-                        PageViewBuilder.build(new PageViewBuilder.Callback<Object>() {
+                        PageViewBuilder.build(new PageViewBuilder.Callback<Object>()
+                        {
                             @Override
-                            public int totalSize() {
+                            public int totalSize()
+                            {
                                 return table.getRowCount();
                             }
 
                             @Override
-                            public Object get(int index) {
+                            public Object get(int index)
+                            {
                                 return table.getRow(index);
                             }
-                        }, new PagingRequest(page, pageSize), o -> {
+                        }, new PagingRequest(page, pageSize), o ->
+                        {
                             List<Object> l = new ArrayList<>();
-                            for (int i = 0; i < columns.length; i++) {
+                            for (int i = 0; i < columns.length; i++)
+                            {
                                 Object columnValue = table.getColumnValue(o, i);
 
                                 l.add(columnValue != null ? EscapeUtil.unescapeJava(columnValue.toString()) : null);
                             }
                             IContextObject co = table.getContext(o);
-                            return new CalciteSQLResult.TableResult.Entry(co != null ? co.getObjectId() : Helper.ILLEGAL_OBJECT_ID,
-                                                                          l);
+                            return new CalciteSQLResult.TableResult.Entry(
+                                    co != null ? co.getObjectId() : Helper.ILLEGAL_OBJECT_ID,
+                                    l);
                         });
                 return new CalciteSQLResult.TableResult(cs, pv);
-            } else if (result instanceof TextResult) {
-                return new CalciteSQLResult.TextResult(((TextResult) result).getText());
+            }
+            else if (result instanceof TextResult)
+            {
+                return new CalciteSQLResult.TextResult(((TextResult)result).getText());
             }
             return new CalciteSQLResult.TextResult("Unsupported Calcite SQL result type");
         });
     }
 
-    static class IObjectSortHelper {
+    static class IObjectSortHelper
+    {
 
         static Map<String, Comparator<IObject>> sortTable = new SortTableGenerator<IObject>()
                 .add("id", IObject::getObjectId)
@@ -1239,62 +1458,80 @@ public class HeapDumpAnalyzerImpl implements HeapDumpAnalyzer {
                 .add("label", IObject::getDisplayName)
                 .build();
 
-        public static Comparator<IObject> sortBy(String field, boolean ascendingOrder) {
+        public static Comparator<IObject> sortBy(String field, boolean ascendingOrder)
+        {
             return ascendingOrder ? sortTable.get(field) : sortTable.get(field).reversed();
         }
     }
 
-    public OQLResult getOQLResult(String oql, String sortBy, boolean ascendingOrder, int page, int pageSize) {
+    public OQLResult getOQLResult(String oql, String sortBy, boolean ascendingOrder, int page, int pageSize)
+    {
         IResult result = getOQLResult(context, oql);
-        return $(() -> {
-            if (result instanceof IResultTree) {
+        return $(() ->
+        {
+            if (result instanceof IResultTree)
+            {
                 return new OQLResult.TreeResult(
                         PageViewBuilder.build(
-                                ((IResultTree) result).getElements(),
+                                ((IResultTree)result).getElements(),
                                 new PagingRequest(page, pageSize),
-                                e -> $(() -> context.snapshot.getObject(((IResultTree) result).getContext(e).getObjectId())),
-                                o -> $(() -> {
+                                e -> $(() -> context.snapshot.getObject(
+                                        ((IResultTree)result).getContext(e).getObjectId())),
+                                o -> $(() ->
+                                {
                                     JavaObject jo = new JavaObject();
                                     jo.setObjectId(o.getObjectId());
                                     jo.setLabel(o.getDisplayName());
                                     jo.setSuffix(Helper.suffix(o.getGCRootInfo()));
                                     jo.setShallowSize(o.getUsedHeapSize());
                                     jo.setRetainedSize(o.getRetainedHeapSize());
-                                    jo.setGCRoot(context.snapshot.isGCRoot(o.getObjectId()));
+                                    jo.setgCRoot(context.snapshot.isGCRoot(o.getObjectId()));
                                     jo.setObjectType(typeOf(o));
                                     jo.setHasOutbound(true);
                                     return jo;
                                 }), IObjectSortHelper.sortBy(sortBy, ascendingOrder)));
-            } else if (result instanceof IResultTable) {
-                IResultTable table = (IResultTable) result;
+            }
+            else if (result instanceof IResultTable)
+            {
+                IResultTable table = (IResultTable)result;
                 Column[] columns = table.getColumns();
                 List<String> cs = Arrays.stream(columns).map(Column::getLabel).collect(Collectors.toList());
                 PageView<OQLResult.TableResult.Entry> pv =
-                        PageViewBuilder.build(new PageViewBuilder.Callback<Object>() {
+                        PageViewBuilder.build(new PageViewBuilder.Callback<Object>()
+                        {
                             @Override
-                            public int totalSize() {
+                            public int totalSize()
+                            {
                                 return table.getRowCount();
                             }
 
                             @Override
-                            public Object get(int index) {
+                            public Object get(int index)
+                            {
                                 return table.getRow(index);
                             }
-                        }, new PagingRequest(page, pageSize), o -> {
+                        }, new PagingRequest(page, pageSize), o ->
+                        {
                             List<Object> l = new ArrayList<>();
-                            for (int i = 0; i < columns.length; i++) {
+                            for (int i = 0; i < columns.length; i++)
+                            {
                                 Object columnValue = table.getColumnValue(o, i);
 
                                 l.add(columnValue != null ? columnValue.toString() : null);
                             }
                             IContextObject co = table.getContext(o);
-                            return new OQLResult.TableResult.Entry(co != null ? co.getObjectId() : Helper.ILLEGAL_OBJECT_ID,
-                                                                   l);
+                            return new OQLResult.TableResult.Entry(
+                                    co != null ? co.getObjectId() : Helper.ILLEGAL_OBJECT_ID,
+                                    l);
                         });
                 return new OQLResult.TableResult(cs, pv);
-            } else if (result instanceof TextResult) {
-                return new OQLResult.TextResult(((TextResult) result).getText());
-            } else {
+            }
+            else if (result instanceof TextResult)
+            {
+                return new OQLResult.TextResult(((TextResult)result).getText());
+            }
+            else
+            {
                 throw new AnalysisException("Unsupported OQL result type");
             }
         });
@@ -1302,13 +1539,15 @@ public class HeapDumpAnalyzerImpl implements HeapDumpAnalyzer {
 
     @Override
     public Model.Thread.Summary getSummaryOfThreads(String searchText,
-                                                    SearchType searchType) {
-        return $(() -> {
+            SearchType searchType)
+    {
+        return $(() ->
+        {
             IResultTree result = queryByCommand(context, "thread_overview");
             List<Model.Thread.Item> items = result.getElements().stream()
-                                                  .map(row -> new VirtualThreadItem(result, row))
-                                                  .filter(SearchPredicate.createPredicate(searchText, searchType))
-                                                  .collect(Collectors.toList());
+                    .map(row -> new VirtualThreadItem(result, row))
+                    .filter(SearchPredicate.createPredicate(searchText, searchType))
+                    .collect(Collectors.toList());
             Model.Thread.Summary summary = new Model.Thread.Summary();
             summary.totalSize = items.size();
             summary.shallowHeap = items.stream().mapToLong(Model.Thread.Item::getShallowSize).sum();
@@ -1320,47 +1559,52 @@ public class HeapDumpAnalyzerImpl implements HeapDumpAnalyzer {
 
     @Override
     public PageView<Model.Thread.Item> getThreads(String sortBy, boolean ascendingOrder, String searchText,
-                                                  SearchType searchType, int page, int pageSize) {
+            SearchType searchType, int page, int pageSize)
+    {
         PagingRequest pagingRequest = new PagingRequest(page, pageSize);
-        return $(() -> {
+        return $(() ->
+        {
             IResultTree result = queryByCommand(context, "thread_overview");
             final AtomicInteger afterFilterCount = new AtomicInteger(0);
             List<Model.Thread.Item> items = result.getElements().stream()
-                                                  .map(row -> new VirtualThreadItem(result, row))
-                                                  .filter(SearchPredicate.createPredicate(searchText, searchType))
-                                                  .peek(filtered -> afterFilterCount.incrementAndGet())
-                                                  .sorted(Model.Thread.Item.sortBy(sortBy, ascendingOrder))
-                                                  .skip(pagingRequest.from())
-                                                  .limit(pagingRequest.getPageSize())
-                                                  .collect(Collectors.toList());
+                    .map(row -> new VirtualThreadItem(result, row))
+                    .filter(SearchPredicate.createPredicate(searchText, searchType))
+                    .peek(filtered -> afterFilterCount.incrementAndGet())
+                    .sorted(Model.Thread.Item.sortBy(sortBy, ascendingOrder))
+                    .skip(pagingRequest.from())
+                    .limit(pagingRequest.getPageSize())
+                    .collect(Collectors.toList());
             return new PageView<>(pagingRequest, afterFilterCount.get(), items);
         });
     }
 
     @Override
-    public List<Model.Thread.StackFrame> getStackTrace(int objectId) {
-        return $(() -> {
+    public List<Model.Thread.StackFrame> getStackTrace(int objectId)
+    {
+        return $(() ->
+        {
             Map<String, Object> args = new HashMap<>();
-            args.put("objects", Helper.buildHeapObjectArgument(new int[]{objectId}));
+            args.put("objects", Helper.buildHeapObjectArgument(new int[] { objectId }));
             IResultTree result = queryByCommand(context, "thread_overview", args);
 
             List<?> elements = result.getElements();
 
             boolean includesMaxLocalRetained = (result.getColumns().length == 10);
 
-            if (result.hasChildren(elements.get(0))) {
+            if (result.hasChildren(elements.get(0)))
+            {
 
                 List<?> frames = result.getChildren(elements.get(0));
 
                 List<Model.Thread.StackFrame> res = frames.stream().map(
-                        frame -> new Model.Thread.StackFrame(((String) result.getColumnValue(frame, 0)),
-                                                             result.hasChildren(frame),
-                                                             (includesMaxLocalRetained && result.getColumnValue(frame, 4) != null)
-                                                                     ? ((Bytes) result.getColumnValue(frame, 4)).getValue()
-                                                                     : 0L
+                        frame -> new Model.Thread.StackFrame(((String)result.getColumnValue(frame, 0)),
+                                result.hasChildren(frame),
+                                (includesMaxLocalRetained && result.getColumnValue(frame, 4) != null)
+                                        ? ((Bytes)result.getColumnValue(frame, 4)).getValue()
+                                        : 0L
                         )).collect(Collectors.toList());
                 res.stream().filter(t -> !t.getStack().contains("Native Method")).findFirst()
-                   .ifPresent(sf -> sf.setFirstNonNativeFrame(true));
+                        .ifPresent(sf -> sf.setFirstNonNativeFrame(true));
                 return res;
             }
             return Collections.emptyList();
@@ -1368,39 +1612,49 @@ public class HeapDumpAnalyzerImpl implements HeapDumpAnalyzer {
     }
 
     @Override
-    public List<Model.Thread.LocalVariable> getLocalVariables(int objectId, int depth, boolean firstNonNativeFrame) {
-        return $(() -> {
+    public List<Model.Thread.LocalVariable> getLocalVariables(int objectId, int depth, boolean firstNonNativeFrame)
+    {
+        return $(() ->
+        {
             Map<String, Object> args = new HashMap<>();
-            args.put("objects", Helper.buildHeapObjectArgument(new int[]{objectId}));
+            args.put("objects", Helper.buildHeapObjectArgument(new int[] { objectId }));
             IResultTree result = queryByCommand(context, "thread_overview", args);
 
             List<?> elements = result.getElements();
-            if (result.hasChildren(elements.get(0))) {
+            if (result.hasChildren(elements.get(0)))
+            {
                 List<?> frames = result.getChildren(elements.get(0));
                 Object frame = frames.get(depth - 1);
-                if (result.hasChildren(frame)) {
+                if (result.hasChildren(frame))
+                {
                     List<?> locals = result.getChildren(frame);
-                    return locals.stream().map(local -> {
+                    return locals.stream().map(local ->
+                    {
                         int id = result.getContext(local).getObjectId();
                         Model.Thread.LocalVariable var = new Model.Thread.LocalVariable();
                         var.setObjectId(id);
-                        try {
+                        try
+                        {
                             IObject object = context.snapshot.getObject(id);
                             var.setLabel(object.getDisplayName());
                             var.setShallowSize(object.getUsedHeapSize());
                             var.setRetainedSize(object.getRetainedHeapSize());
                             var.setObjectType(typeOf(object));
-                            var.setGCRoot(context.snapshot.isGCRoot(id));
+                            var.setgCRoot(context.snapshot.isGCRoot(id));
                             var.setHasOutbound(result.hasChildren(var));
                             // ThreadStackQuery_Label_Local
                             var.setPrefix("<local>");
-                            if (firstNonNativeFrame) {
+                            if (firstNonNativeFrame)
+                            {
                                 GCRootInfo[] gcRootInfos = object.getGCRootInfo();
-                                if (gcRootInfos != null) {
-                                    for (GCRootInfo gcRootInfo : gcRootInfos) {
+                                if (gcRootInfos != null)
+                                {
+                                    for (GCRootInfo gcRootInfo : gcRootInfos)
+                                    {
                                         if (gcRootInfo.getContextId() != 0 &&
-                                            (gcRootInfo.getType() & GCRootInfo.Type.BUSY_MONITOR) != 0 &&
-                                            gcRootInfo.getContextId() == objectId) {
+                                                (gcRootInfo.getType() & GCRootInfo.Type.BUSY_MONITOR) != 0 &&
+                                                gcRootInfo.getContextId() == objectId)
+                                        {
                                             // ThreadStackQuery_Label_Local_Blocked_On
                                             var.setPrefix("<local, blocked on>");
                                         }
@@ -1409,7 +1663,9 @@ public class HeapDumpAnalyzerImpl implements HeapDumpAnalyzer {
                             }
                             var.setSuffix(Helper.suffix(context.snapshot, id));
                             return var;
-                        } catch (SnapshotException e) {
+                        }
+                        catch (SnapshotException e)
+                        {
                             throw new CommonException(e);
                         }
                     }).collect(Collectors.toList());
@@ -1421,48 +1677,57 @@ public class HeapDumpAnalyzerImpl implements HeapDumpAnalyzer {
 
     @Override
     public PageView<DuplicatedClass.ClassItem> getDuplicatedClasses(String searchText,
-                                                                    SearchType searchType, int page, int pageSize) {
-        return $(() -> {
+            SearchType searchType, int page, int pageSize)
+    {
+        return $(() ->
+        {
             IResultTree result = queryByCommand(context, "duplicate_classes");
             List<?> classes = result.getElements();
-            classes.sort((o1, o2) -> ((List<?>) o2).size() - ((List<?>) o1).size());
+            classes.sort((o1, o2) -> ((List<?>)o2).size() - ((List<?>)o1).size());
             PageViewBuilder<?, DuplicatedClass.ClassItem> builder = PageViewBuilder.fromList(classes);
             AtomicInteger index = new AtomicInteger(0);
             return builder.paging(new PagingRequest(page, pageSize))
-                          .map(r -> {
-                              DuplicatedClass.ClassItem item = new DuplicatedClass.ClassItem();
-                              item.setLabel((String) result.getColumnValue(r, 0));
-                              item.setCount((Integer) result.getColumnValue(r, 1));
-                              item.setIndex(index.getAndIncrement());
-                              return item;
-                          })
-                          .filter(SearchPredicate.createPredicate(searchText, searchType))
-                          .done();
+                    .map(r ->
+                    {
+                        DuplicatedClass.ClassItem item = new DuplicatedClass.ClassItem();
+                        item.setLabel((String)result.getColumnValue(r, 0));
+                        item.setCount((Integer)result.getColumnValue(r, 1));
+                        item.setIndex(index.getAndIncrement());
+                        return item;
+                    })
+                    .filter(SearchPredicate.createPredicate(searchText, searchType))
+                    .done();
         });
     }
 
     @Override
     public PageView<DuplicatedClass.ClassLoaderItem> getClassloadersOfDuplicatedClass(int index, int page,
-                                                                                      int pageSize) {
-        return $(() -> {
+            int pageSize)
+    {
+        return $(() ->
+        {
             IResultTree result = queryByCommand(context, "duplicate_classes");
             List<?> classes = result.getElements();
-            classes.sort((o1, o2) -> ((List<?>) o2).size() - ((List<?>) o1).size());
-            List<?> classLoaders = (List<?>) classes.get(index);
-            return PageViewBuilder.build(classLoaders, new PagingRequest(page, pageSize), r -> {
+            classes.sort((o1, o2) -> ((List<?>)o2).size() - ((List<?>)o1).size());
+            List<?> classLoaders = (List<?>)classes.get(index);
+            return PageViewBuilder.build(classLoaders, new PagingRequest(page, pageSize), r ->
+            {
                 DuplicatedClass.ClassLoaderItem item = new DuplicatedClass.ClassLoaderItem();
-                item.setLabel((String) result.getColumnValue(r, 0));
-                item.setDefinedClassesCount((Integer) result.getColumnValue(r, 2));
-                item.setInstantiatedObjectsCount((Integer) result.getColumnValue(r, 3));
+                item.setLabel((String)result.getColumnValue(r, 0));
+                item.setDefinedClassesCount((Integer)result.getColumnValue(r, 2));
+                item.setInstantiatedObjectsCount((Integer)result.getColumnValue(r, 3));
                 GCRootInfo[] roots;
-                try {
-                    roots = ((IClass) r).getGCRootInfo();
-                } catch (SnapshotException e) {
+                try
+                {
+                    roots = ((IClass)r).getGCRootInfo();
+                }
+                catch (SnapshotException e)
+                {
                     throw new CommonException(e);
                 }
-                int id = ((IClass) r).getClassLoaderId();
+                int id = ((IClass)r).getClassLoaderId();
                 item.setObjectId(id);
-                item.setGCRoot(context.snapshot.isGCRoot(id));
+                item.setgCRoot(context.snapshot.isGCRoot(id));
                 item.setSuffix(roots != null ? GCRootInfo.getTypeSetAsString(roots) : null);
                 return item;
             });
@@ -1471,126 +1736,140 @@ public class HeapDumpAnalyzerImpl implements HeapDumpAnalyzer {
 
     @Override
     public PageView<Model.Histogram.Item> getHistogram(Model.Histogram.Grouping groupingBy,
-                                                       int[] ids, String sortBy, boolean ascendingOrder,
-                                                       String searchText, SearchType searchType,
-                                                       int page, int pageSize) {
-        return $(() -> {
+            int[] ids, String sortBy, boolean ascendingOrder,
+            String searchText, SearchType searchType,
+            int page, int pageSize)
+    {
+        return $(() ->
+        {
             Map<String, Object> args = new HashMap<>();
-            if (ids != null) {
+            if (ids != null)
+            {
                 args.put("objects", Helper.buildHeapObjectArgument(ids));
             }
             IResult result = queryByCommand(context, "histogram -groupBy " + groupingBy.name(), args);
-            switch (groupingBy) {
-                case BY_CLASS:
-                    Histogram h = (Histogram) result;
-                    List<ClassHistogramRecord> records =
-                            (List<ClassHistogramRecord>) h.getClassHistogramRecords();
-                    return PageViewBuilder.<ClassHistogramRecord, Model.Histogram.Item>fromList(records)
-                                          .beforeMap(record -> $(() -> record
-                                                  .calculateRetainedSize(context.snapshot, true, true, Helper.VOID_LISTENER)))
-                                          .paging(new PagingRequest(page, pageSize))
-                                          .map(record -> new Model.Histogram.Item(record.getClassId(), record.getLabel(),
-                                                                                  Model.Histogram.ItemType.CLASS,
-                                                                                  record.getNumberOfObjects(),
-                                                                                  record.getUsedHeapSize(),
-                                                                                  record.getRetainedHeapSize()))
-                                          .sort(Model.Histogram.Item.sortBy(sortBy, ascendingOrder))
-                                          .filter(createPredicate(searchText, searchType))
-                                          .done();
-                case BY_CLASSLOADER:
-                    Histogram.ClassLoaderTree ct = (Histogram.ClassLoaderTree) result;
-                    @SuppressWarnings("unchecked")
-                    PageViewBuilder<? extends XClassLoaderHistogramRecord, Model.Histogram.Item> builder =
-                            PageViewBuilder.fromList((List<? extends XClassLoaderHistogramRecord>) ct.getElements());
-                    return builder
-                            .beforeMap(record -> $(() -> record.calculateRetainedSize(context.snapshot, true, true,
-                                                                                      Helper.VOID_LISTENER)))
-                            .paging(new PagingRequest(page, pageSize))
-                            .map(record ->
-                                         new Model.Histogram.Item(record.getClassLoaderId(), record.getLabel(),
-                                                                  Model.Histogram.ItemType.CLASS_LOADER,
-                                                                  record.getNumberOfObjects(),
-                                                                  record.getUsedHeapSize(),
-                                                                  record.getRetainedHeapSize())
-                                )
-                            .sort(Model.Histogram.Item.sortBy(sortBy, ascendingOrder))
-                            .filter(createPredicate(searchText, searchType))
-                            .done();
-                case BY_SUPERCLASS:
-                    Histogram.SuperclassTree st = (Histogram.SuperclassTree) result;
-                    return PageViewBuilder.<HistogramRecord, Model.Histogram.Item>fromList(
-                                                  (List<HistogramRecord>) st.getElements())
-                                          .paging(new PagingRequest(page, pageSize))
-                                          .map(e -> {
-                                              Model.Histogram.Item item = new Model.Histogram.Item();
-                                              int objectId = st.getContext(e).getObjectId();
-                                              item.setType(Model.Histogram.ItemType.SUPER_CLASS);
-                                              item.setObjectId(objectId);
-                                              item.setLabel((String) st.getColumnValue(e, 0));
-                                              item.setNumberOfObjects((Long) st.getColumnValue(e, 1));
-                                              item.setShallowSize(((Bytes) st.getColumnValue(e, 2)).getValue());
-                                              return item;
-                                          })
-                                          .sort(Model.Histogram.Item.sortBy(sortBy, ascendingOrder))
-                                          .filter(createPredicate(searchText, searchType))
-                                          .done();
-                case BY_PACKAGE:
-                    Histogram.PackageTree pt = (Histogram.PackageTree) result;
-                    return
-                            PageViewBuilder.<HistogramRecord, Model.Histogram.Item>fromList(
-                                                   (List<HistogramRecord>) pt.getElements())
-                                           .paging(new PagingRequest(page, pageSize))
-                                           .map(e -> {
+            switch (groupingBy)
+            {
+            case BY_CLASS:
+                Histogram h = (Histogram)result;
+                List<ClassHistogramRecord> records =
+                        (List<ClassHistogramRecord>)h.getClassHistogramRecords();
+                return PageViewBuilder.<ClassHistogramRecord, Model.Histogram.Item> fromList(records)
+                        .beforeMap(record -> $(() -> record
+                                .calculateRetainedSize(context.snapshot, true, true, Helper.VOID_LISTENER)))
+                        .paging(new PagingRequest(page, pageSize))
+                        .map(record -> new Model.Histogram.Item(record.getClassId(), record.getLabel(),
+                                Model.Histogram.ItemType.CLASS,
+                                record.getNumberOfObjects(),
+                                record.getUsedHeapSize(),
+                                record.getRetainedHeapSize()))
+                        .sort(Model.Histogram.Item.sortBy(sortBy, ascendingOrder))
+                        .filter(createPredicate(searchText, searchType))
+                        .done();
+            case BY_CLASSLOADER:
+                Histogram.ClassLoaderTree ct = (Histogram.ClassLoaderTree)result;
+                @SuppressWarnings("unchecked")
+                PageViewBuilder<? extends XClassLoaderHistogramRecord, Model.Histogram.Item> builder =
+                        PageViewBuilder.fromList((List<? extends XClassLoaderHistogramRecord>)ct.getElements());
+                return builder
+                        .beforeMap(record -> $(() -> record.calculateRetainedSize(context.snapshot, true, true,
+                                Helper.VOID_LISTENER)))
+                        .paging(new PagingRequest(page, pageSize))
+                        .map(record ->
+                                new Model.Histogram.Item(record.getClassLoaderId(), record.getLabel(),
+                                        Model.Histogram.ItemType.CLASS_LOADER,
+                                        record.getNumberOfObjects(),
+                                        record.getUsedHeapSize(),
+                                        record.getRetainedHeapSize())
+                        )
+                        .sort(Model.Histogram.Item.sortBy(sortBy, ascendingOrder))
+                        .filter(createPredicate(searchText, searchType))
+                        .done();
+            case BY_SUPERCLASS:
+                Histogram.SuperclassTree st = (Histogram.SuperclassTree)result;
+                return PageViewBuilder.<HistogramRecord, Model.Histogram.Item> fromList(
+                                (List<HistogramRecord>)st.getElements())
+                        .paging(new PagingRequest(page, pageSize))
+                        .map(e ->
+                        {
+                            Model.Histogram.Item item = new Model.Histogram.Item();
+                            int objectId = st.getContext(e).getObjectId();
+                            item.setType(Model.Histogram.ItemType.SUPER_CLASS);
+                            item.setObjectId(objectId);
+                            item.setLabel((String)st.getColumnValue(e, 0));
+                            item.setNumberOfObjects((Long)st.getColumnValue(e, 1));
+                            item.setShallowSize(((Bytes)st.getColumnValue(e, 2)).getValue());
+                            return item;
+                        })
+                        .sort(Model.Histogram.Item.sortBy(sortBy, ascendingOrder))
+                        .filter(createPredicate(searchText, searchType))
+                        .done();
+            case BY_PACKAGE:
+                Histogram.PackageTree pt = (Histogram.PackageTree)result;
+                return
+                        PageViewBuilder.<HistogramRecord, Model.Histogram.Item> fromList(
+                                        (List<HistogramRecord>)pt.getElements())
+                                .paging(new PagingRequest(page, pageSize))
+                                .map(e ->
+                                {
 
-                                               Model.Histogram.Item item = new Model.Histogram.Item();
-                                               String label = (String) pt.getColumnValue(e, 0);
-                                               item.setLabel(label);
+                                    Model.Histogram.Item item = new Model.Histogram.Item();
+                                    String label = (String)pt.getColumnValue(e, 0);
+                                    item.setLabel(label);
 
-                                               if (e instanceof XClassHistogramRecord) {
-                                                   int objectId = pt.getContext(e).getObjectId();
-                                                   item.setObjectId(objectId);
-                                                   item.setType(Model.Histogram.ItemType.CLASS);
-                                               } else {
-                                                   item.setObjectId(label.hashCode());
-                                                   item.setType(Model.Histogram.ItemType.PACKAGE);
-                                               }
+                                    if (e instanceof XClassHistogramRecord)
+                                    {
+                                        int objectId = pt.getContext(e).getObjectId();
+                                        item.setObjectId(objectId);
+                                        item.setType(Model.Histogram.ItemType.CLASS);
+                                    }
+                                    else
+                                    {
+                                        item.setObjectId(label.hashCode());
+                                        item.setType(Model.Histogram.ItemType.PACKAGE);
+                                    }
 
-                                               if (label.matches("^int(\\[\\])*") || label.matches("^char(\\[\\])*") ||
-                                                   label.matches("^byte(\\[\\])*") || label.matches("^short(\\[\\])*") ||
-                                                   label.matches("^boolean(\\[\\])*") ||
-                                                   label.matches("^double(\\[\\])*") ||
-                                                   label.matches("^float(\\[\\])*") || label.matches("^long(\\[\\])*") ||
-                                                   label.matches("^void(\\[\\])*")) {
-                                                   item.setType(Model.Histogram.ItemType.CLASS);
-                                               }
-                                               item.setNumberOfObjects((Long) pt.getColumnValue(e, 1));
-                                               item.setShallowSize(((Bytes) pt.getColumnValue(e, 2)).getValue());
+                                    if (label.matches("^int(\\[\\])*") || label.matches("^char(\\[\\])*") ||
+                                            label.matches("^byte(\\[\\])*") || label.matches("^short(\\[\\])*") ||
+                                            label.matches("^boolean(\\[\\])*") ||
+                                            label.matches("^double(\\[\\])*") ||
+                                            label.matches("^float(\\[\\])*") || label.matches("^long(\\[\\])*") ||
+                                            label.matches("^void(\\[\\])*"))
+                                    {
+                                        item.setType(Model.Histogram.ItemType.CLASS);
+                                    }
+                                    item.setNumberOfObjects((Long)pt.getColumnValue(e, 1));
+                                    item.setShallowSize(((Bytes)pt.getColumnValue(e, 2)).getValue());
 
-                                               return item;
-                                           })
-                                           .sort(Model.Histogram.Item.sortBy(sortBy, ascendingOrder))
-                                           .filter(createPredicate(searchText, searchType))
-                                           .done();
-                default:
-                    throw new AnalysisException("Should not reach here");
+                                    return item;
+                                })
+                                .sort(Model.Histogram.Item.sortBy(sortBy, ascendingOrder))
+                                .filter(createPredicate(searchText, searchType))
+                                .done();
+            default:
+                throw new AnalysisException("Should not reach here");
             }
 
         });
     }
 
     @Override
-    public PageView<JavaObject> getHistogramObjects(int classId, int page, int pageSize) {
-        return $(() -> {
+    public PageView<JavaObject> getHistogramObjects(int classId, int page, int pageSize)
+    {
+        return $(() ->
+        {
             IResult result = queryByCommand(context, "histogram -groupBy BY_CLASS", Collections.emptyMap());
-            Histogram h = (Histogram) result;
+            Histogram h = (Histogram)result;
             List<ClassHistogramRecord> records =
-                    (List<ClassHistogramRecord>) h.getClassHistogramRecords();
+                    (List<ClassHistogramRecord>)h.getClassHistogramRecords();
 
             Optional<ClassHistogramRecord> ro = records.stream().filter(r -> r.getClassId() == classId).findFirst();
-            if (ro.isPresent()) {
-                IContextObject c = ((Histogram) result).getContext(ro.get());
-                if (c instanceof IContextObjectSet) {
-                    int[] objectIds = ((IContextObjectSet) c).getObjectIds();
+            if (ro.isPresent())
+            {
+                IContextObject c = ((Histogram)result).getContext(ro.get());
+                if (c instanceof IContextObjectSet)
+                {
+                    int[] objectIds = ((IContextObjectSet)c).getObjectIds();
                     return PageViewBuilder.build(objectIds, new PagingRequest(page, pageSize), this::getObjectInfo);
                 }
             }
@@ -1600,369 +1879,454 @@ public class HeapDumpAnalyzerImpl implements HeapDumpAnalyzer {
 
     @Override
     public PageView<Model.Histogram.Item> getChildrenOfHistogram(Model.Histogram.Grouping groupBy, int[] ids,
-                                                                 String sortBy, boolean ascendingOrder,
-                                                                 int parentObjectId, int page, int pageSize) {
-        return $(() -> {
+            String sortBy, boolean ascendingOrder,
+            int parentObjectId, int page, int pageSize)
+    {
+        return $(() ->
+        {
             Map<String, Object> args = new HashMap<>();
-            if (ids != null) {
+            if (ids != null)
+            {
                 args.put("objects", Helper.buildHeapObjectArgument(ids));
             }
             IResult result = queryByCommand(context, "histogram -groupBy " + groupBy.name(), args);
-            switch (groupBy) {
-                case BY_CLASS: {
-                    throw new AnalysisException("Should not reach here");
-                }
-                case BY_CLASSLOADER: {
-                    Histogram.ClassLoaderTree tree = (Histogram.ClassLoaderTree) result;
-                    List<?> elems = tree.getElements();
-                    List<? extends ClassHistogramRecord> children = null;
-                    for (Object elem : elems) {
-                        if (elem instanceof XClassLoaderHistogramRecord) {
-                            if (((XClassLoaderHistogramRecord) elem).getClassLoaderId() == parentObjectId) {
-                                children = (List<? extends ClassHistogramRecord>) ((XClassLoaderHistogramRecord) elem)
-                                        .getClassHistogramRecords();
-                                break;
-                            }
+            switch (groupBy)
+            {
+            case BY_CLASS:
+            {
+                throw new AnalysisException("Should not reach here");
+            }
+            case BY_CLASSLOADER:
+            {
+                Histogram.ClassLoaderTree tree = (Histogram.ClassLoaderTree)result;
+                List<?> elems = tree.getElements();
+                List<? extends ClassHistogramRecord> children = null;
+                for (Object elem : elems)
+                {
+                    if (elem instanceof XClassLoaderHistogramRecord)
+                    {
+                        if (((XClassLoaderHistogramRecord)elem).getClassLoaderId() == parentObjectId)
+                        {
+                            children = (List<? extends ClassHistogramRecord>)((XClassLoaderHistogramRecord)elem)
+                                    .getClassHistogramRecords();
+                            break;
                         }
                     }
-                    if (children != null) {
-                        return PageViewBuilder.<ClassHistogramRecord, Model.Histogram.Item>fromList(
-                                                      (List<ClassHistogramRecord>) children)
-                                              .beforeMap(record -> $(() -> record
-                                                      .calculateRetainedSize(context.snapshot, true, true, Helper.VOID_LISTENER)))
-                                              .paging(new PagingRequest(page, pageSize))
-                                              .map(record -> new Model.Histogram.Item(record.getClassId(), record.getLabel(),
-                                                                                      Model.Histogram.ItemType.CLASS,
-                                                                                      record.getNumberOfObjects(),
-                                                                                      record.getUsedHeapSize(),
-                                                                                      record.getRetainedHeapSize()))
-                                              .sort(Model.Histogram.Item.sortBy(sortBy, ascendingOrder))
-                                              .done();
-                    } else {
-                        return PageView.empty();
-                    }
                 }
-                case BY_SUPERCLASS: {
-                    Histogram.SuperclassTree st = (Histogram.SuperclassTree) result;
-                    List<?> children = new ExoticTreeFinder(st)
-                            .setGetChildrenCallback(node -> {
-                                Map<String, ?> subClasses = ReflectionUtil.getFieldValueOrNull(node, "subClasses");
-                                if (subClasses != null) {
-                                    return new ArrayList<>(subClasses.values());
-                                }
-                                return null;
-                            })
-                            .setPredicate((theTree, theNode) -> theTree.getContext(theNode).getObjectId())
-                            .findChildrenOf(parentObjectId);
-
-                    if (children != null) {
-                        return PageViewBuilder.<HistogramRecord, Model.Histogram.Item>fromList(
-                                                      (List<HistogramRecord>) children)
-                                              .paging(new PagingRequest(page, pageSize))
-                                              .map(e -> {
-                                                  Model.Histogram.Item item = new Model.Histogram.Item();
-                                                  int objectId = st.getContext(e).getObjectId();
-                                                  item.setType(Model.Histogram.ItemType.SUPER_CLASS);
-                                                  item.setObjectId(objectId);
-                                                  item.setLabel((String) st.getColumnValue(e, 0));
-                                                  item.setNumberOfObjects((Long) st.getColumnValue(e, 1));
-                                                  item.setShallowSize(((Bytes) st.getColumnValue(e, 2)).getValue());
-                                                  return item;
-                                              })
-                                              .sort(Model.Histogram.Item.sortBy(sortBy, ascendingOrder))
-                                              .done();
-                    } else {
-                        return PageView.empty();
-                    }
+                if (children != null)
+                {
+                    return PageViewBuilder.<ClassHistogramRecord, Model.Histogram.Item> fromList(
+                                    (List<ClassHistogramRecord>)children)
+                            .beforeMap(record -> $(() -> record
+                                    .calculateRetainedSize(context.snapshot, true, true, Helper.VOID_LISTENER)))
+                            .paging(new PagingRequest(page, pageSize))
+                            .map(record -> new Model.Histogram.Item(record.getClassId(), record.getLabel(),
+                                    Model.Histogram.ItemType.CLASS,
+                                    record.getNumberOfObjects(),
+                                    record.getUsedHeapSize(),
+                                    record.getRetainedHeapSize()))
+                            .sort(Model.Histogram.Item.sortBy(sortBy, ascendingOrder))
+                            .done();
                 }
-                case BY_PACKAGE: {
-                    Histogram.PackageTree pt = (Histogram.PackageTree) result;
-                    Object targetParentNode = new ExoticTreeFinder(pt)
-                            .setGetChildrenCallback(node -> {
-                                Map<String, ?> subPackages = ReflectionUtil.getFieldValueOrNull(node, "subPackages");
-                                if (subPackages != null) {
-                                    return new ArrayList<>(subPackages.values());
-                                } else {
-                                    return null;
-                                }
-                            })
-                            .setPredicate((theTree, theNode) -> {
-                                if (!(theNode instanceof XClassHistogramRecord)) {
-                                    try {
-                                        java.lang.reflect.Field
-                                                field = theNode.getClass().getSuperclass().getDeclaredField("label");
-                                        field.setAccessible(true);
-                                        String labelName = (String) field.get(theNode);
-                                        return labelName.hashCode();
-                                    } catch (Throwable e) {
-                                        e.printStackTrace();
-                                    }
-                                }
-                                return null;
-                            })
-                            .findTargetParentNode(parentObjectId);
-                    if (targetParentNode != null) {
-                        Map<String, ?> packageMap = ReflectionUtil.getFieldValueOrNull(targetParentNode, "subPackages");
-                        List<?> elems = new ArrayList<>();
-                        if (packageMap != null) {
-                            if (packageMap.size() == 0) {
-                                elems = ReflectionUtil.getFieldValueOrNull(targetParentNode, "classes");
-                            } else {
-                                elems = new ArrayList<>(packageMap.values());
+                else
+                {
+                    return PageView.empty();
+                }
+            }
+            case BY_SUPERCLASS:
+            {
+                Histogram.SuperclassTree st = (Histogram.SuperclassTree)result;
+                List<?> children = new ExoticTreeFinder(st)
+                        .setGetChildrenCallback(node ->
+                        {
+                            Map<String, ?> subClasses = ReflectionUtil.getFieldValueOrNull(node, "subClasses");
+                            if (subClasses != null)
+                            {
+                                return new ArrayList<>(subClasses.values());
                             }
+                            return null;
+                        })
+                        .setPredicate((theTree, theNode) -> theTree.getContext(theNode).getObjectId())
+                        .findChildrenOf(parentObjectId);
+
+                if (children != null)
+                {
+                    return PageViewBuilder.<HistogramRecord, Model.Histogram.Item> fromList(
+                                    (List<HistogramRecord>)children)
+                            .paging(new PagingRequest(page, pageSize))
+                            .map(e ->
+                            {
+                                Model.Histogram.Item item = new Model.Histogram.Item();
+                                int objectId = st.getContext(e).getObjectId();
+                                item.setType(Model.Histogram.ItemType.SUPER_CLASS);
+                                item.setObjectId(objectId);
+                                item.setLabel((String)st.getColumnValue(e, 0));
+                                item.setNumberOfObjects((Long)st.getColumnValue(e, 1));
+                                item.setShallowSize(((Bytes)st.getColumnValue(e, 2)).getValue());
+                                return item;
+                            })
+                            .sort(Model.Histogram.Item.sortBy(sortBy, ascendingOrder))
+                            .done();
+                }
+                else
+                {
+                    return PageView.empty();
+                }
+            }
+            case BY_PACKAGE:
+            {
+                Histogram.PackageTree pt = (Histogram.PackageTree)result;
+                Object targetParentNode = new ExoticTreeFinder(pt)
+                        .setGetChildrenCallback(node ->
+                        {
+                            Map<String, ?> subPackages = ReflectionUtil.getFieldValueOrNull(node, "subPackages");
+                            if (subPackages != null)
+                            {
+                                return new ArrayList<>(subPackages.values());
+                            }
+                            else
+                            {
+                                return null;
+                            }
+                        })
+                        .setPredicate((theTree, theNode) ->
+                        {
+                            if (!(theNode instanceof XClassHistogramRecord))
+                            {
+                                try
+                                {
+                                    java.lang.reflect.Field
+                                            field = theNode.getClass().getSuperclass().getDeclaredField("label");
+                                    field.setAccessible(true);
+                                    String labelName = (String)field.get(theNode);
+                                    return labelName.hashCode();
+                                }
+                                catch (Throwable e)
+                                {
+                                    e.printStackTrace();
+                                }
+                            }
+                            return null;
+                        })
+                        .findTargetParentNode(parentObjectId);
+                if (targetParentNode != null)
+                {
+                    Map<String, ?> packageMap = ReflectionUtil.getFieldValueOrNull(targetParentNode, "subPackages");
+                    List<?> elems = new ArrayList<>();
+                    if (packageMap != null)
+                    {
+                        if (packageMap.size() == 0)
+                        {
+                            elems = ReflectionUtil.getFieldValueOrNull(targetParentNode, "classes");
                         }
-                        return
-                                PageViewBuilder.<HistogramRecord, Model.Histogram.Item>fromList(
-                                                       (List<HistogramRecord>) elems)
-                                               .paging(new PagingRequest(page, pageSize))
-                                               .map(e -> {
-
-                                                   Model.Histogram.Item item = new Model.Histogram.Item();
-                                                   String label = (String) pt.getColumnValue(e, 0);
-                                                   item.setLabel(label);
-
-                                                   if (e instanceof XClassHistogramRecord) {
-                                                       int objectId = pt.getContext(e).getObjectId();
-                                                       item.setObjectId(objectId);
-                                                       item.setType(Model.Histogram.ItemType.CLASS);
-                                                   } else {
-                                                       item.setObjectId(label.hashCode());
-                                                       item.setType(Model.Histogram.ItemType.PACKAGE);
-                                                   }
-
-                                                   if (label.matches("^int(\\[\\])*") || label.matches("^char(\\[\\])*") ||
-                                                       label.matches("^byte(\\[\\])*") || label.matches("^short(\\[\\])*") ||
-                                                       label.matches("^boolean(\\[\\])*") ||
-                                                       label.matches("^double(\\[\\])*") ||
-                                                       label.matches("^float(\\[\\])*") || label.matches("^long(\\[\\])*") ||
-                                                       label.matches("^void(\\[\\])*")) {
-                                                       item.setType(Model.Histogram.ItemType.CLASS);
-                                                   }
-                                                   item.setNumberOfObjects((Long) pt.getColumnValue(e, 1));
-                                                   item.setShallowSize(((Bytes) pt.getColumnValue(e, 2)).getValue());
-
-                                                   return item;
-                                               })
-                                               .sort(Model.Histogram.Item.sortBy(sortBy, ascendingOrder))
-                                               .done();
-
-                    } else {
-                        return PageView.empty();
+                        else
+                        {
+                            elems = new ArrayList<>(packageMap.values());
+                        }
                     }
+                    return
+                            PageViewBuilder.<HistogramRecord, Model.Histogram.Item> fromList(
+                                            (List<HistogramRecord>)elems)
+                                    .paging(new PagingRequest(page, pageSize))
+                                    .map(e ->
+                                    {
+
+                                        Model.Histogram.Item item = new Model.Histogram.Item();
+                                        String label = (String)pt.getColumnValue(e, 0);
+                                        item.setLabel(label);
+
+                                        if (e instanceof XClassHistogramRecord)
+                                        {
+                                            int objectId = pt.getContext(e).getObjectId();
+                                            item.setObjectId(objectId);
+                                            item.setType(Model.Histogram.ItemType.CLASS);
+                                        }
+                                        else
+                                        {
+                                            item.setObjectId(label.hashCode());
+                                            item.setType(Model.Histogram.ItemType.PACKAGE);
+                                        }
+
+                                        if (label.matches("^int(\\[\\])*") || label.matches("^char(\\[\\])*") ||
+                                                label.matches("^byte(\\[\\])*") || label.matches("^short(\\[\\])*") ||
+                                                label.matches("^boolean(\\[\\])*") ||
+                                                label.matches("^double(\\[\\])*") ||
+                                                label.matches("^float(\\[\\])*") || label.matches("^long(\\[\\])*") ||
+                                                label.matches("^void(\\[\\])*"))
+                                        {
+                                            item.setType(Model.Histogram.ItemType.CLASS);
+                                        }
+                                        item.setNumberOfObjects((Long)pt.getColumnValue(e, 1));
+                                        item.setShallowSize(((Bytes)pt.getColumnValue(e, 2)).getValue());
+
+                                        return item;
+                                    })
+                                    .sort(Model.Histogram.Item.sortBy(sortBy, ascendingOrder))
+                                    .done();
+
                 }
-                default: {
-                    throw new AnalysisException("Should not reach here");
+                else
+                {
+                    return PageView.empty();
                 }
+            }
+            default:
+            {
+                throw new AnalysisException("Should not reach here");
+            }
             }
         });
     }
 
     private PageView<DominatorTree.DefaultItem> buildDefaultItems(ISnapshot snapshot, IResultTree tree,
-                                                                  List<?> elements,
-                                                                  boolean ascendingOrder, String sortBy,
-                                                                  String searchText, SearchType searchType,
-                                                                  PagingRequest pagingRequest, int parentObjectId) {
+            List<?> elements,
+            boolean ascendingOrder, String sortBy,
+            String searchText, SearchType searchType,
+            PagingRequest pagingRequest, int parentObjectId)
+    {
         final AtomicInteger afterFilterCount = new AtomicInteger(0);
         List<DominatorTree.DefaultItem> items = elements.stream()
-                                                        .map(e -> $(() -> new VirtualDefaultItem(snapshot, tree, e, parentObjectId)))
-                                                        .filter(SearchPredicate.createPredicate(searchText, searchType))
-                                                        .peek(filtered -> afterFilterCount.incrementAndGet())
-                                                        .sorted(DominatorTree.DefaultItem.sortBy(sortBy, ascendingOrder))
-                                                        .skip(pagingRequest.from())
-                                                        .limit(pagingRequest.getPageSize())
-                                                        .collect(Collectors.toList());
+                .map(e -> $(() -> new VirtualDefaultItem(snapshot, tree, e, parentObjectId)))
+                .filter(SearchPredicate.createPredicate(searchText, searchType))
+                .peek(filtered -> afterFilterCount.incrementAndGet())
+                .sorted(DominatorTree.DefaultItem.sortBy(sortBy, ascendingOrder))
+                .skip(pagingRequest.from())
+                .limit(pagingRequest.getPageSize())
+                .collect(Collectors.toList());
         return new PageView<>(pagingRequest, afterFilterCount.get(), items);
     }
 
     private PageView<DominatorTree.ClassItem> buildClassItems(ISnapshot snapshot, IResultTree tree, List<?> elements,
-                                                              boolean ascendingOrder,
-                                                              String sortBy,
-                                                              String searchText, SearchType searchType,
-                                                              PagingRequest pagingRequest) {
+            boolean ascendingOrder,
+            String sortBy,
+            String searchText, SearchType searchType,
+            PagingRequest pagingRequest)
+    {
         final AtomicInteger afterFilterCount = new AtomicInteger(0);
         List<DominatorTree.ClassItem> items = elements.stream()
-                                                      .map(e -> $(() -> new VirtualClassItem(snapshot, tree, e)))
-                                                      .filter(SearchPredicate.createPredicate(searchText, searchType))
-                                                      .peek(filtered -> afterFilterCount.incrementAndGet())
-                                                      .sorted(DominatorTree.ClassItem.sortBy(sortBy, ascendingOrder))
-                                                      .skip(pagingRequest.from())
-                                                      .limit(pagingRequest.getPageSize())
-                                                      .collect(Collectors.toList());
+                .map(e -> $(() -> new VirtualClassItem(snapshot, tree, e)))
+                .filter(SearchPredicate.createPredicate(searchText, searchType))
+                .peek(filtered -> afterFilterCount.incrementAndGet())
+                .sorted(DominatorTree.ClassItem.sortBy(sortBy, ascendingOrder))
+                .skip(pagingRequest.from())
+                .limit(pagingRequest.getPageSize())
+                .collect(Collectors.toList());
         return new PageView<>(pagingRequest, afterFilterCount.get(), items);
     }
 
     private PageView<DominatorTree.ClassLoaderItem> buildClassLoaderItems(ISnapshot snapshot, IResultTree tree,
-                                                                          List<?> elements, boolean ascendingOrder,
-                                                                          String sortBy,
-                                                                          String searchText, SearchType searchType,
-                                                                          PagingRequest pagingRequest) {
+            List<?> elements, boolean ascendingOrder,
+            String sortBy,
+            String searchText, SearchType searchType,
+            PagingRequest pagingRequest)
+    {
         final AtomicInteger afterFilterCount = new AtomicInteger(0);
         List<DominatorTree.ClassLoaderItem> items = elements.stream()
-                                                            .map(e -> $(() -> new VirtualClassLoaderItem(snapshot, tree, e)))
-                                                            .filter(SearchPredicate.createPredicate(searchText, searchType))
-                                                            .peek(filtered -> afterFilterCount.incrementAndGet())
-                                                            .sorted(DominatorTree.ClassLoaderItem.sortBy(sortBy, ascendingOrder))
-                                                            .skip(pagingRequest.from())
-                                                            .limit(pagingRequest.getPageSize())
-                                                            .collect(Collectors.toList());
+                .map(e -> $(() -> new VirtualClassLoaderItem(snapshot, tree, e)))
+                .filter(SearchPredicate.createPredicate(searchText, searchType))
+                .peek(filtered -> afterFilterCount.incrementAndGet())
+                .sorted(DominatorTree.ClassLoaderItem.sortBy(sortBy, ascendingOrder))
+                .skip(pagingRequest.from())
+                .limit(pagingRequest.getPageSize())
+                .collect(Collectors.toList());
         return new PageView<>(pagingRequest, afterFilterCount.get(), items);
     }
 
     private PageView<DominatorTree.PackageItem> buildPackageItems(ISnapshot snapshot, IResultTree tree,
-                                                                  List<?> elements,
-                                                                  boolean ascendingOrder, String sortBy,
-                                                                  String searchText, SearchType searchType,
-                                                                  PagingRequest pagingRequest) {
+            List<?> elements,
+            boolean ascendingOrder, String sortBy,
+            String searchText, SearchType searchType,
+            PagingRequest pagingRequest)
+    {
         final AtomicInteger afterFilterCount = new AtomicInteger(0);
         List<DominatorTree.PackageItem> items = elements.stream()
-                                                        .map(e -> $(() -> new VirtualPackageItem(snapshot, tree, e)))
-                                                        .filter(SearchPredicate.createPredicate(searchText, searchType))
-                                                        .peek(filtered -> afterFilterCount.incrementAndGet())
-                                                        .sorted(DominatorTree.PackageItem.sortBy(sortBy, ascendingOrder))
-                                                        .skip(pagingRequest.from())
-                                                        .limit(pagingRequest.getPageSize())
-                                                        .collect(Collectors.toList());
+                .map(e -> $(() -> new VirtualPackageItem(snapshot, tree, e)))
+                .filter(SearchPredicate.createPredicate(searchText, searchType))
+                .peek(filtered -> afterFilterCount.incrementAndGet())
+                .sorted(DominatorTree.PackageItem.sortBy(sortBy, ascendingOrder))
+                .skip(pagingRequest.from())
+                .limit(pagingRequest.getPageSize())
+                .collect(Collectors.toList());
         return new PageView<>(pagingRequest, afterFilterCount.get(), items);
     }
 
     @Override
     public PageView<? extends DominatorTree.Item> getRootsOfDominatorTree(DominatorTree.Grouping groupBy, String sortBy,
-                                                                          boolean ascendingOrder, String searchText,
-                                                                          SearchType searchType, int page,
-                                                                          int pageSize) {
-        return $(() -> {
+            boolean ascendingOrder, String searchText,
+            SearchType searchType, int page,
+            int pageSize)
+    {
+        return $(() ->
+        {
             Map<String, Object> args = new HashMap<>();
             IResultTree tree = queryByCommand(context, "dominator_tree -groupBy " + groupBy.name(), args);
-            switch (groupBy) {
-                case NONE:
-                    return
-                            buildDefaultItems(context.snapshot, tree, tree.getElements(), ascendingOrder, sortBy,
-                                              searchText, searchType, new PagingRequest(page, pageSize), -1);
-                case BY_CLASS:
-                    return buildClassItems(context.snapshot, tree, tree.getElements(), ascendingOrder, sortBy,
-                                           searchText, searchType, new PagingRequest(page, pageSize));
+            switch (groupBy)
+            {
+            case NONE:
+                return
+                        buildDefaultItems(context.snapshot, tree, tree.getElements(), ascendingOrder, sortBy,
+                                searchText, searchType, new PagingRequest(page, pageSize), -1);
+            case BY_CLASS:
+                return buildClassItems(context.snapshot, tree, tree.getElements(), ascendingOrder, sortBy,
+                        searchText, searchType, new PagingRequest(page, pageSize));
 
-                case BY_CLASSLOADER:
-                    return buildClassLoaderItems(context.snapshot, tree, tree.getElements(), ascendingOrder, sortBy,
-                                                 searchText, searchType, new PagingRequest(page, pageSize));
-                case BY_PACKAGE:
-                    return buildPackageItems(context.snapshot, tree, tree.getElements(), ascendingOrder, sortBy,
-                                             searchText, searchType, new PagingRequest(page, pageSize));
-                default:
-                    throw new AnalysisException("Should not reach here");
+            case BY_CLASSLOADER:
+                return buildClassLoaderItems(context.snapshot, tree, tree.getElements(), ascendingOrder, sortBy,
+                        searchText, searchType, new PagingRequest(page, pageSize));
+            case BY_PACKAGE:
+                return buildPackageItems(context.snapshot, tree, tree.getElements(), ascendingOrder, sortBy,
+                        searchText, searchType, new PagingRequest(page, pageSize));
+            default:
+                throw new AnalysisException("Should not reach here");
             }
         });
     }
 
     @Override
     public PageView<? extends DominatorTree.Item> getChildrenOfDominatorTree(DominatorTree.Grouping groupBy,
-                                                                             String sortBy, boolean ascendingOrder,
-                                                                             int parentObjectId,
-                                                                             int[] idPathInResultTree, int page,
-                                                                             int pageSize) {
-        return $(() -> {
+            String sortBy, boolean ascendingOrder,
+            int parentObjectId,
+            int[] idPathInResultTree, int page,
+            int pageSize)
+    {
+        return $(() ->
+        {
             Map<String, Object> args = new HashMap<>();
             IResultTree tree = queryByCommand(context, "dominator_tree -groupBy " + groupBy.name(), args);
-            switch (groupBy) {
-                case NONE: {
-                    Object parent = Helper.fetchObjectInResultTree(tree, idPathInResultTree);
-                    return
-                            buildDefaultItems(context.snapshot, tree, tree.getChildren(parent), ascendingOrder, sortBy,
-                                              null, null, new PagingRequest(page, pageSize), parentObjectId);
-                }
-                case BY_CLASS: {
-                    Object object = Helper.fetchObjectInResultTree(tree, idPathInResultTree);
-                    List<?> elements = object == null ? Collections.emptyList() : tree.getChildren(object);
-                    return buildClassItems(context.snapshot, tree, elements, ascendingOrder, sortBy, null, null, new PagingRequest(page
-                            , pageSize));
-                }
-                case BY_CLASSLOADER: {
-                    Object parent = Helper.fetchObjectInResultTree(tree, idPathInResultTree);
-                    List<?> children = tree.getChildren(parent);
+            switch (groupBy)
+            {
+            case NONE:
+            {
+                Object parent = Helper.fetchObjectInResultTree(tree, idPathInResultTree);
+                return
+                        buildDefaultItems(context.snapshot, tree, tree.getChildren(parent), ascendingOrder, sortBy,
+                                null, null, new PagingRequest(page, pageSize), parentObjectId);
+            }
+            case BY_CLASS:
+            {
+                Object object = Helper.fetchObjectInResultTree(tree, idPathInResultTree);
+                List<?> elements = object == null ? Collections.emptyList() : tree.getChildren(object);
+                return buildClassItems(context.snapshot, tree, elements, ascendingOrder, sortBy, null, null,
+                        new PagingRequest(page
+                                , pageSize));
+            }
+            case BY_CLASSLOADER:
+            {
+                Object parent = Helper.fetchObjectInResultTree(tree, idPathInResultTree);
+                List<?> children = tree.getChildren(parent);
 
-                    if (children != null) {
-                        return buildClassLoaderItems(context.snapshot, tree, children, ascendingOrder, sortBy, null,
-                                                     null, new PagingRequest(page, pageSize));
-                    } else {
-                        return PageView.empty();
-                    }
+                if (children != null)
+                {
+                    return buildClassLoaderItems(context.snapshot, tree, children, ascendingOrder, sortBy, null,
+                            null, new PagingRequest(page, pageSize));
                 }
-                case BY_PACKAGE: {
-                    Object targetParentNode = new ExoticTreeFinder(tree)
-                            .setGetChildrenCallback(node -> {
-                                Map<String, ?> subPackages = ReflectionUtil.getFieldValueOrNull(node, "subPackages");
-                                if (subPackages != null) {
-                                    return new ArrayList<>(subPackages.values());
-                                } else {
-                                    return null;
-                                }
-                            })
-                            .setPredicate((theTree, theNode) -> {
-                                try {
-                                    java.lang.reflect.Field
-                                            field =
-                                            theNode.getClass().getSuperclass().getSuperclass().getDeclaredField("label");
-                                    field.setAccessible(true);
-                                    String labelName = (String) field.get(theNode);
-                                    return labelName.hashCode();
-                                } catch (Throwable e) {
-                                    e.printStackTrace();
-                                }
-                                return null;
-                            })
-                            .findTargetParentNode(parentObjectId);
-                    if (targetParentNode != null) {
-                        Map<String, ?> packageMap = ReflectionUtil.getFieldValueOrNull(targetParentNode, "subPackages");
-                        List<?> elems = new ArrayList<>();
-                        if (packageMap != null) {
-                            if (packageMap.size() == 0) {
-                                elems = ReflectionUtil.getFieldValueOrNull(targetParentNode, "classes");
-                            } else {
-                                elems = new ArrayList<>(packageMap.values());
+                else
+                {
+                    return PageView.empty();
+                }
+            }
+            case BY_PACKAGE:
+            {
+                Object targetParentNode = new ExoticTreeFinder(tree)
+                        .setGetChildrenCallback(node ->
+                        {
+                            Map<String, ?> subPackages = ReflectionUtil.getFieldValueOrNull(node, "subPackages");
+                            if (subPackages != null)
+                            {
+                                return new ArrayList<>(subPackages.values());
                             }
+                            else
+                            {
+                                return null;
+                            }
+                        })
+                        .setPredicate((theTree, theNode) ->
+                        {
+                            try
+                            {
+                                java.lang.reflect.Field
+                                        field =
+                                        theNode.getClass().getSuperclass().getSuperclass().getDeclaredField("label");
+                                field.setAccessible(true);
+                                String labelName = (String)field.get(theNode);
+                                return labelName.hashCode();
+                            }
+                            catch (Throwable e)
+                            {
+                                e.printStackTrace();
+                            }
+                            return null;
+                        })
+                        .findTargetParentNode(parentObjectId);
+                if (targetParentNode != null)
+                {
+                    Map<String, ?> packageMap = ReflectionUtil.getFieldValueOrNull(targetParentNode, "subPackages");
+                    List<?> elems = new ArrayList<>();
+                    if (packageMap != null)
+                    {
+                        if (packageMap.size() == 0)
+                        {
+                            elems = ReflectionUtil.getFieldValueOrNull(targetParentNode, "classes");
                         }
-                        if (elems != null) {
-                            return
-                                    buildPackageItems(context.snapshot, tree, elems, ascendingOrder, sortBy, null, null,
-                                                      new PagingRequest(page, pageSize));
-                        } else {
-                            return PageView.empty();
+                        else
+                        {
+                            elems = new ArrayList<>(packageMap.values());
                         }
-                    } else {
+                    }
+                    if (elems != null)
+                    {
+                        return
+                                buildPackageItems(context.snapshot, tree, elems, ascendingOrder, sortBy, null, null,
+                                        new PagingRequest(page, pageSize));
+                    }
+                    else
+                    {
                         return PageView.empty();
                     }
                 }
-                default:
-                    throw new AnalysisException("Should not reach here");
+                else
+                {
+                    return PageView.empty();
+                }
+            }
+            default:
+                throw new AnalysisException("Should not reach here");
             }
         });
     }
 
-    interface R {
+    interface R
+    {
         void run() throws Exception;
     }
 
-    interface RV<V> {
+    interface RV<V>
+    {
         V run() throws Exception;
     }
 
-    private static class ProviderImpl implements HeapDumpAnalyzer.Provider {
+    private static class ProviderImpl implements HeapDumpAnalyzer.Provider
+    {
         @Override
         public HeapDumpAnalyzer provide(Path path, Map<String, String> options,
-                                        ProgressListener listener) {
+                ProgressListener listener)
+        {
             Map<String, String> finalOptions = options != null ? options : Collections.emptyMap();
             return new HeapDumpAnalyzerImpl(new AnalysisContext(
                     $(() ->
-                      {
-                          try {
-                              HprofPreferencesAccess.setStrictness(finalOptions.get("strictness"));
-                              return SnapshotFactory.openSnapshot(path.toFile(),
-                                                                  finalOptions,
-                                                                  new ProgressListenerImpl(listener));
-                          } finally {
-                              HprofPreferencesAccess.setStrictness(null);
-                          }
-                      })
+                    {
+                        try
+                        {
+                            HprofPreferencesAccess.setStrictness(finalOptions.get("strictness"));
+                            return SnapshotFactory.openSnapshot(path.toFile(),
+                                    finalOptions,
+                                    new ProgressListenerImpl(listener));
+                        }
+                        finally
+                        {
+                            HprofPreferencesAccess.setStrictness(null);
+                        }
+                    })
             ));
         }
     }

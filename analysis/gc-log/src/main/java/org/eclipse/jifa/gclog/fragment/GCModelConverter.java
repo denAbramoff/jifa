@@ -14,7 +14,7 @@ package org.eclipse.jifa.gclog.fragment;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import lombok.extern.slf4j.Slf4j;
+
 import org.eclipse.jifa.gclog.event.GCEvent;
 import org.eclipse.jifa.gclog.event.evnetInfo.MemoryArea;
 import org.eclipse.jifa.gclog.model.GCModel;
@@ -23,7 +23,7 @@ import org.eclipse.jifa.gclog.util.Constant;
 
 import java.util.*;
 
-@Slf4j
+
 public class GCModelConverter {
     public List<Metric> toMetrics(GCModel gcModel, Map<String, String> instanceId, long startTime, long endTime) {
         List<Metric> result = new ArrayList<>();

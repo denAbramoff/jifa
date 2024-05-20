@@ -13,27 +13,55 @@
 
 package org.eclipse.jifa.gclog.event.evnetInfo;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 
 import static org.eclipse.jifa.gclog.util.Constant.UNKNOWN_DOUBLE;
 
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
-public class CpuTime {
+public class CpuTime
+{
     //unit is ms
     private double user = UNKNOWN_DOUBLE;
     private double sys = UNKNOWN_DOUBLE;
     private double real = UNKNOWN_DOUBLE;
 
-    public String toString() {
+    public double getUser()
+    {
+        return user;
+    }
+
+    public void setUser(double user)
+    {
+        this.user = user;
+    }
+
+    public double getSys()
+    {
+        return sys;
+    }
+
+    public void setSys(double sys)
+    {
+        this.sys = sys;
+    }
+
+    public double getReal()
+    {
+        return real;
+    }
+
+    public void setReal(double real)
+    {
+        this.real = real;
+    }
+
+    public String toString()
+    {
         return String.format("User=%.2fs Sys=%.2fs Real=%.2fs", user / 1000, sys / 1000, real / 1000);
     }
 
-    public double getValue(String type) {
-        return switch (type) {
+    public double getValue(String type)
+    {
+        return switch (type)
+        {
             case "USER" -> user;
             case "SYS" -> sys;
             case "REAL" -> real;

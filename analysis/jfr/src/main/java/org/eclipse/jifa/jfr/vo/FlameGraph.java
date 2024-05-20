@@ -12,11 +12,17 @@
  ********************************************************************************/
 package org.eclipse.jifa.jfr.vo;
 
-import lombok.Getter;
-import lombok.Setter;
-
-@Setter
-@Getter
-public class FlameGraph extends GraphBase {
+public class FlameGraph extends GraphBase
+{
     private Object[][] data = new Object[0][];
+
+    public Object[][] getData()
+    {
+        return data;
+    }
+
+    public void setData(Object[][] data)
+    {
+        this.data = data;
+    }
 }

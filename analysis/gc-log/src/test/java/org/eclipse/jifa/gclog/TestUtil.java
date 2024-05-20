@@ -19,37 +19,51 @@ import java.io.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class TestUtil {
-    public static BufferedReader stringToBufferedReader(String source) {
+public class TestUtil
+{
+    public static BufferedReader stringToBufferedReader(String source)
+    {
         InputStream inputStream = new ByteArrayInputStream(source.getBytes());
         return new BufferedReader(new InputStreamReader(inputStream));
     }
 
-    public static BufferedReader getGCLog(String name) {
-        InputStream is = Objects.requireNonNull(Thread.currentThread().getContextClassLoader().getResourceAsStream(name));
+    public static BufferedReader getGCLog(String name)
+    {
+        InputStream is = Objects.requireNonNull(
+                Thread.currentThread().getContextClassLoader().getResourceAsStream(name));
         return new BufferedReader(new InputStreamReader(is));
     }
 
-    public static List<String> generateShuffledGCLog(String name) {
-        StringBuffer gclog = new StringBuffer("\n");
-        try {
+    public static List<String> generateShuffledGCLog(String name)
+    {
+        StringBuilder gclog = new StringBuilder("\n");
+        try
+        {
             BufferedReader bufferedReader = getGCLog(name);
             String line;
-            while ((line = bufferedReader.readLine()) != null) {
+            while ((line = bufferedReader.readLine()) != null)
+            {
                 gclog.append(line);
                 gclog.append('\n');
             }
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             e.printStackTrace();
         }
 
         String regexForSplit = null;
-        switch (name) {
-            case "11CMSUpTime.log" -> regexForSplit = "(?=\n\\[[\\d-T:+.]+]\\[[0-9]+\\.[0-9]+s])";
-            case "11G1Parser.log", "11CMSGCParser.log", "IncompleteGCLog.log" -> regexForSplit = "(?=\n\\[[0-9]+\\.[0-9]+s])";
-            case "8CMSParser.log", "8CMSPrintGC.log", "8G1PrintGC.log", "8ParallelGCParser.log" -> regexForSplit = "(?=\n[0-9]+\\.[0-9]+: \\[)";
-            case "8G1GCParser.log", "8G1GCParserAdaptiveSize.log", "8ConcurrentPrintDateTimeStamp.log", "8CMSCPUTime.log", "8CMSPromotionFailed.log", "8CMSScavengeBeforeRemark.log", "8GenerationalGCInterleave.log" -> regexForSplit = "(?=\n[\\d-T:+.]+ \\d+\\.\\d+: \\[)";
-            default -> Assertions.fail("can't find timestamp pattern for gc log " + name);
+        switch (name)
+        {
+        case "11CMSUpTime.log" -> regexForSplit = "(?=\n\\[[\\d-T:+.]+]\\[[0-9]+\\.[0-9]+s])";
+        case "11G1Parser.log", "11CMSGCParser.log", "IncompleteGCLOG.log" ->
+                regexForSplit = "(?=\n\\[[0-9]+\\.[0-9]+s])";
+        case "8CMSParser.log", "8CMSPrintGC.log", "8G1PrintGC.log", "8ParallelGCParser.log" ->
+                regexForSplit = "(?=\n[0-9]+\\.[0-9]+: \\[)";
+        case "8G1GCParser.log", "8G1GCParserAdaptiveSize.log", "8ConcurrentPrintDateTimeStamp.log", "8CMSCPUTime.log"
+                , "8CMSPromotionFailed.log", "8CMSScavengeBeforeRemark.log", "8GenerationalGCInterleave.log" ->
+                regexForSplit = "(?=\n[\\d-T:+.]+ \\d+\\.\\d+: \\[)";
+        default -> Assertions.fail("can't find timestamp pattern for gc log " + name);
         }
 
         String originalLog = gclog.toString();

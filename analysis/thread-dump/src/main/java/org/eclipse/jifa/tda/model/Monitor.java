@@ -13,30 +13,50 @@
 
 package org.eclipse.jifa.tda.model;
 
-import lombok.Data;
 import org.eclipse.jifa.tda.enums.MonitorState;
 
 import java.util.Objects;
 
-@Data
-public class Monitor {
-
+public class Monitor
+{
     private RawMonitor rawMonitor;
 
     private MonitorState state;
 
+    public RawMonitor getRawMonitor()
+    {
+        return rawMonitor;
+    }
+
+    public void setRawMonitor(RawMonitor rawMonitor)
+    {
+        this.rawMonitor = rawMonitor;
+    }
+
+    public MonitorState getState()
+    {
+        return state;
+    }
+
+    public void setState(MonitorState state)
+    {
+        this.state = state;
+    }
+
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(Object o)
+    {
         if (this == o)
             return true;
         if (o == null || getClass() != o.getClass())
             return false;
-        Monitor monitor = (Monitor) o;
+        Monitor monitor = (Monitor)o;
         return Objects.equals(rawMonitor, monitor.rawMonitor) && state == monitor.state;
     }
 
     @Override
-    public int hashCode() {
+    public int hashCode()
+    {
         return Objects.hash(rawMonitor, state);
     }
 }

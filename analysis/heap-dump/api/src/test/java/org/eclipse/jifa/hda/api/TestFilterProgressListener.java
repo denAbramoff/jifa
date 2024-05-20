@@ -16,10 +16,11 @@ import org.eclipse.jifa.analysis.listener.ProgressListener;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
-public class TestFilterProgressListener {
-
+public class TestFilterProgressListener
+{
     @Test
-    public void test() {
+    public void test()
+    {
         ProgressListener mock = Mockito.mock(ProgressListener.class);
         FilterProgressListener listener = new FilterProgressListener(mock);
 

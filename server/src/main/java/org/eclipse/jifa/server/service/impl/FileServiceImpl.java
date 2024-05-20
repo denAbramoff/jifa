@@ -13,7 +13,7 @@
 package org.eclipse.jifa.server.service.impl;
 
 import jakarta.annotation.Nullable;
-import lombok.extern.slf4j.Slf4j;
+
 import org.eclipse.jifa.common.domain.vo.PageView;
 import org.eclipse.jifa.common.util.Validate;
 import org.eclipse.jifa.server.ConfigurationAccessor;
@@ -46,6 +46,9 @@ import org.eclipse.jifa.server.service.UserService;
 import org.eclipse.jifa.server.service.WorkerService;
 import org.eclipse.jifa.server.support.FileTransferListener;
 import org.eclipse.jifa.server.util.FileTransferUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
@@ -80,9 +83,9 @@ import static org.eclipse.jifa.server.enums.ServerErrorCode.UNAVAILABLE;
 
 @SuppressWarnings("DataFlowIssue")
 @Component
-@Slf4j
-public class FileServiceImpl extends ConfigurationAccessor implements FileService {
-
+public class FileServiceImpl extends ConfigurationAccessor implements FileService
+{
+    private static final Logger LOG = LoggerFactory.getLogger(FileServiceImpl.class);
     private final TransactionTemplate transactionTemplate;
 
     private final UserService userService;
@@ -103,16 +106,18 @@ public class FileServiceImpl extends ConfigurationAccessor implements FileServic
 
     private final TaskScheduler taskScheduler;
 
+    @Autowired
     public FileServiceImpl(TransactionTemplate transactionTemplate,
-                           UserService userService,
-                           FileRepo fileRepo,
-                           TransferringFileRepo transferringFileRepo,
-                           DeletedFileRepo deletedFileRepo,
-                           @Nullable CurrentStaticWorker currentStaticWorker,
-                           @Nullable FileStaticWorkerBindRepo fileStaticWorkerBindRepo,
-                           @Nullable StorageService storageService,
-                           @Nullable WorkerService workerService,
-                           TaskScheduler taskScheduler) {
+            UserService userService,
+            FileRepo fileRepo,
+            TransferringFileRepo transferringFileRepo,
+            DeletedFileRepo deletedFileRepo,
+            @Nullable CurrentStaticWorker currentStaticWorker,
+            @Nullable FileStaticWorkerBindRepo fileStaticWorkerBindRepo,
+            @Nullable StorageService storageService,
+            @Nullable WorkerService workerService,
+            TaskScheduler taskScheduler)
+    {
         this.transactionTemplate = transactionTemplate;
         this.userService = userService;
         this.fileRepo = fileRepo;
@@ -126,7 +131,8 @@ public class FileServiceImpl extends ConfigurationAccessor implements FileServic
     }
 
     @Override
-    public PageView<FileView> getUserFileViews(FileType type, int page, int pageSize) {
+    public PageView<FileView> getUserFileViews(FileType type, int page, int pageSize)
+    {
         mustBe(MASTER, STANDALONE_WORKER);
 
         Page<FileEntity> files;
@@ -136,33 +142,38 @@ public class FileServiceImpl extends ConfigurationAccessor implements FileServic
                 : fileRepo.findByUserIdAndTypeOrderByCreatedTimeDesc(userService.getCurrentUserId(), type, pageRequest);
 
         List<FileView> fileViews = files.getContent().stream().map(FileViewConverter::convert).toList();
-        return new PageView<>(page, pageSize, (int) files.getTotalElements(), fileViews);
+        return new PageView<>(page, pageSize, (int)files.getTotalElements(), fileViews);
     }
 
     @Override
-    public FileView getFileViewById(long fileId) {
+    public FileView getFileViewById(long fileId)
+    {
         mustBe(MASTER, STANDALONE_WORKER);
         return FileViewConverter.convert(getFileEntityByIdAndCheckAuthority(fileId));
     }
 
     @Override
-    public FileView getFileViewByUniqueName(String uniqueName) {
+    public FileView getFileViewByUniqueName(String uniqueName)
+    {
         mustBe(MASTER, STANDALONE_WORKER);
         return FileViewConverter.convert(getFileEntityByUniqueNameAndCheckAuthority(uniqueName));
     }
 
     @Override
-    public void deleteById(long fileId) {
+    public void deleteById(long fileId)
+    {
         mustNotBe(ELASTIC_WORKER);
 
         FileEntity file = getFileEntityByIdAndCheckAuthority(fileId);
 
-        if (isMaster()) {
+        if (isMaster())
+        {
             Optional<FileStaticWorkerBindEntity> optional = fileStaticWorkerBindRepo.findByFileId(file.getId());
-            if (optional.isPresent()) {
+            if (optional.isPresent())
+            {
                 // forward the request to the static worker
                 workerService.syncRequest(optional.get().getStaticWorker(),
-                                          createDeleteRequest("/files/" + fileId, null, Void.class));
+                        createDeleteRequest("/files/" + fileId, null, Void.class));
                 return;
             }
         }
@@ -171,24 +182,30 @@ public class FileServiceImpl extends ConfigurationAccessor implements FileServic
     }
 
     @Override
-    public FileEntity getFileByUniqueName(String uniqueName, FileType expectedFileType) {
+    public FileEntity getFileByUniqueName(String uniqueName, FileType expectedFileType)
+    {
         FileEntity file = getFileEntityByUniqueNameAndCheckAuthority(uniqueName);
         Validate.isTrue(expectedFileType == null || file.getType() == expectedFileType, FILE_TYPE_MISMATCH);
         return file;
     }
 
     @Override
-    public long handleTransferRequest(FileTransferRequest request) {
+    public long handleTransferRequest(FileTransferRequest request)
+    {
         mustNotBe(ELASTIC_WORKER);
 
-        Validate.isFalse(config.getDisabledFileTransferMethods().contains(request.getMethod()), FILE_TRANSFER_METHOD_DISABLED);
+        Validate.isFalse(config.getDisabledFileTransferMethods().contains(request.getMethod()),
+                FILE_TRANSFER_METHOD_DISABLED);
 
-        if (isMaster()) {
-            FileLocation location = workerService.decideLocationForNewFile(userService.getCurrentUserRef(), request.getType());
+        if (isMaster())
+        {
+            FileLocation location = workerService.decideLocationForNewFile(userService.getCurrentUserRef(),
+                    request.getType());
             assert location.valid();
-            if (!location.useSharedStorage()) {
+            if (!location.useSharedStorage())
+            {
                 return workerService.syncRequest(location.staticWorker(),
-                                                 createPostRequest("/files/transfer", request, Long.class));
+                        createPostRequest("/files/transfer", request, Long.class));
             }
         }
 
@@ -201,49 +218,61 @@ public class FileServiceImpl extends ConfigurationAccessor implements FileServic
         transferringFileRepo.save(transferringFile);
 
         storageService.handleTransfer(request, transferringFile.getUniqueName(),
-                                      new FileTransferListenerImpl(transferringFile));
+                new FileTransferListenerImpl(transferringFile));
         return transferringFile.getId();
     }
 
     @Override
-    public FileTransferProgress getTransferProgress(long transferringFileId) {
+    public FileTransferProgress getTransferProgress(long transferringFileId)
+    {
         mustBe(MASTER, STANDALONE_WORKER);
-        TransferringFileEntity transferringFile = transferringFileRepo.findById(transferringFileId).orElseThrow(() -> CE(UNAVAILABLE));
+        TransferringFileEntity transferringFile = transferringFileRepo.findById(transferringFileId)
+                .orElseThrow(() -> CE(UNAVAILABLE));
         checkAuthority(transferringFile);
         Long fileId = null;
-        if (transferringFile.getTransferState() == FileTransferState.SUCCESS) {
-            fileId = fileRepo.findByUniqueName(transferringFile.getUniqueName()).orElseThrow(() -> CE(INTERNAL_ERROR)).getId();
+        if (transferringFile.getTransferState() == FileTransferState.SUCCESS)
+        {
+            fileId = fileRepo.findByUniqueName(transferringFile.getUniqueName())
+                    .orElseThrow(() -> CE(INTERNAL_ERROR))
+                    .getId();
         }
         return new FileTransferProgress(transferringFile.getTransferState(),
-                                        transferringFile.getTotalSize(),
-                                        transferringFile.getTransferredSize(),
-                                        transferringFile.getFailureMessage(),
-                                        fileId);
+                transferringFile.getTotalSize(),
+                transferringFile.getTransferredSize(),
+                transferringFile.getFailureMessage(),
+                fileId);
     }
 
     @Override
-    public long handleUploadRequest(FileType type, MultipartFile file) throws Throwable {
+    public long handleUploadRequest(FileType type, MultipartFile file) throws Throwable
+    {
         mustNotBe(ELASTIC_WORKER);
 
-        Validate.isFalse(config.getDisabledFileTransferMethods().contains(FileTransferMethod.UPLOAD), FILE_TRANSFER_METHOD_DISABLED);
+        Validate.isFalse(config.getDisabledFileTransferMethods().contains(FileTransferMethod.UPLOAD),
+                FILE_TRANSFER_METHOD_DISABLED);
 
-        if (isMaster()) {
+        if (isMaster())
+        {
             FileLocation location = workerService.decideLocationForNewFile(userService.getCurrentUserRef(), type);
-            if (!location.useSharedStorage()) {
+            if (!location.useSharedStorage())
+            {
                 return workerService.forwardUploadRequestToStaticWorker(location.staticWorker(), type, file);
             }
         }
 
         String uniqueName = generateFileUniqueName();
-        String originalName = file.getOriginalFilename() != null ? file.getOriginalFilename() : Constant.DEFAULT_FILENAME;
+        String originalName =
+                file.getOriginalFilename() != null ? file.getOriginalFilename() : Constant.DEFAULT_FILENAME;
         long size = storageService.handleUpload(type, file, uniqueName);
 
         FileStaticWorkerBindEntity bind = isStaticWorker() ? new FileStaticWorkerBindEntity() : null;
-        if (bind != null) {
+        if (bind != null)
+        {
             bind.setStaticWorker(currentStaticWorker.getEntity());
         }
 
-        return transactionTemplate.execute(status -> {
+        return transactionTemplate.execute(status ->
+        {
             FileEntity newFile = new FileEntity();
             newFile.setUniqueName(uniqueName);
             newFile.setUser(userService.getCurrentUserRef());
@@ -251,7 +280,8 @@ public class FileServiceImpl extends ConfigurationAccessor implements FileServic
             newFile.setType(type);
             newFile.setSize(size);
             FileEntity savedFile = fileRepo.save(newFile);
-            if (bind != null) {
+            if (bind != null)
+            {
                 bind.setFile(savedFile);
                 fileStaticWorkerBindRepo.save(bind);
             }
@@ -260,7 +290,8 @@ public class FileServiceImpl extends ConfigurationAccessor implements FileServic
     }
 
     @Override
-    public String handleLocalFileRequest(FileType type, Path path) throws IOException {
+    public String handleLocalFileRequest(FileType type, Path path) throws IOException
+    {
         mustBe(STANDALONE_WORKER);
 
         Validate.isTrue(Files.exists(path) && Files.isRegularFile(path));
@@ -280,21 +311,25 @@ public class FileServiceImpl extends ConfigurationAccessor implements FileServic
     }
 
     @Override
-    public NamedResource handleDownloadRequest(long fileId) throws Throwable {
+    public NamedResource handleDownloadRequest(long fileId) throws Throwable
+    {
         mustNotBe(ELASTIC_WORKER);
 
         FileEntity file = getFileEntityByIdAndCheckAuthority(fileId);
         Resource resource = null;
-        if (isMaster()) {
+        if (isMaster())
+        {
             FileStaticWorkerBindEntity bind = fileStaticWorkerBindRepo.findByFileId(file.getId())
-                                                                      .orElse(null);
-            if (bind != null) {
+                    .orElse(null);
+            if (bind != null)
+            {
                 // forward the request to the static worker
                 resource = workerService.forwardDownloadRequestToStaticWorker(bind.getStaticWorker(), file.getId());
             }
         }
 
-        if (resource == null) {
+        if (resource == null)
+        {
             resource = new FileSystemResource(storageService.locationOf(file.getType(), file.getUniqueName()));
             Validate.isTrue(resource.exists(), INTERNAL_ERROR);
         }
@@ -303,50 +338,62 @@ public class FileServiceImpl extends ConfigurationAccessor implements FileServic
     }
 
     @Override
-    public void deleteOldestFile() {
+    public void deleteOldestFile()
+    {
         Optional<FileEntity> optional = fileRepo.findFirstByOrderByCreatedTimeDesc();
-        if (optional.isPresent()) {
+        if (optional.isPresent())
+        {
             FileEntity file = optional.get();
             doDelete(file);
-            log.info("File '{} ({})' is deleted", file.getOriginalName(), file.getUniqueName());
+            LOG.info("File '{} ({})' is deleted", file.getOriginalName(), file.getUniqueName());
         }
     }
 
     @Override
-    public Optional<StaticWorkerEntity> getStaticWorkerByFile(FileEntity file) {
+    public Optional<StaticWorkerEntity> getStaticWorkerByFile(FileEntity file)
+    {
         return fileStaticWorkerBindRepo.findByFileId(file.getId()).map(FileStaticWorkerBindEntity::getStaticWorker);
     }
 
-    private FileEntity getFileEntityByIdAndCheckAuthority(long id) {
+    private FileEntity getFileEntityByIdAndCheckAuthority(long id)
+    {
         FileEntity file = fileRepo.findById(id).orElseThrow((() -> CE(FILE_NOT_FOUND)));
         checkAuthority(file);
         return file;
     }
 
-    private FileEntity getFileEntityByUniqueNameAndCheckAuthority(String uniqueName) {
+    private FileEntity getFileEntityByUniqueNameAndCheckAuthority(String uniqueName)
+    {
         FileEntity file = fileRepo.findByUniqueName(uniqueName).orElseThrow((() -> CE(FILE_NOT_FOUND)));
         checkAuthority(file);
         return file;
     }
 
-    private void checkAuthority(BaseFileEntity file) {
+    private void checkAuthority(BaseFileEntity file)
+    {
         UserEntity user = file.getUser();
         Validate.isTrue(user == null
                         || user.getId().equals(userService.getCurrentUserId())
                         || userService.isCurrentUserAdmin(),
-                        ACCESS_DENIED);
+                ACCESS_DENIED);
     }
 
-    private String generateFileUniqueName() {
+    private String generateFileUniqueName()
+    {
         return UUID.randomUUID().toString();
     }
 
-    private void doDelete(FileEntity file) {
-        FileStaticWorkerBindEntity bind = isStaticWorker() ? fileStaticWorkerBindRepo.findByFileId(file.getId()).orElseThrow(() -> CE(INTERNAL_ERROR)) : null;
+    private void doDelete(FileEntity file)
+    {
+        FileStaticWorkerBindEntity bind = isStaticWorker() ?
+                fileStaticWorkerBindRepo.findByFileId(file.getId()).orElseThrow(() -> CE(INTERNAL_ERROR)) :
+                null;
 
         DeletedFileEntity deletedFile = EntityConverter.convert(file);
-        transactionTemplate.executeWithoutResult(status -> {
-            if (bind != null) {
+        transactionTemplate.executeWithoutResult(status ->
+        {
+            if (bind != null)
+            {
                 fileStaticWorkerBindRepo.deleteById(bind.getId());
             }
             fileRepo.deleteById(file.getId());
@@ -356,7 +403,8 @@ public class FileServiceImpl extends ConfigurationAccessor implements FileServic
         storageService.scavenge(file.getType(), file.getUniqueName());
     }
 
-    private class FileTransferListenerImpl implements FileTransferListener {
+    private class FileTransferListenerImpl implements FileTransferListener
+    {
 
         private static final int DELETION_DELAY = 180;
 
@@ -366,54 +414,72 @@ public class FileServiceImpl extends ConfigurationAccessor implements FileServic
 
         private volatile boolean transferring;
 
-        public FileTransferListenerImpl(TransferringFileEntity transferringFile) {
+        public FileTransferListenerImpl(TransferringFileEntity transferringFile)
+        {
             this.transferringFile = transferringFile;
         }
 
         @Override
-        public void onStart() {
+        public void onStart()
+        {
             transferring = true;
 
-            new Thread(() -> {
+            new Thread(() ->
+            {
                 long currentTransferredSize = 0;
-                while (transferring) {
-                    synchronized (this) {
-                        if (!transferring) {
+                while (transferring)
+                {
+                    synchronized (this)
+                    {
+                        if (!transferring)
+                        {
                             break;
                         }
-                        if (currentTransferredSize < transferredSize) {
+                        if (currentTransferredSize < transferredSize)
+                        {
                             currentTransferredSize = transferredSize;
-                            try {
+                            try
+                            {
                                 transferringFile.setTransferredSize(currentTransferredSize);
                                 transferringFile = transferringFileRepo.save(transferringFile);
-                            } catch (Throwable ignored) {
+                            }
+                            catch (Throwable ignored)
+                            {
+                                //do notning
                             }
                         }
                     }
-                    try {
+                    try
+                    {
                         TimeUnit.SECONDS.sleep(1);
-                    } catch (InterruptedException ignored) {
+                    }
+                    catch (InterruptedException ignored)
+                    {
                     }
                 }
             }, "TransferredSize Updater - " + transferringFile.getId()).start();
         }
 
         @Override
-        public void fireTotalSize(long totalSize) {
-            if (totalSize > 0) {
+        public void fireTotalSize(long totalSize)
+        {
+            if (totalSize > 0)
+            {
                 transferringFile.setTotalSize(totalSize);
                 transferringFile = transferringFileRepo.save(transferringFile);
             }
         }
 
         @Override
-        public void fireTransferredSize(long transferredSize) {
+        public void fireTransferredSize(long transferredSize)
+        {
             assert transferredSize >= this.transferredSize;
             this.transferredSize = transferredSize;
         }
 
         @Override
-        public synchronized void onSuccess(long totalSize) {
+        public synchronized void onSuccess(long totalSize)
+        {
             transferring = false;
             transferringFile.setTransferState(FileTransferState.SUCCESS);
             transferringFile.setTotalSize(totalSize);
@@ -423,40 +489,51 @@ public class FileServiceImpl extends ConfigurationAccessor implements FileServic
 
             FileStaticWorkerBindEntity bind = isStaticWorker() ? new FileStaticWorkerBindEntity() : null;
 
-            if (bind != null) {
+            if (bind != null)
+            {
                 bind.setStaticWorker(currentStaticWorker.getEntity());
             }
 
-            try {
-                transactionTemplate.executeWithoutResult(status -> {
+            try
+            {
+                transactionTemplate.executeWithoutResult(status ->
+                {
                     transferringFile = transferringFileRepo.save(transferringFile);
                     FileEntity savedFile = fileRepo.save(file);
-                    if (bind != null) {
+                    if (bind != null)
+                    {
                         bind.setFile(savedFile);
                         fileStaticWorkerBindRepo.save(bind);
                     }
                 });
-            } finally {
+            }
+            finally
+            {
                 taskScheduler.schedule(() -> transferringFileRepo.deleteById(transferringFile.getId()),
-                                       Instant.now().plusSeconds(DELETION_DELAY));
+                        Instant.now().plusSeconds(DELETION_DELAY));
             }
         }
 
         @Override
-        public synchronized void onError(Throwable t) {
+        public synchronized void onError(Throwable t)
+        {
             transferring = false;
 
             transferringFile.setTransferState(FileTransferState.FAILURE);
             String failureMessage = t.getMessage();
-            if (failureMessage.length() > TransferringFileEntity.MAX_FAILURE_MESSAGE_LENGTH) {
+            if (failureMessage.length() > TransferringFileEntity.MAX_FAILURE_MESSAGE_LENGTH)
+            {
                 failureMessage = failureMessage.substring(0, TransferringFileEntity.MAX_FAILURE_MESSAGE_LENGTH);
             }
             transferringFile.setFailureMessage(failureMessage);
-            try {
+            try
+            {
                 transferringFile = transferringFileRepo.save(transferringFile);
-            } finally {
+            }
+            finally
+            {
                 taskScheduler.schedule(() -> transferringFileRepo.deleteById(transferringFile.getId()),
-                                       Instant.now().plusSeconds(DELETION_DELAY));
+                        Instant.now().plusSeconds(DELETION_DELAY));
             }
         }
     }

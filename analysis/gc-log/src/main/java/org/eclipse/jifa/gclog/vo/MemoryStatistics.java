@@ -12,28 +12,117 @@
  ********************************************************************************/
 package org.eclipse.jifa.gclog.vo;
 
-
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-public class MemoryStatistics {
+public class MemoryStatistics
+{
     private MemoryStatisticsItem young;
     private MemoryStatisticsItem old;
     private MemoryStatisticsItem humongous;
     private MemoryStatisticsItem heap;
     private MemoryStatisticsItem metaspace;
 
-    @Data
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class MemoryStatisticsItem {
+    public MemoryStatisticsItem getYoung()
+    {
+        return young;
+    }
+
+    public void setYoung(MemoryStatisticsItem young)
+    {
+        this.young = young;
+    }
+
+    public MemoryStatisticsItem getOld()
+    {
+        return old;
+    }
+
+    public void setOld(MemoryStatisticsItem old)
+    {
+        this.old = old;
+    }
+
+    public MemoryStatisticsItem getHumongous()
+    {
+        return humongous;
+    }
+
+    public void setHumongous(MemoryStatisticsItem humongous)
+    {
+        this.humongous = humongous;
+    }
+
+    public MemoryStatisticsItem getHeap()
+    {
+        return heap;
+    }
+
+    public void setHeap(MemoryStatisticsItem heap)
+    {
+        this.heap = heap;
+    }
+
+    public MemoryStatisticsItem getMetaspace()
+    {
+        return metaspace;
+    }
+
+    public void setMetaspace(MemoryStatisticsItem metaspace)
+    {
+        this.metaspace = metaspace;
+    }
+
+    public static class MemoryStatisticsItem
+    {
         private long capacityAvg;
         private long usedMax;
         private long usedAvgAfterFullGC;
         private long usedAvgAfterOldGC;
+
+        public MemoryStatisticsItem(long capacityAvg, long usedMax, long usedAvgAfterFullGC, long usedAvgAfterOldGC)
+        {
+            this.capacityAvg = capacityAvg;
+            this.usedMax = usedMax;
+            this.usedAvgAfterFullGC = usedAvgAfterFullGC;
+            this.usedAvgAfterOldGC = usedAvgAfterOldGC;
+        }
+
+        public long getCapacityAvg()
+        {
+            return capacityAvg;
+        }
+
+        public void setCapacityAvg(long capacityAvg)
+        {
+            this.capacityAvg = capacityAvg;
+        }
+
+        public long getUsedMax()
+        {
+            return usedMax;
+        }
+
+        public void setUsedMax(long usedMax)
+        {
+            this.usedMax = usedMax;
+        }
+
+        public long getUsedAvgAfterFullGC()
+        {
+            return usedAvgAfterFullGC;
+        }
+
+        public void setUsedAvgAfterFullGC(long usedAvgAfterFullGC)
+        {
+            this.usedAvgAfterFullGC = usedAvgAfterFullGC;
+        }
+
+        public long getUsedAvgAfterOldGC()
+        {
+            return usedAvgAfterOldGC;
+        }
+
+        public void setUsedAvgAfterOldGC(long usedAvgAfterOldGC)
+        {
+            this.usedAvgAfterOldGC = usedAvgAfterOldGC;
+        }
     }
 }

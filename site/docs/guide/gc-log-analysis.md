@@ -17,7 +17,7 @@ in optimizing GC performance and understanding the impact of code or JVM option 
 ### Basic Information
 
 This view displays some basic information, such as the GC algorithm used by the application, the number of GC threads,
-and the time period covered by the log.
+and the time period covered by the LOG.
 
 ### Diagnosis
 

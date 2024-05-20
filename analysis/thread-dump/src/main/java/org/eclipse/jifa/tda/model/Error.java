@@ -13,9 +13,9 @@
 
 package org.eclipse.jifa.tda.model;
 
-import lombok.Data;
 
-@Data
+
+
 public class Error {
 
     private String detail;

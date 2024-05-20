@@ -13,17 +13,37 @@
 
 package org.eclipse.jifa.tda.vo;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-
 import java.util.List;
 
-@Data
-@AllArgsConstructor
-public class Content {
-
+public class Content
+{
     private List<String> content;
 
     private boolean end;
 
+    public Content(List<String> content, boolean end)
+    {
+        this.content = content;
+        this.end = end;
+    }
+
+    public List<String> getContent()
+    {
+        return content;
+    }
+
+    public void setContent(List<String> content)
+    {
+        this.content = content;
+    }
+
+    public boolean isEnd()
+    {
+        return end;
+    }
+
+    public void setEnd(boolean end)
+    {
+        this.end = end;
+    }
 }

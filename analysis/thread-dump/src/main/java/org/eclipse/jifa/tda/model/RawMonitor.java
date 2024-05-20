@@ -13,32 +13,61 @@
 
 package org.eclipse.jifa.tda.model;
 
-import lombok.Data;
-
 import java.util.Objects;
 
-@Data
-public class RawMonitor extends Identity {
-
+public class RawMonitor extends Identity
+{
     private long address = -1;
 
     private boolean classInstance;
 
     private String clazz;
 
+    public long getAddress()
+    {
+        return address;
+    }
+
+    public void setAddress(long address)
+    {
+        this.address = address;
+    }
+
+    public boolean isClassInstance()
+    {
+        return classInstance;
+    }
+
+    public void setClassInstance(boolean classInstance)
+    {
+        this.classInstance = classInstance;
+    }
+
+    public String getClazz()
+    {
+        return clazz;
+    }
+
+    public void setClazz(String clazz)
+    {
+        this.clazz = clazz;
+    }
+
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(Object o)
+    {
         if (this == o)
             return true;
         if (o == null || getClass() != o.getClass())
             return false;
-        RawMonitor that = (RawMonitor) o;
+        RawMonitor that = (RawMonitor)o;
         return address == that.address && classInstance == that.classInstance &&
-               Objects.equals(clazz, that.clazz);
+                Objects.equals(clazz, that.clazz);
     }
 
     @Override
-    public int hashCode() {
+    public int hashCode()
+    {
         return Objects.hash(address, classInstance, clazz);
     }
 }

@@ -14,12 +14,14 @@ package org.eclipse.jifa.server.controller;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.extern.slf4j.Slf4j;
+
 import org.eclipse.jifa.common.domain.exception.ErrorCodeAccessor;
 import org.eclipse.jifa.common.domain.exception.ValidationException;
 import org.eclipse.jifa.server.domain.exception.ElasticWorkerNotReadyException;
 import org.eclipse.jifa.server.enums.ServerErrorCode;
 import org.eclipse.jifa.server.util.ErrorUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -31,15 +33,19 @@ import java.io.IOException;
 import java.nio.file.AccessDeniedException;
 
 @ControllerAdvice
-@Slf4j
-public class GlobalExceptionHandler {
+public class GlobalExceptionHandler
+{
+    private static final Logger LOG = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     @ExceptionHandler
     @ResponseBody
-    public void handleHttpRequestException(Throwable throwable, HttpServletRequest request, HttpServletResponse response) throws IOException {
+    public void handleHttpRequestException(Throwable throwable, HttpServletRequest request,
+            HttpServletResponse response) throws IOException
+    {
         log(throwable, request);
 
-        if (throwable instanceof WebClientResponseException e) {
+        if (throwable instanceof WebClientResponseException e)
+        {
             response.setStatus(e.getStatusCode().value());
             response.getOutputStream().write(e.getResponseBodyAsByteArray());
             return;
@@ -48,33 +54,41 @@ public class GlobalExceptionHandler {
         response.getOutputStream().write(ErrorUtil.toJson(throwable));
     }
 
-    private void log(Throwable throwable, HttpServletRequest request) {
-        if (throwable instanceof ElasticWorkerNotReadyException) {
+    private static void log(Throwable throwable, HttpServletRequest request)
+    {
+        if (throwable instanceof ElasticWorkerNotReadyException)
+        {
             return;
         }
 
         if (throwable instanceof MissingServletRequestParameterException ||
-            throwable instanceof IllegalArgumentException ||
-            throwable instanceof AuthenticationException ||
-            throwable instanceof ValidationException ||
-            throwable instanceof WebClientResponseException) {
-            log.error(throwable.getMessage());
-        } else {
-            log.error("Error occurred when handling http request '{}'", request.getRequestURI(), throwable);
+                throwable instanceof IllegalArgumentException ||
+                throwable instanceof AuthenticationException ||
+                throwable instanceof ValidationException ||
+                throwable instanceof WebClientResponseException)
+        {
+            LOG.error(throwable.getMessage());
+        }
+        else
+        {
+            LOG.error("Error occurred when handling http request '{}'", request.getRequestURI(), throwable);
         }
     }
 
-    private int getStatusOf(Throwable throwable) {
-        if (throwable instanceof MissingServletRequestParameterException) {
+    private static int getStatusOf(Throwable throwable)
+    {
+        if (throwable instanceof MissingServletRequestParameterException)
+        {
             return 400;
         }
-        if (throwable instanceof AuthenticationException || throwable instanceof AccessDeniedException) {
+        if (throwable instanceof AuthenticationException || throwable instanceof AccessDeniedException)
+        {
             return 401;
         }
-        if (throwable instanceof ErrorCodeAccessor errorCodeAccessor) {
-            if (ServerErrorCode.ACCESS_DENIED == errorCodeAccessor.getErrorCode()) {
+        if (throwable instanceof ErrorCodeAccessor errorCodeAccessor && (ServerErrorCode.ACCESS_DENIED == errorCodeAccessor.getErrorCode()))
+            {
                 return 401;
-            }
+
         }
         return 500;
     }

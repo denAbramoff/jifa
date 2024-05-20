@@ -12,13 +12,30 @@
  ********************************************************************************/
 package org.eclipse.jifa.jfr.model;
 
-import lombok.Getter;
-import lombok.Setter;
 import org.eclipse.jifa.jfr.model.Task;
 
-@Setter
-@Getter
-public class JavaThread extends Task {
+public class JavaThread extends Task
+{
     private long javaId;
     private long osId;
+
+    public long getJavaId()
+    {
+        return javaId;
+    }
+
+    public void setJavaId(long javaId)
+    {
+        this.javaId = javaId;
+    }
+
+    public long getOsId()
+    {
+        return osId;
+    }
+
+    public void setOsId(long osId)
+    {
+        this.osId = osId;
+    }
 }

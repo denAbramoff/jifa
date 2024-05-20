@@ -13,7 +13,7 @@
 package org.eclipse.jifa.gclog;
 
 import com.google.common.collect.ImmutableSet;
-import lombok.extern.slf4j.Slf4j;
+
 import org.eclipse.jifa.analysis.listener.DefaultProgressListener;
 import org.eclipse.jifa.gclog.event.GCEvent;
 import org.eclipse.jifa.gclog.event.evnetInfo.MemoryArea;
@@ -38,7 +38,7 @@ Also, gclog of jdk11 and 17 and 8 with serialGC are excluded for the time being.
 IncompleteGCLog and 11_CMS gclogs are not supported.
  */
 
-@Slf4j
+
 public class TestFragmentedParserToGCModel {
     public static final double DELTA = 1e-6;
 

@@ -12,20 +12,27 @@
  ********************************************************************************/
 package org.eclipse.jifa.jfr.model;
 
-import lombok.Getter;
-import lombok.Setter;
-
 import java.util.ArrayList;
 import java.util.List;
 
-@Setter
-@Getter
-public class DimensionResult<T> {
-
+public class DimensionResult<T>
+{
     private List<T> list;
 
-    public void add(T t) {
-        if (list == null) {
+    public List<T> getList()
+    {
+        return list;
+    }
+
+    public void setList(List<T> list)
+    {
+        this.list = list;
+    }
+
+    public void add(T t)
+    {
+        if (list == null)
+        {
             list = new ArrayList<>();
         }
         list.add(t);

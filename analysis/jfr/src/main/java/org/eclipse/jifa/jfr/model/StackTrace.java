@@ -12,27 +12,46 @@
  ********************************************************************************/
 package org.eclipse.jifa.jfr.model;
 
-import lombok.Getter;
-import lombok.Setter;
 import org.eclipse.jifa.jfr.model.symbol.SymbolBase;
 
 import java.util.Arrays;
 import java.util.Objects;
 
-@Setter
-@Getter
-public class StackTrace extends SymbolBase {
-
+public class StackTrace extends SymbolBase
+{
     private Frame[] frames;
 
     private boolean truncated;
 
-    public int genHashCode() {
+    public Frame[] getFrames()
+    {
+        return frames;
+    }
+
+    public void setFrames(Frame[] frames)
+    {
+        this.frames = frames;
+    }
+
+    public boolean isTruncated()
+    {
+        return truncated;
+    }
+
+    public void setTruncated(boolean truncated)
+    {
+        this.truncated = truncated;
+    }
+
+    public int genHashCode()
+    {
         return Objects.hash(truncated, Arrays.hashCode(frames));
     }
 
-    public boolean isEquals(Object b) {
-        if (!(b instanceof StackTrace t2)) {
+    public boolean isEquals(Object b)
+    {
+        if (!(b instanceof StackTrace t2))
+        {
             return false;
         }
 

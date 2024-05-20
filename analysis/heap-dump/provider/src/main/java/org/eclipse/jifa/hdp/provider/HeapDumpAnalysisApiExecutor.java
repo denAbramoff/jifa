@@ -12,7 +12,6 @@
  ********************************************************************************/
 package org.eclipse.jifa.hdp.provider;
 
-import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.jifa.analysis.AbstractApiExecutor;
 import org.eclipse.jifa.analysis.listener.ProgressListener;
@@ -24,6 +23,8 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
 import org.osgi.framework.launch.Framework;
 import org.osgi.framework.launch.FrameworkFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -40,10 +41,12 @@ import java.util.Objects;
 import java.util.ServiceLoader;
 import java.util.function.Predicate;
 
-@Slf4j
-public class HeapDumpAnalysisApiExecutor extends AbstractApiExecutor<HeapDumpAnalyzer> {
+public class HeapDumpAnalysisApiExecutor extends AbstractApiExecutor<HeapDumpAnalyzer>
+{
+    private static final Logger LOG = LoggerFactory.getLogger(HeapDumpAnalysisApiExecutor.class);
 
-    static {
+    static
+    {
         Map<String, String> config = new HashMap<>();
         config.put(Constants.FRAMEWORK_STORAGE_CLEAN, Constants.FRAMEWORK_STORAGE_CLEAN_ONFIRSTINIT);
 
@@ -76,24 +79,29 @@ public class HeapDumpAnalysisApiExecutor extends AbstractApiExecutor<HeapDumpAna
                 "org.apache.commons.lang3"
         };
         config.put(Constants.FRAMEWORK_SYSTEMPACKAGES_EXTRA, String.join(",", extras));
-        try {
+        try
+        {
             String path = System.getProperty("java.io.tmpdir");
             File dir = new File(path);
-            if (!dir.exists()) {
+            if (!dir.exists())
+            {
                 Files.createDirectory(Path.of(path));
             }
 
             String osgiWorkspace = path + "/osgi_workspace";
             String osgiConfiguration = path + "/osgi_configuration";
 
-            if (Files.exists(Path.of(osgiWorkspace))) {
+            if (Files.exists(Path.of(osgiWorkspace)))
+            {
                 FileUtils.deleteQuietly(new File(osgiWorkspace));
             }
-            if (Files.exists(Path.of(osgiConfiguration))) {
+            if (Files.exists(Path.of(osgiConfiguration)))
+            {
                 FileUtils.deleteQuietly(new File(osgiConfiguration));
             }
 
-            Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            Runtime.getRuntime().addShutdownHook(new Thread(() ->
+            {
                 FileUtils.deleteQuietly(new File(osgiWorkspace));
                 FileUtils.deleteQuietly(new File(osgiConfiguration));
             }));
@@ -106,22 +114,30 @@ public class HeapDumpAnalysisApiExecutor extends AbstractApiExecutor<HeapDumpAna
 
             List<String> dependencies;
             try (BufferedReader br = new BufferedReader(
-                    new InputStreamReader(Objects.requireNonNull(HeapDumpAnalysisApiExecutor.class.getClassLoader().getResourceAsStream("mat-deps/list"))))) {
+                    new InputStreamReader(Objects.requireNonNull(
+                            HeapDumpAnalysisApiExecutor.class.getClassLoader().getResourceAsStream("mat-deps/list")))))
+            {
                 dependencies = Arrays.asList(br.readLine().split(","));
             }
 
             List<Bundle> bundles = new ArrayList<>();
 
-            for (String dependency : dependencies) {
+            for (String dependency : dependencies)
+            {
                 // org.eclipse.osgi is the system bundle
-                if (!dependency.startsWith("org.eclipse.osgi-")) {
-                    URL resource = HeapDumpAnalysisApiExecutor.class.getClassLoader().getResource("mat-deps/" + dependency);
-                    try {
+                if (!dependency.startsWith("org.eclipse.osgi-"))
+                {
+                    URL resource = HeapDumpAnalysisApiExecutor.class.getClassLoader()
+                            .getResource("mat-deps/" + dependency);
+                    try
+                    {
                         assert resource != null;
                         bundles.add(framework.getBundleContext().installBundle(resource.toString()));
-                    } catch (Throwable t) {
-                        log.error("Failed to install bundle: {}", dependency);
-                        throw  t;
+                    }
+                    catch (Throwable t)
+                    {
+                        LOG.error("Failed to install bundle: {}", dependency);
+                        throw t;
                     }
                 }
             }
@@ -131,19 +147,24 @@ public class HeapDumpAnalysisApiExecutor extends AbstractApiExecutor<HeapDumpAna
             validNames.add("org.eclipse.equinox.event");
             validNames.add("org.eclipse.jifa.hda.implementation");
 
-            for (Bundle bundle : bundles) {
-                if (validNames.contains(bundle.getSymbolicName())) {
-                    log.debug("starting bundle: {}", bundle);
+            for (Bundle bundle : bundles)
+            {
+                if (validNames.contains(bundle.getSymbolicName()))
+                {
+                    LOG.debug("starting bundle: {}", bundle);
                     bundle.start();
                 }
             }
 
             PROVIDER = framework.getBundleContext()
-                                .getService(framework.getBundleContext()
-                                                     .getServiceReference(HeapDumpAnalyzer.Provider.class));
+                    .getService(framework.getBundleContext()
+                            .getServiceReference(HeapDumpAnalyzer.Provider.class));
 
-        } catch (Throwable t) {
-            if (t instanceof RuntimeException rt) {
+        }
+        catch (Throwable t)
+        {
+            if (t instanceof RuntimeException rt)
+            {
                 throw rt;
             }
             throw new RuntimeException(t);
@@ -153,63 +174,77 @@ public class HeapDumpAnalysisApiExecutor extends AbstractApiExecutor<HeapDumpAna
     private static final HeapDumpAnalyzer.Provider PROVIDER;
 
     @Override
-    public String namespace() {
+    public String namespace()
+    {
         return "heap-dump";
     }
 
     @Override
-    public Predicate<byte[]> matcher() {
-        return new Predicate<>() {
+    public Predicate<byte[]> matcher()
+    {
+        return new Predicate<>()
+        {
             static final String HEADER = "JAVA PROFILE 1.0.2";
 
             @Override
-            public boolean test(byte[] bytes) {
+            public boolean test(byte[] bytes)
+            {
                 return bytes.length > HEADER.length() && new String(bytes, 0, HEADER.length()).equals(HEADER);
             }
         };
     }
 
     @Override
-    public boolean needOptionsForAnalysis(Path target) {
+    public boolean needOptionsForAnalysis(Path target)
+    {
         checkExists(target);
         return !indexFile(target).exists() && !errorLogFile(target).exists() && !isActive(target);
     }
 
     @Override
-    public void clean(Path target) {
+    public void clean(Path target)
+    {
         super.clean(target);
         File index = indexFile(target);
-        if (index.exists()) {
-            if (!index.delete()) {
-                log.warn("Failed to delete index file: {}", index.getAbsolutePath());
-            }
+        if (index.exists() && !index.delete())
+            {
+                LOG.warn("Failed to delete index file: {}", index.getAbsolutePath());
+
         }
     }
 
     @Override
-    protected MethodNameConverter methodNameConverter() {
+    protected MethodNameConverter methodNameConverter()
+    {
         return MethodNameConverter.GETTER_METHOD;
     }
 
     @Override
-    protected HeapDumpAnalyzer buildAnalyzer(Path target, Map<String, String> options, ProgressListener listener) {
+    protected HeapDumpAnalyzer buildAnalyzer(Path target, Map<String, String> options, ProgressListener listener)
+    {
         return PROVIDER.provide(target, options, listener);
     }
 
     @Override
-    protected void cachedAnalyzerRemoved(HeapDumpAnalyzer heapDumpAnalyzer) {
-        if (heapDumpAnalyzer != null) {
+    protected void cachedAnalyzerRemoved(HeapDumpAnalyzer heapDumpAnalyzer)
+    {
+        if (heapDumpAnalyzer != null)
+        {
             heapDumpAnalyzer.dispose();
         }
     }
 
-    private File indexFile(Path target) {
+    private static File indexFile(Path target)
+    {
         String indexFileNamePrefix;
         String dumpFileName = target.toFile().getName();
         int i = dumpFileName.lastIndexOf('.');
-        if (i >= 0) {
+        if (i >= 0)
+        {
             indexFileNamePrefix = dumpFileName.substring(0, i + 1);
-        } else {
+        }
+        else
+        {
             indexFileNamePrefix = dumpFileName + '.';
         }
         return target.resolveSibling(indexFileNamePrefix + "index").toFile();

@@ -13,7 +13,6 @@
 
 package org.eclipse.jifa.gclog.parser;
 
-import lombok.extern.slf4j.Slf4j;
 import org.eclipse.jifa.gclog.event.Safepoint;
 import org.eclipse.jifa.gclog.model.GCModel;
 import org.eclipse.jifa.gclog.model.GCModelFactory;
@@ -24,41 +23,55 @@ import java.util.List;
 
 import static org.eclipse.jifa.gclog.util.Constant.MS2S;
 
-@Slf4j
-public abstract class AbstractGCLogParser implements GCLogParser {
+public abstract class AbstractGCLogParser implements GCLogParser
+{
+    private static final org.slf4j.Logger LOG = org.slf4j.LoggerFactory.getLogger(AbstractGCLogParser.class);
+
     private GCModel model;
     private GCLogParsingMetadata metadata;
 
-    public GCLogParsingMetadata getMetadata() {
+    public GCLogParsingMetadata getMetadata()
+    {
         return metadata;
     }
 
-    public void setMetadata(GCLogParsingMetadata metadata) {
+    public void setMetadata(GCLogParsingMetadata metadata)
+    {
         this.metadata = metadata;
     }
 
-    protected GCModel getModel() {
+    protected GCModel getModel()
+    {
         return model;
     }
 
     // for the sake of performance, will try to use less regular expression
-    public final GCModel parse(BufferedReader br) throws Exception {
-        model = GCModelFactory.getModel(metadata.getCollector());
-        model.setLogStyle(metadata.getStyle());
+    public final GCModel parse(BufferedReader br) throws Exception
+    {
+        model = GCModelFactory.getModel(metadata.collector());
+        model.setLogStyle(metadata.style());
         String line;
-        while ((line = br.readLine()) != null) {
-            try {
-                if (line.length() > 0) {
+        while ((line = br.readLine()) != null)
+        {
+            try
+            {
+                if (!line.isEmpty())
+                {
                     doParseLine(line);
                 }
-            } catch (Exception e) {
-                log.debug("fail to parse \"{}\", {}", line, e.getMessage());
+            }
+            catch (Exception e)
+            {
+                LOG.debug("fail to parse \"{}\", {}", line, e.getMessage());
             }
         }
-        try {
+        try
+        {
             endParsing();
-        } catch (Exception e) {
-            log.debug("fail to parse \"{}\", {}", line, e.getMessage());
+        }
+        catch (Exception e)
+        {
+            LOG.debug("fail to parse \"{}\", {}", line, e.getMessage());
         }
 
         return model;
@@ -66,22 +79,29 @@ public abstract class AbstractGCLogParser implements GCLogParser {
 
     protected abstract void doParseLine(String line);
 
-    protected void endParsing() {
+    protected void endParsing()
+    {
     }
 
     // return true if text can be parsed by any rule
     // order of rules matters
-    protected boolean doParseUsingRules(AbstractGCLogParser parser, ParseRuleContext context, String text, List<ParseRule> rules) {
-        for (ParseRule rule : rules) {
-            if (rule.doParse(parser, context, text)) {
+    protected boolean doParseUsingRules(AbstractGCLogParser parser, ParseRuleContext context, String text,
+            List<ParseRule> rules)
+    {
+        for (ParseRule rule : rules)
+        {
+            if (rule.doParse(parser, context, text))
+            {
                 return true;
             }
         }
         return false;
     }
 
-    // Total time for which application threads were stopped: 0.0001215 seconds, Stopping threads took: 0.0000271 seconds
-    protected void parseSafepointStop(double uptime, String s) {
+    // Total time for which application threads were stopped: 0.0001215 seconds, Stopping threads took: 0.0000271
+    // seconds
+    protected void parseSafepointStop(double uptime, String s)
+    {
         int begin = s.indexOf("stopped: ") + "stopped: ".length();
         int end = s.indexOf(" seconds, ");
         double duration = Double.parseDouble(s.substring(begin, end)) * MS2S;

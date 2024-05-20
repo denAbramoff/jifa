@@ -14,8 +14,7 @@ package org.eclipse.jifa.server.domain.dto;
 
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
-import lombok.Getter;
-import lombok.Setter;
+
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jifa.server.enums.FileTransferMethod;
 import org.eclipse.jifa.server.enums.FileType;
@@ -31,9 +30,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * File Transfer Request
  */
 @FileTransferRequest.Constraint
-@Getter
-@Setter
-public class FileTransferRequest {
+public class FileTransferRequest
+{
     /**
      * File type, required
      */
@@ -130,14 +128,205 @@ public class FileTransferRequest {
      */
     private String text;
 
+    public FileType getType()
+    {
+        return type;
+    }
+
+    public FileTransferMethod getMethod()
+    {
+        return method;
+    }
+
+    public String getOssEndpoint()
+    {
+        return ossEndpoint;
+    }
+
+    public String getOssAccessKeyId()
+    {
+        return ossAccessKeyId;
+    }
+
+    public String getOssSecretAccessKey()
+    {
+        return ossSecretAccessKey;
+    }
+
+    public String getOssBucketName()
+    {
+        return ossBucketName;
+    }
+
+    public String getOssObjectKey()
+    {
+        return ossObjectKey;
+    }
+
+    public String getS3Region()
+    {
+        return s3Region;
+    }
+
+    public String getS3AccessKey()
+    {
+        return s3AccessKey;
+    }
+
+    public String getS3SecretKey()
+    {
+        return s3SecretKey;
+    }
+
+    public String getS3BucketName()
+    {
+        return s3BucketName;
+    }
+
+    public String getS3ObjectKey()
+    {
+        return s3ObjectKey;
+    }
+
+    public String getScpHostname()
+    {
+        return scpHostname;
+    }
+
+    public String getScpUser()
+    {
+        return scpUser;
+    }
+
+    public String getScpPassword()
+    {
+        return scpPassword;
+    }
+
+    public String getScpSourcePath()
+    {
+        return scpSourcePath;
+    }
+
+    public String getUrl()
+    {
+        return url;
+    }
+
+    public String getFilename()
+    {
+        return filename;
+    }
+
+    public String getText()
+    {
+        return text;
+    }
+
+    public void setType(FileType type)
+    {
+        this.type = type;
+    }
+
+    public void setMethod(FileTransferMethod method)
+    {
+        this.method = method;
+    }
+
+    public void setOssEndpoint(String ossEndpoint)
+    {
+        this.ossEndpoint = ossEndpoint;
+    }
+
+    public void setOssAccessKeyId(String ossAccessKeyId)
+    {
+        this.ossAccessKeyId = ossAccessKeyId;
+    }
+
+    public void setOssSecretAccessKey(String ossSecretAccessKey)
+    {
+        this.ossSecretAccessKey = ossSecretAccessKey;
+    }
+
+    public void setOssBucketName(String ossBucketName)
+    {
+        this.ossBucketName = ossBucketName;
+    }
+
+    public void setOssObjectKey(String ossObjectKey)
+    {
+        this.ossObjectKey = ossObjectKey;
+    }
+
+    public void setS3Region(String s3Region)
+    {
+        this.s3Region = s3Region;
+    }
+
+    public void setS3AccessKey(String s3AccessKey)
+    {
+        this.s3AccessKey = s3AccessKey;
+    }
+
+    public void setS3SecretKey(String s3SecretKey)
+    {
+        this.s3SecretKey = s3SecretKey;
+    }
+
+    public void setS3BucketName(String s3BucketName)
+    {
+        this.s3BucketName = s3BucketName;
+    }
+
+    public void setS3ObjectKey(String s3ObjectKey)
+    {
+        this.s3ObjectKey = s3ObjectKey;
+    }
+
+    public void setScpHostname(String scpHostname)
+    {
+        this.scpHostname = scpHostname;
+    }
+
+    public void setScpUser(String scpUser)
+    {
+        this.scpUser = scpUser;
+    }
+
+    public void setScpPassword(String scpPassword)
+    {
+        this.scpPassword = scpPassword;
+    }
+
+    public void setScpSourcePath(String scpSourcePath)
+    {
+        this.scpSourcePath = scpSourcePath;
+    }
+
+    public void setUrl(String url)
+    {
+        this.url = url;
+    }
+
+    public void setFilename(String filename)
+    {
+        this.filename = filename;
+    }
+
+    public void setText(String text)
+    {
+        this.text = text;
+    }
+
     /**
      * Constraint of FileTransferRequest
      */
-    @Target({TYPE})
+    @Target({ TYPE })
     @Retention(RUNTIME)
     @Documented
-    @jakarta.validation.Constraint(validatedBy = {Validator.class})
-    @interface Constraint {
+    @jakarta.validation.Constraint(validatedBy = { Validator.class })
+    @interface Constraint
+    {
         String message() default "";
 
         Class[] groups() default {};
@@ -148,85 +337,100 @@ public class FileTransferRequest {
     /**
      * Validator of FileTransferRequest
      */
-    private static class Validator implements ConstraintValidator<Constraint, FileTransferRequest> {
+    private static class Validator implements ConstraintValidator<Constraint, FileTransferRequest>
+    {
 
         @Override
-        public boolean isValid(FileTransferRequest request, ConstraintValidatorContext context) {
+        public boolean isValid(FileTransferRequest request, ConstraintValidatorContext context)
+        {
             String notNullTemplate = "{jakarta.validation.constraints.NotNull.message}";
             boolean valid = true;
-            if (request.type == null) {
+            if (request.type == null)
+            {
                 valid = false;
                 context.buildConstraintViolationWithTemplate(notNullTemplate)
-                       .addPropertyNode("type")
-                       .addConstraintViolation();
+                        .addPropertyNode("type")
+                        .addConstraintViolation();
             }
 
-            if (request.method == null) {
+            if (request.method == null)
+            {
                 context.buildConstraintViolationWithTemplate(notNullTemplate)
-                       .addPropertyNode("method")
-                       .addConstraintViolation();
+                        .addPropertyNode("method")
+                        .addConstraintViolation();
                 context.disableDefaultConstraintViolation();
                 return false;
             }
 
-            if (request.method == FileTransferMethod.UPLOAD) {
+            if (request.method == FileTransferMethod.UPLOAD)
+            {
                 context.disableDefaultConstraintViolation();
                 return false;
             }
 
-            switch (request.method) {
-                case OSS -> {
-                    valid &= checkNotBlank(request.ossEndpoint, "ossEndpoint", context);
-                    valid &= checkNotBlank(request.ossAccessKeyId, "ossAccessKeyId", context);
-                    valid &= checkNotBlank(request.ossSecretAccessKey, "ossSecretAccessKey", context);
-                    valid &= checkNotBlank(request.ossBucketName, "ossBucketName", context);
-                    valid &= checkNotBlank(request.ossObjectKey, "ossObjectKey", context);
-                }
-
-                case S3 -> {
-                    valid &= checkNotBlank(request.s3Region, "s3Region", context);
-                    valid &= checkNotBlank(request.s3AccessKey, "s3AccessKey", context);
-                    valid &= checkNotBlank(request.s3SecretKey, "s3SecretKey", context);
-                    valid &= checkNotBlank(request.s3BucketName, "s3BucketName", context);
-                    valid &= checkNotBlank(request.s3ObjectKey, "s3ObjectKey", context);
-                }
-
-                case SCP -> {
-                    valid &= checkNotBlank(request.scpHostname, "scpHostname", context);
-                    valid &= checkNotBlank(request.scpUser, "scpUser", context);
-                    valid &= checkNotBlank(request.scpSourcePath, "scpSourcePath", context);
-                }
-
-                case URL -> valid &= checkNotBlank(request.url, "url", context);
-
-                case TEXT -> {
-                    // TODO: should check file type
-                    valid &= checkNotBlank(request.filename, "filename", context);
-                    valid &= checkNotBlank(request.text, "text", context);
-                }
+            switch (request.method)
+            {
+            case OSS ->
+            {
+                valid &= checkNotBlank(request.ossEndpoint, "ossEndpoint", context);
+                valid &= checkNotBlank(request.ossAccessKeyId, "ossAccessKeyId", context);
+                valid &= checkNotBlank(request.ossSecretAccessKey, "ossSecretAccessKey", context);
+                valid &= checkNotBlank(request.ossBucketName, "ossBucketName", context);
+                valid &= checkNotBlank(request.ossObjectKey, "ossObjectKey", context);
             }
 
-            if (!valid) {
+            case S3 ->
+            {
+                valid &= checkNotBlank(request.s3Region, "s3Region", context);
+                valid &= checkNotBlank(request.s3AccessKey, "s3AccessKey", context);
+                valid &= checkNotBlank(request.s3SecretKey, "s3SecretKey", context);
+                valid &= checkNotBlank(request.s3BucketName, "s3BucketName", context);
+                valid &= checkNotBlank(request.s3ObjectKey, "s3ObjectKey", context);
+            }
+
+            case SCP ->
+            {
+                valid &= checkNotBlank(request.scpHostname, "scpHostname", context);
+                valid &= checkNotBlank(request.scpUser, "scpUser", context);
+                valid &= checkNotBlank(request.scpSourcePath, "scpSourcePath", context);
+            }
+
+            case URL -> valid &= checkNotBlank(request.url, "url", context);
+
+            case TEXT ->
+            {
+                // TODO: should check file type
+                valid &= checkNotBlank(request.filename, "filename", context);
+                valid &= checkNotBlank(request.text, "text", context);
+            }
+            }
+
+            if (!valid)
+            {
                 context.disableDefaultConstraintViolation();
             }
             return valid;
         }
 
-        private boolean checkNotBlank(String value, String name, ConstraintValidatorContext context) {
-            if (StringUtils.isBlank(value)) {
+        private boolean checkNotBlank(String value, String name, ConstraintValidatorContext context)
+        {
+            if (StringUtils.isBlank(value))
+            {
                 context.buildConstraintViolationWithTemplate("{jakarta.validation.constraints.NotBlank.message}")
-                       .addPropertyNode(name)
-                       .addConstraintViolation();
+                        .addPropertyNode(name)
+                        .addConstraintViolation();
                 return false;
             }
             return true;
         }
 
-        private boolean checkTrue(String value, String name, ConstraintValidatorContext context) {
-            if (StringUtils.isBlank(value)) {
+        private boolean checkTrue(String value, String name, ConstraintValidatorContext context)
+        {
+            if (StringUtils.isBlank(value))
+            {
                 context.buildConstraintViolationWithTemplate("{jakarta.validation.constraints.NotBlank.message}")
-                       .addPropertyNode(name)
-                       .addConstraintViolation();
+                        .addPropertyNode(name)
+                        .addConstraintViolation();
                 return false;
             }
             return true;

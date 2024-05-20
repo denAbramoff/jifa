@@ -13,20 +13,29 @@
 
 package org.eclipse.jifa.tda.model;
 
-import lombok.Data;
-
-@Data
-public abstract class Identity {
-
+public abstract class Identity
+{
     private int id;
 
+    public int getId()
+    {
+        return id;
+    }
+
+    public void setId(int id)
+    {
+        this.id = id;
+    }
+
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(Object o)
+    {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public int hashCode() {
+    public int hashCode()
+    {
         throw new UnsupportedOperationException();
     }
 }

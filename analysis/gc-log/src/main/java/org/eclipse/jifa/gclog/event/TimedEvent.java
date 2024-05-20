@@ -23,7 +23,7 @@ import static org.eclipse.jifa.gclog.util.Constant.UNKNOWN_INT;
 
 public class TimedEvent {
     // We assume that start time always exists. We will refuse to analyze logs that does not print any time,
-    // and will add a suitable start time to events that does not have a start time in log.
+    // and will add a suitable start time to events that does not have a start time in LOG.
     // Unit of all time variables is ms.
     protected double startTime = UNKNOWN_DOUBLE;
     protected int id = UNKNOWN_INT; // id is used to identify events, should not be showed to user

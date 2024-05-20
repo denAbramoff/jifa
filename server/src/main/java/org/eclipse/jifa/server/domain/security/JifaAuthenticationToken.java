@@ -20,9 +20,10 @@ import java.time.Instant;
 import java.util.Collection;
 import java.util.Collections;
 
-public class JifaAuthenticationToken extends AbstractAuthenticationToken {
-
-    private static final Collection<? extends GrantedAuthority> ADMIN = Collections.singleton((GrantedAuthority) () -> Constant.ROLE_PREFIX + Constant.ROLE_ADMIN);
+public class JifaAuthenticationToken extends AbstractAuthenticationToken
+{
+    private static final Collection<? extends GrantedAuthority> ADMIN = Collections.singleton(
+            (GrantedAuthority)() -> Constant.ROLE_PREFIX + Constant.ROLE_ADMIN);
 
     private final long userId;
 
@@ -34,7 +35,8 @@ public class JifaAuthenticationToken extends AbstractAuthenticationToken {
 
     private final Instant expiresAt;
 
-    public JifaAuthenticationToken(long userId, String userName, boolean admin, String token, Instant expiresAt) {
+    public JifaAuthenticationToken(long userId, String userName, boolean admin, String token, Instant expiresAt)
+    {
         super(admin ? ADMIN : Collections.emptySet());
         this.userId = userId;
         this.userName = userName;
@@ -45,32 +47,39 @@ public class JifaAuthenticationToken extends AbstractAuthenticationToken {
     }
 
     @Override
-    public Object getPrincipal() {
+    public Object getPrincipal()
+    {
         return userId;
     }
 
     @Override
-    public Object getCredentials() {
+    public Object getCredentials()
+    {
         return null;
     }
 
-    public long getUserId() {
+    public long getUserId()
+    {
         return userId;
     }
 
-    public String getUserName() {
+    public String getUserName()
+    {
         return userName;
     }
 
-    public boolean isAdmin() {
+    public boolean isAdmin()
+    {
         return admin;
     }
 
-    public String getToken() {
+    public String getToken()
+    {
         return token;
     }
 
-    public Instant getExpiresAt() {
+    public Instant getExpiresAt()
+    {
         return expiresAt;
     }
 }

@@ -13,18 +13,6 @@
 
 package org.eclipse.jifa.gclog.vo;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-public class PauseStatistics {
-    double throughput;
-    double pauseAvg;
-    double pauseMedian;
-    double pauseP99;
-    double pauseP999;
-    double pauseMax;
+public record PauseStatistics(double throughput, double pauseAvg, double pauseMedian, double pauseP99, double pauseP999, double pauseMax)
+{
 }

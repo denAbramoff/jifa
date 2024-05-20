@@ -17,18 +17,22 @@ import org.junit.jupiter.api.Test;
 
 import java.util.UUID;
 
-public class TestCache {
+public class TestCache
+{
 
-    public static class C {
+    public static class C
+    {
 
         @Cacheable
-        public String randomString() {
+        public String randomString()
+        {
             return UUID.randomUUID().toString();
         }
     }
 
     @Test
-    public void test() {
+    public void test()
+    {
         C c = ProxyBuilder.build(C.class);
         Assertions.assertEquals(c.randomString(), c.randomString());
     }

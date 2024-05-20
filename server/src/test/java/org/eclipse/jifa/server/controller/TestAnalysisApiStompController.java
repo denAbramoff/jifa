@@ -13,7 +13,7 @@
 package org.eclipse.jifa.server.controller;
 
 import com.google.gson.JsonElement;
-import lombok.extern.slf4j.Slf4j;
+
 import org.eclipse.jifa.server.Constant;
 import org.eclipse.jifa.server.service.AnalysisApiService;
 import org.junit.jupiter.api.BeforeEach;
@@ -46,7 +46,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.DEFINED_PORT;
 
 @SuppressWarnings("NullableProblems")
-@Slf4j
+
 @SpringBootTest(webEnvironment = DEFINED_PORT)
 public class TestAnalysisApiStompController {
 

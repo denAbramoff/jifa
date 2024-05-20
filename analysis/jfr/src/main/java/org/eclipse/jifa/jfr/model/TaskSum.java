@@ -12,19 +12,27 @@
  ********************************************************************************/
 package org.eclipse.jifa.jfr.model;
 
-import lombok.Getter;
-import lombok.Setter;
+public class TaskSum extends TaskResultBase
+{
+    private long sum;
 
-@Setter
-@Getter
-public class TaskSum extends TaskResultBase {
-    public TaskSum() {
+    public TaskSum()
+    {
         super(null);
     }
 
-    public TaskSum(Task task) {
+    public TaskSum(Task task)
+    {
         super(task);
     }
 
-    private long sum;
+    public long getSum()
+    {
+        return sum;
+    }
+
+    public void setSum(long sum)
+    {
+        this.sum = sum;
+    }
 }

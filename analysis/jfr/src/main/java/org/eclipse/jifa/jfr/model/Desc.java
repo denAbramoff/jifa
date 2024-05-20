@@ -12,9 +12,9 @@
  ********************************************************************************/
 package org.eclipse.jifa.jfr.model;
 
-import lombok.Getter;
 
-@Getter
+
+
 public class Desc {
     private final String key;
 

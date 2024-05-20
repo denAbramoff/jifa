@@ -12,31 +12,52 @@
  ********************************************************************************/
 package org.eclipse.jifa.jfr.model;
 
-import lombok.Getter;
-import lombok.Setter;
-
 import java.util.HashMap;
 import java.util.Map;
 
-@Setter
-@Getter
-public class TaskResultBase {
+public class TaskResultBase
+{
     private Task task;
     private Map<StackTrace, Long> samples;
 
-    public TaskResultBase(Task task) {
+    public TaskResultBase(Task task)
+    {
         this.task = task;
         samples = new HashMap<>();
     }
 
-    public TaskResultBase() {
+    public TaskResultBase()
+    {
     }
 
-    public void merge(StackTrace st, long value) {
-        if (samples == null) {
+    public Task getTask()
+    {
+        return task;
+    }
+
+    public void setTask(Task task)
+    {
+        this.task = task;
+    }
+
+    public Map<StackTrace, Long> getSamples()
+    {
+        return samples;
+    }
+
+    public void setSamples(Map<StackTrace, Long> samples)
+    {
+        this.samples = samples;
+    }
+
+    public void merge(StackTrace st, long value)
+    {
+        if (samples == null)
+        {
             samples = new HashMap<>();
         }
-        if (st == null || value <= 0) {
+        if (st == null || value <= 0)
+        {
             return;
         }
         samples.put(st, samples.containsKey(st) ? samples.get(st) + value : value);

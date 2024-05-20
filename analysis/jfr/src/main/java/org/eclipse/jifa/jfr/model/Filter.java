@@ -12,9 +12,9 @@
  ********************************************************************************/
 package org.eclipse.jifa.jfr.model;
 
-import lombok.Getter;
 
-@Getter
+
+
 public class Filter {
     private final String key;
 

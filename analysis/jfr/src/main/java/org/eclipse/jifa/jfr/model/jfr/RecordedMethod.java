@@ -12,27 +12,74 @@
  ********************************************************************************/
 package org.eclipse.jifa.jfr.model.jfr;
 
-import lombok.Getter;
-import lombok.Setter;
 import org.eclipse.jifa.jfr.model.symbol.SymbolBase;
 
 import java.util.Objects;
 
-@Setter
-@Getter
-public class RecordedMethod extends SymbolBase {
+public class RecordedMethod extends SymbolBase
+{
     private RecordedClass type;
     private String name;
     private String descriptor;
     private int modifiers;
     private boolean hidden;
 
-    public boolean isEquals(Object b) {
-        if (!(b instanceof RecordedMethod)) {
+    public RecordedClass getType()
+    {
+        return type;
+    }
+
+    public void setType(RecordedClass type)
+    {
+        this.type = type;
+    }
+
+    public String getName()
+    {
+        return name;
+    }
+
+    public void setName(String name)
+    {
+        this.name = name;
+    }
+
+    public String getDescriptor()
+    {
+        return descriptor;
+    }
+
+    public void setDescriptor(String descriptor)
+    {
+        this.descriptor = descriptor;
+    }
+
+    public int getModifiers()
+    {
+        return modifiers;
+    }
+
+    public void setModifiers(int modifiers)
+    {
+        this.modifiers = modifiers;
+    }
+
+    public boolean isHidden()
+    {
+        return hidden;
+    }
+
+    public void setHidden(boolean hidden)
+    {
+        this.hidden = hidden;
+    }
+
+    public boolean isEquals(Object b)
+    {
+        if (!(b instanceof RecordedMethod m2))
+        {
             return false;
         }
-
-        RecordedMethod m2 = (RecordedMethod) b;
 
         return Objects.equals(descriptor, m2.getDescriptor())
                 && Objects.equals(name, m2.getName())
@@ -41,7 +88,8 @@ public class RecordedMethod extends SymbolBase {
                 && hidden == m2.isHidden();
     }
 
-    public int genHashCode() {
+    public int genHashCode()
+    {
         return Objects.hash(type, name, descriptor, modifiers, hidden);
     }
 }

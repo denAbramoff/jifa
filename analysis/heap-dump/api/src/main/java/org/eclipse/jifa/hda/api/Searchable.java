@@ -12,6 +12,7 @@
  ********************************************************************************/
 package org.eclipse.jifa.hda.api;
 
-public interface Searchable {
+public interface Searchable
+{
     Object getBySearchType(SearchType type);
 }

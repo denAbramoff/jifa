@@ -15,6 +15,7 @@ package org.eclipse.jifa.server.service.impl;
 import io.netty.channel.ChannelOption;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import io.netty.handler.timeout.WriteTimeoutHandler;
+
 import org.eclipse.jifa.common.domain.exception.ShouldNotReachHereException;
 import org.eclipse.jifa.common.util.Validate;
 import org.eclipse.jifa.server.ConfigurationAccessor;
@@ -43,6 +44,7 @@ import org.eclipse.jifa.server.service.StorageService;
 import org.eclipse.jifa.server.service.UserService;
 import org.eclipse.jifa.server.service.WorkerService;
 import org.jetbrains.annotations.NotNull;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
@@ -69,6 +71,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import org.springframework.web.util.DefaultUriBuilderFactory;
 import org.springframework.web.util.UriBuilder;
+
 import reactor.core.publisher.Mono;
 import reactor.netty.http.client.HttpClient;
 
@@ -93,8 +96,8 @@ import static org.eclipse.jifa.server.enums.ServerErrorCode.NO_AVAILABLE_LOCATIO
 
 @Master
 @Service
-public class WorkerServiceImpl extends ConfigurationAccessor implements WorkerService {
-
+public class WorkerServiceImpl extends ConfigurationAccessor implements WorkerService
+{
     private final UserService userService;
     protected final WebClient webClient;
     private static final int DELETION_DELAY = 60;
@@ -107,12 +110,14 @@ public class WorkerServiceImpl extends ConfigurationAccessor implements WorkerSe
     private final TaskScheduler taskScheduler;
     private final RetryTemplate retryTemplateForAcquiringElasticWorker;
 
+    @Autowired
     protected WorkerServiceImpl(UserService userService,
-                                StorageService storageService,
-                                FileLocationRuleRepo fileLocationRuleRepo,
-                                StaticWorkerRepo staticWorkerRepo, StaticWorkerLabelRepo staticWorkerLabelRepo,
-                                ElasticWorkerRepo elasticWorkerRepo, ElasticWorkerScheduler elasticWorkerScheduler,
-                                TaskScheduler taskScheduler) {
+            StorageService storageService,
+            FileLocationRuleRepo fileLocationRuleRepo,
+            StaticWorkerRepo staticWorkerRepo, StaticWorkerLabelRepo staticWorkerLabelRepo,
+            ElasticWorkerRepo elasticWorkerRepo, ElasticWorkerScheduler elasticWorkerScheduler,
+            TaskScheduler taskScheduler)
+    {
         this.userService = userService;
         this.storageService = storageService;
         this.fileLocationRuleRepo = fileLocationRuleRepo;
@@ -123,13 +128,13 @@ public class WorkerServiceImpl extends ConfigurationAccessor implements WorkerSe
         this.taskScheduler = taskScheduler;
 
         HttpClient httpClient = HttpClient.create()
-                                          .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 16000)
-                                          .doOnConnected(conn -> conn
-                                                  .addHandlerLast(new ReadTimeoutHandler(Long.MAX_VALUE, TimeUnit.SECONDS))
-                                                  .addHandlerLast(new WriteTimeoutHandler(Long.MAX_VALUE, TimeUnit.SECONDS)));
+                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 16000)
+                .doOnConnected(conn -> conn
+                        .addHandlerLast(new ReadTimeoutHandler(Long.MAX_VALUE, TimeUnit.SECONDS))
+                        .addHandlerLast(new WriteTimeoutHandler(Long.MAX_VALUE, TimeUnit.SECONDS)));
         webClient = WebClient.builder()
-                             .clientConnector(new ReactorClientHttpConnector(httpClient))
-                             .build();
+                .clientConnector(new ReactorClientHttpConnector(httpClient))
+                .build();
 
         retryTemplateForAcquiringElasticWorker = new RetryTemplate();
 
@@ -139,9 +144,9 @@ public class WorkerServiceImpl extends ConfigurationAccessor implements WorkerSe
         timeoutRetryPolicy.setTimeout(30000);
 
         SimpleRetryPolicy simpleRetryPolicy = new SimpleRetryPolicy(Integer.MAX_VALUE,
-                                                                    Collections.singletonMap(DataIntegrityViolationException.class, true));
+                Collections.singletonMap(DataIntegrityViolationException.class, true));
 
-        compositeRetryPolicy.setPolicies(new RetryPolicy[]{
+        compositeRetryPolicy.setPolicies(new RetryPolicy[] {
                 timeoutRetryPolicy, simpleRetryPolicy
         });
 
@@ -153,20 +158,25 @@ public class WorkerServiceImpl extends ConfigurationAccessor implements WorkerSe
     }
 
     @Override
-    public FileLocation decideLocationForNewFile(UserEntity user, FileType type) {
+    public FileLocation decideLocationForNewFile(UserEntity user, FileType type)
+    {
         FileLocationRuleEntity rule = null;
-        if (fileLocationRuleRepo.count() > 0) {
+        if (fileLocationRuleRepo.count() > 0)
+        {
             // find by user and file type
             rule = fileLocationRuleRepo.findByUserAndFileType(user, type);
-            if (rule == null) {
+            if (rule == null)
+            {
                 // find by user
                 rule = fileLocationRuleRepo.findByUserAndFileType(user, null);
             }
-            if (rule == null) {
+            if (rule == null)
+            {
                 // find by file type
                 rule = fileLocationRuleRepo.findByUserAndFileType(null, type);
             }
-            if (rule == null) {
+            if (rule == null)
+            {
                 // default
                 rule = fileLocationRuleRepo.findByUserAndFileType(null, null);
             }
@@ -174,34 +184,43 @@ public class WorkerServiceImpl extends ConfigurationAccessor implements WorkerSe
 
         Optional<StaticWorkerEntity> staticWorker;
 
-        if (rule == null) {
-            if (storageService.available()) {
+        if (rule == null)
+        {
+            if (storageService.available())
+            {
                 return new FileLocation(true, null);
             }
 
             staticWorker = staticWorkerRepo.findFirstByOrderByAvailableSpaceDesc();
-        } else {
+        }
+        else
+        {
 
-            switch (rule.getRule()) {
-                case SHARED_STORAGE -> {
-                    return new FileLocation(true, null);
-                }
+            switch (rule.getRule())
+            {
+            case SHARED_STORAGE ->
+            {
+                return new FileLocation(true, null);
+            }
 
-                case STATIC_WORKERS -> {
-                    staticWorker = staticWorkerRepo.findFirstByOrderByAvailableSpaceDesc();
-                }
+            case STATIC_WORKERS ->
+            {
+                staticWorker = staticWorkerRepo.findFirstByOrderByAvailableSpaceDesc();
+            }
 
-                case LABELED_STATIC_WORKERS -> {
-                    staticWorker = staticWorkerLabelRepo.findByLabel(rule.getLabel()).stream()
-                                                        .sorted(Comparator.comparingLong(e -> e.getStaticWorker().getAvailableSpace()))
-                                                        .reduce((f, s) -> s).map(StaticWorkerLabelEntity::getStaticWorker);
-                }
+            case LABELED_STATIC_WORKERS ->
+            {
+                staticWorker = staticWorkerLabelRepo.findByLabel(rule.getLabel()).stream()
+                        .sorted(Comparator.comparingLong(e -> e.getStaticWorker().getAvailableSpace()))
+                        .reduce((f, s) -> s).map(StaticWorkerLabelEntity::getStaticWorker);
+            }
 
-                default -> throw new ShouldNotReachHereException();
+            default -> throw new ShouldNotReachHereException();
             }
         }
 
-        if (staticWorker.isPresent()) {
+        if (staticWorker.isPresent())
+        {
             return new FileLocation(false, staticWorker.get());
         }
 
@@ -209,71 +228,88 @@ public class WorkerServiceImpl extends ConfigurationAccessor implements WorkerSe
     }
 
     @Override
-    public long forwardUploadRequestToStaticWorker(StaticWorkerEntity worker, FileType type, MultipartFile file) throws Throwable {
+    public long forwardUploadRequestToStaticWorker(StaticWorkerEntity worker, FileType type, MultipartFile file)
+            throws Throwable
+    {
         MultipartBodyBuilder builder = new MultipartBodyBuilder();
-        try {
+        try
+        {
             builder.part("file", new ByteArrayResource(file.getBytes()))
-                   .filename(file.getOriginalFilename() != null ? file.getOriginalFilename() : Constant.DEFAULT_FILENAME)
-                   .contentType(MediaType.APPLICATION_OCTET_STREAM);
+                    .filename(
+                            file.getOriginalFilename() != null ? file.getOriginalFilename() : Constant.DEFAULT_FILENAME)
+                    .contentType(MediaType.APPLICATION_OCTET_STREAM);
             builder.part("type", type.name());
-        } catch (IOException e) {
+        }
+        catch (IOException e)
+        {
             throw new RuntimeException(e);
         }
 
         UriBuilder uriBuilder = new DefaultUriBuilderFactory().builder()
-                                                              .scheme("http")
-                                                              .host(worker.getHostAddress())
-                                                              .port(worker.getPort())
-                                                              .path(HTTP_API_PREFIX + "/files/upload");
+                .scheme("http")
+                .host(worker.getHostAddress())
+                .port(worker.getPort())
+                .path(HTTP_API_PREFIX + "/files/upload");
 
         WebClient.RequestBodySpec spec = webClient.method(HttpMethod.POST)
-                                                  .uri(uriBuilder.build());
+                .uri(uriBuilder.build());
 
         String jwtToken = userService.getCurrentUserJwtTokenOrNull();
-        if (jwtToken != null) {
+        if (jwtToken != null)
+        {
             spec.header(HttpHeaders.AUTHORIZATION, "Bearer " + jwtToken);
         }
 
         return spec.contentType(MediaType.MULTIPART_FORM_DATA)
-                   .body(BodyInserters.fromMultipartData(builder.build()))
-                   .exchangeToMono(response -> {
-                       if (!response.statusCode().is2xxSuccessful()) {
-                           return response.createError();
-                       }
-                       return response.bodyToMono(String.class).map(s -> GSON.fromJson(s, Long.class));
-                   }).toFuture().get();
+                .body(BodyInserters.fromMultipartData(builder.build()))
+                .exchangeToMono(response ->
+                {
+                    if (!response.statusCode().is2xxSuccessful())
+                    {
+                        return response.createError();
+                    }
+                    return response.bodyToMono(String.class).map(s -> GSON.fromJson(s, Long.class));
+                }).toFuture().get();
     }
 
     @Override
-    public Resource forwardDownloadRequestToStaticWorker(StaticWorkerEntity worker, long fileId) throws Throwable {
+    public Resource forwardDownloadRequestToStaticWorker(StaticWorkerEntity worker, long fileId) throws Throwable
+    {
         Validate.isTrue(isMaster(), INTERNAL_ERROR);
         UriBuilder uriBuilder = new DefaultUriBuilderFactory().builder()
-                                                              .scheme("http")
-                                                              .host(worker.getHostAddress())
-                                                              .port(worker.getPort())
-                                                              .path(HTTP_API_PREFIX + "/files/" + fileId + "/download");
-        return new UrlResource(uriBuilder.build()) {
+                .scheme("http")
+                .host(worker.getHostAddress())
+                .port(worker.getPort())
+                .path(HTTP_API_PREFIX + "/files/" + fileId + "/download");
+        return new UrlResource(uriBuilder.build())
+        {
             @Override
-            protected void customizeConnection(@NotNull HttpURLConnection con) throws IOException {
+            protected void customizeConnection(@NotNull HttpURLConnection con) throws IOException
+            {
                 super.customizeConnection(con);
                 String jwtToken = userService.getCurrentUserJwtTokenOrNull();
-                if (jwtToken != null) {
-                    con.setRequestProperty(HttpHeaders.AUTHORIZATION, "Bearer " + userService.getCurrentUserJwtTokenOrNull());
+                if (jwtToken != null)
+                {
+                    con.setRequestProperty(HttpHeaders.AUTHORIZATION,
+                            "Bearer " + userService.getCurrentUserJwtTokenOrNull());
                 }
             }
         };
     }
 
     @Override
-    public ElasticWorkerState getElasticWorkerState(long workerId) {
+    public ElasticWorkerState getElasticWorkerState(long workerId)
+    {
         return elasticWorkerRepo.findById(workerId).orElseThrow(() -> CE(INTERNAL_ERROR))
-                                .getState();
+                .getState();
     }
 
     @Override
-    public ElasticWorkerEntity requestElasticWorkerForAnalysisApiRequest(FileEntity target) {
+    public ElasticWorkerEntity requestElasticWorkerForAnalysisApiRequest(FileEntity target)
+    {
         ElasticWorkerEntity worker = acquireElasticWorkerForAnalysis(target);
-        return switch (worker.getState()) {
+        return switch (worker.getState())
+        {
             case READY -> worker;
             case STARTING -> throw new ElasticWorkerNotReadyException(worker.getId());
             case FAILURE -> throw CE(INTERNAL_ERROR);
@@ -281,15 +317,22 @@ public class WorkerServiceImpl extends ConfigurationAccessor implements WorkerSe
     }
 
     @Override
-    public <Response> Response syncRequest(WorkerEntity worker, HttpRequestToWorker<Response> request) {
-        try {
+    public <Response> Response syncRequest(WorkerEntity worker, HttpRequestToWorker<Response> request)
+    {
+        try
+        {
             return asyncRequest(worker, request).get();
-        } catch (Throwable t) {
-            if (t instanceof RuntimeException re) {
+        }
+        catch (Throwable t)
+        {
+            if (t instanceof RuntimeException re)
+            {
                 throw re;
             }
-            if (t instanceof ExecutionException ee) {
-                if (ee.getCause() instanceof WebClientResponseException re) {
+            if (t instanceof ExecutionException ee)
+            {
+                if (ee.getCause() instanceof WebClientResponseException re)
+                {
                     throw re;
                 }
             }
@@ -299,80 +342,100 @@ public class WorkerServiceImpl extends ConfigurationAccessor implements WorkerSe
 
     @SuppressWarnings("unchecked")
     @Override
-    public <Response> CompletableFuture<Response> asyncRequest(WorkerEntity worker, HttpRequestToWorker<Response> request) {
+    public <Response> CompletableFuture<Response> asyncRequest(WorkerEntity worker,
+            HttpRequestToWorker<Response> request)
+    {
         UriBuilder uriBuilder = new DefaultUriBuilderFactory().builder()
-                                                              .scheme("http")
-                                                              .host(worker.getHostAddress())
-                                                              .port(worker.getPort())
-                                                              .path(HTTP_API_PREFIX + "/" + request.uri());
+                .scheme("http")
+                .host(worker.getHostAddress())
+                .port(worker.getPort())
+                .path(HTTP_API_PREFIX + "/" + request.uri());
 
         HttpMethod method = request.method();
-        if (method == HttpMethod.GET && request.query() != null) {
+        if (method == HttpMethod.GET && request.query() != null)
+        {
             uriBuilder.queryParams(request.query());
         }
 
         WebClient.RequestBodySpec spec = webClient.method(method)
-                                                  .uri(uriBuilder.build())
-                                                  .accept(MediaType.APPLICATION_JSON);
+                .uri(uriBuilder.build())
+                .accept(MediaType.APPLICATION_JSON);
 
         String jwtToken = userService.getCurrentUserJwtTokenOrNull();
 
-        if (jwtToken != null) {
+        if (jwtToken != null)
+        {
             spec.header(HttpHeaders.AUTHORIZATION, "Bearer " + jwtToken);
         }
 
-        if (request.body() != null) {
+        if (request.body() != null)
+        {
             Object body = request.body();
             String bodyJson;
-            if (body instanceof JsonConvertible convertible) {
+            if (body instanceof JsonConvertible convertible)
+            {
                 bodyJson = convertible.toJson();
-            } else {
+            }
+            else
+            {
                 bodyJson = GSON.toJson(body);
             }
             byte[] bytes = bodyJson.getBytes(Constant.CHARSET);
             spec.contentType(MediaType.APPLICATION_JSON)
-                .body((BodyInserter<byte[], ClientHttpRequest>) (message, context) -> {
-                    DataBuffer buffer = message.bufferFactory().wrap(bytes);
-                    message.getHeaders().setContentLength(bytes.length);
-                    return message.writeWith(Mono.just(buffer));
-                });
+                    .body((BodyInserter<byte[], ClientHttpRequest>)(message, context) ->
+                    {
+                        DataBuffer buffer = message.bufferFactory().wrap(bytes);
+                        message.getHeaders().setContentLength(bytes.length);
+                        return message.writeWith(Mono.just(buffer));
+                    });
         }
 
         Class<Response> responseClass = request.responseType();
-        return spec.exchangeToMono(response -> {
-            if (!response.statusCode().is2xxSuccessful()) {
+        return spec.exchangeToMono(response ->
+        {
+            if (!response.statusCode().is2xxSuccessful())
+            {
                 return response.createError();
             }
 
-            if (responseClass == Void.class) {
+            if (responseClass == Void.class)
+            {
                 return Mono.empty();
             }
 
-            if (responseClass == byte[].class) {
-                return (Mono<Response>) response.bodyToMono(byte[].class)
-                                                .defaultIfEmpty(Constant.EMPTY_BYTE_ARRAY);
+            if (responseClass == byte[].class)
+            {
+                return (Mono<Response>)response.bodyToMono(byte[].class)
+                        .defaultIfEmpty(Constant.EMPTY_BYTE_ARRAY);
             }
 
             return response.bodyToMono(String.class)
-                           .map(s -> GSON.fromJson(s, responseClass));
+                    .map(s -> GSON.fromJson(s, responseClass));
         }).toFuture();
     }
 
-    private ElasticWorkerEntity acquireElasticWorkerForAnalysis(FileEntity target) {
-        return AcquireElasticWorker(FILE_ANALYSIS, target.getId(), () -> {
+    private ElasticWorkerEntity acquireElasticWorkerForAnalysis(FileEntity target)
+    {
+        return AcquireElasticWorker(FILE_ANALYSIS, target.getId(), () ->
+        {
             // TODO: need improvements
             long GB = 1024 * 1024 * 1024L;
-            return (long) Math.max(GB, 1.3 * target.getSize());
+            return (long)Math.max(GB, 1.3 * target.getSize());
         });
     }
 
     @SuppressWarnings("SameParameterValue")
-    private ElasticWorkerEntity AcquireElasticWorker(ElasticWorkerPurpose purpose, long referenceId, Supplier<Long> requestedMemorySizeSupplier) {
-        return retryTemplateForAcquiringElasticWorker.execute(c -> {
+    private ElasticWorkerEntity AcquireElasticWorker(ElasticWorkerPurpose purpose, long referenceId,
+            Supplier<Long> requestedMemorySizeSupplier)
+    {
+        return retryTemplateForAcquiringElasticWorker.execute(c ->
+        {
 
-            Optional<ElasticWorkerEntity> optional = elasticWorkerRepo.findByPurposeAndReferenceId(purpose, referenceId);
+            Optional<ElasticWorkerEntity> optional = elasticWorkerRepo.findByPurposeAndReferenceId(purpose,
+                    referenceId);
 
-            if (optional.isPresent()) {
+            if (optional.isPresent())
+            {
                 return optional.get();
             }
 
@@ -380,21 +443,29 @@ public class WorkerServiceImpl extends ConfigurationAccessor implements WorkerSe
 
             long requestedMemorySize = requestedMemorySizeSupplier.get();
 
-            elasticWorkerScheduler.scheduleAsync(elasticWorker.getId(), requestedMemorySize, (hostAddress, throwable) -> {
-                if (throwable != null) {
-                    try {
+            elasticWorkerScheduler.scheduleAsync(elasticWorker.getId(), requestedMemorySize, (hostAddress, throwable) ->
+            {
+                if (throwable != null)
+                {
+                    try
+                    {
                         elasticWorker.setState(ElasticWorkerState.FAILURE);
                         String failureMessage = throwable.getMessage();
-                        if (failureMessage.length() > MAX_FAILURE_MESSAGE_LENGTH) {
+                        if (failureMessage.length() > MAX_FAILURE_MESSAGE_LENGTH)
+                        {
                             failureMessage = failureMessage.substring(0, MAX_FAILURE_MESSAGE_LENGTH);
                         }
                         elasticWorker.setFailureMessage(failureMessage);
                         elasticWorkerRepo.save(elasticWorker);
-                    } finally {
-                        taskScheduler.schedule(() -> elasticWorkerRepo.deleteById(elasticWorker.getId()),
-                                               Instant.now().plusSeconds(DELETION_DELAY));
                     }
-                } else {
+                    finally
+                    {
+                        taskScheduler.schedule(() -> elasticWorkerRepo.deleteById(elasticWorker.getId()),
+                                Instant.now().plusSeconds(DELETION_DELAY));
+                    }
+                }
+                else
+                {
                     elasticWorker.setHostAddress(hostAddress);
                     elasticWorker.setState(ElasticWorkerState.READY);
                     elasticWorkerRepo.save(elasticWorker);
@@ -404,7 +475,8 @@ public class WorkerServiceImpl extends ConfigurationAccessor implements WorkerSe
         });
     }
 
-    private ElasticWorkerEntity createNewElasticWorker(ElasticWorkerPurpose purpose, long referenceId) {
+    private ElasticWorkerEntity createNewElasticWorker(ElasticWorkerPurpose purpose, long referenceId)
+    {
         ElasticWorkerEntity newElasticWorker = new ElasticWorkerEntity();
         newElasticWorker.setPurpose(purpose);
         newElasticWorker.setReferenceId(referenceId);

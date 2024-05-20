@@ -13,8 +13,6 @@
 
 package org.eclipse.jifa.gclog.parser;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
 import org.eclipse.jifa.common.domain.exception.CommonException;
 import org.eclipse.jifa.gclog.model.modeInfo.GCCollectorType;
 import org.eclipse.jifa.gclog.model.modeInfo.GCLogStyle;
@@ -32,8 +30,9 @@ import static org.eclipse.jifa.gclog.model.modeInfo.GCCollectorType.ZGC;
 import static org.eclipse.jifa.gclog.model.modeInfo.GCLogStyle.PRE_UNIFIED;
 import static org.eclipse.jifa.gclog.model.modeInfo.GCLogStyle.UNIFIED;
 
-public class GCLogParserFactory {
-    // When -Xlog:gc*=trace is used, a single gc produces at most about 5000 lines of log.
+public class GCLogParserFactory
+{
+    // When -Xlog:gc*=trace is used, a single gc produces at most about 5000 lines of LOG.
     // 20000 lines should be enough to cover at least one gc.
     public static final int MAX_ATTEMPT_LINE = 20000;
 
@@ -73,92 +72,86 @@ public class GCLogParserFactory {
             new ParserMetadataRule("Using Shenandoah", UNIFIED, SHENANDOAH),
     };
 
-    public GCLogParser getParser(BufferedReader br) {
+    public static GCLogParser getParser(BufferedReader br)
+    {
         GCLogParsingMetadata metadata = getMetadata(br);
         return createParser(metadata);
     }
 
-    private GCLogParsingMetadata getMetadata(BufferedReader br) {
+    private static GCLogParsingMetadata getMetadata(BufferedReader br)
+    {
         GCLogParsingMetadata result = new GCLogParsingMetadata(GCCollectorType.UNKNOWN, GCLogStyle.UNKNOWN);
-        try {
+        try
+        {
             complete:
-            for (int i = 0; i < MAX_ATTEMPT_LINE; i++) {
+            for (int i = 0; i < MAX_ATTEMPT_LINE; i++)
+            {
                 String line = br.readLine();
-                if (line == null) {
+                if (line == null)
+                {
                     break;
                 }
                 // Don't read this line in case users are using wrong arguments
-                if (line.startsWith("CommandLine flags: ")) {
+                if (line.startsWith("CommandLine flags: "))
+                {
                     continue;
                 }
-                for (ParserMetadataRule rule : rules) {
-                    if (!line.contains(rule.getText())) {
+                for (ParserMetadataRule rule : rules)
+                {
+                    if (!line.contains(rule.text))
+                    {
                         continue;
                     }
-                    if (result.getStyle() == GCLogStyle.UNKNOWN) {
-                        result.setStyle(rule.getStyle());
+                    if (result.style() == GCLogStyle.UNKNOWN && result.collector() == GCCollectorType.UNKNOWN)
+                    {
+                        result = new GCLogParsingMetadata(rule.collector, rule.style);
                     }
-                    if (result.getCollector() == GCCollectorType.UNKNOWN) {
-                        result.setCollector(rule.getCollector());
-                    }
-                    if (result.getCollector() != GCCollectorType.UNKNOWN && result.getStyle() != GCLogStyle.UNKNOWN) {
+                    if (result.collector() != GCCollectorType.UNKNOWN && result.style() != GCLogStyle.UNKNOWN)
+                    {
                         break complete;
                     }
                 }
             }
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             // do nothing, hopefully we have got enough information
         }
         return result;
     }
 
-    private GCLogParser createParser(GCLogParsingMetadata metadata) {
+    private static GCLogParser createParser(GCLogParsingMetadata metadata)
+    {
         AbstractGCLogParser parser = null;
-        if (metadata.getStyle() == PRE_UNIFIED) {
-            switch (metadata.getCollector()) {
-                case SERIAL:
-                case PARALLEL:
-                case CMS:
-                case UNKNOWN:
-                    parser = new PreUnifiedGenerationalGCLogParser();
-                    break;
-                case G1:
-                    parser = new PreUnifiedG1GCLogParser();
-                    break;
-            }
-        } else if (metadata.getStyle() == UNIFIED) {
-            switch (metadata.getCollector()) {
-                case SERIAL:
-                case PARALLEL:
-                case CMS:
-                case UNKNOWN:
-                    parser = new UnifiedGenerationalGCLogParser();
-                    break;
-                case G1:
-                    parser = new UnifiedG1GCLogParser();
-                    break;
-                case ZGC:
-                    parser = new UnifiedZGCLogParser();
-                    break;
-                case SHENANDOAH:
-                case GENSHEN:
-                case GENZ:
-                case EPSILON:
-                    throw new CommonException("GC type not supported: " + metadata.getCollector().getName());
-            }
+        if (metadata.style() == PRE_UNIFIED)
+        {
+            parser = switch (metadata.collector())
+            {
+                case SERIAL, PARALLEL, CMS, UNKNOWN -> new PreUnifiedGenerationalGCLogParser();
+                case G1 -> new PreUnifiedG1GCLogParser();
+                default -> parser;
+            };
         }
-        if (parser == null) {
-            throw new CommonException("Can not recognize file format. Please check if the file is a gc log.");
+        else if (metadata.style() == UNIFIED)
+        {
+            parser = switch (metadata.collector())
+            {
+                case SERIAL, PARALLEL, CMS, UNKNOWN -> new UnifiedGenerationalGCLogParser();
+                case G1 -> new UnifiedG1GCLogParser();
+                case ZGC -> new UnifiedZGCLogParser();
+                case SHENANDOAH, GENSHEN, GENZ, EPSILON ->
+                        throw new CommonException("GC type not supported: " + metadata.collector().getName());
+            };
+        }
+        if (parser == null)
+        {
+            throw new CommonException("Can not recognize file format. Please check if the file is a gc LOG.");
         }
         parser.setMetadata(metadata);
         return parser;
     }
 
-    @Data
-    @AllArgsConstructor
-    private static class ParserMetadataRule {
-        private String text;
-        private GCLogStyle style;
-        private GCCollectorType collector;
+    private record ParserMetadataRule(String text, GCLogStyle style, GCCollectorType collector)
+    {
     }
 }

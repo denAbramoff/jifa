@@ -19,8 +19,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
-import lombok.Getter;
-import lombok.Setter;
+
 import org.eclipse.jifa.server.domain.entity.shared.BaseEntity;
 import org.eclipse.jifa.server.enums.ExternalLoginMethod;
 
@@ -28,12 +27,10 @@ import org.eclipse.jifa.server.enums.ExternalLoginMethod;
 @Entity
 @Table(name = "external_login_data",
         uniqueConstraints = {
-                @UniqueConstraint(columnNames = {"method", "provider", "principalName"})
+                @UniqueConstraint(columnNames = { "method", "provider", "principalName" })
         })
-@Getter
-@Setter
-public class ExternalLoginDataEntity extends BaseEntity {
-
+public class ExternalLoginDataEntity extends BaseEntity
+{
     @OneToOne(optional = false)
     private UserEntity user;
 
@@ -46,4 +43,44 @@ public class ExternalLoginDataEntity extends BaseEntity {
 
     @Column(nullable = false, updatable = false, length = 64)
     private String principalName;
+
+    public UserEntity getUser()
+    {
+        return user;
+    }
+
+    public void setUser(UserEntity user)
+    {
+        this.user = user;
+    }
+
+    public ExternalLoginMethod getMethod()
+    {
+        return method;
+    }
+
+    public void setMethod(ExternalLoginMethod method)
+    {
+        this.method = method;
+    }
+
+    public String getProvider()
+    {
+        return provider;
+    }
+
+    public void setProvider(String provider)
+    {
+        this.provider = provider;
+    }
+
+    public String getPrincipalName()
+    {
+        return principalName;
+    }
+
+    public void setPrincipalName(String principalName)
+    {
+        this.principalName = principalName;
+    }
 }

@@ -12,8 +12,6 @@
  ********************************************************************************/
 package org.eclipse.jifa.gclog.diagnoser;
 
-import lombok.Data;
-import lombok.NoArgsConstructor;
 import org.eclipse.jifa.gclog.event.TimedEvent;
 import org.eclipse.jifa.gclog.model.GCModel;
 import org.eclipse.jifa.gclog.util.I18nStringView;
@@ -23,31 +21,66 @@ import java.util.List;
 
 import static org.eclipse.jifa.gclog.diagnoser.AbnormalType.LAST_TYPE;
 
-@Data
-public class AbnormalPoint {
+public class AbnormalPoint
+{
     private AbnormalType type;
     private TimedEvent site;
     private List<I18nStringView> defaultSuggestions;
 
     public static final AbnormalPoint LEAST_SERIOUS = new AbnormalPoint(LAST_TYPE, null);
 
-    public AbnormalPoint(AbnormalType type, TimedEvent site) {
+    public AbnormalPoint(AbnormalType type, TimedEvent site)
+    {
         this.type = type;
         this.site = site;
     }
 
-    public static final Comparator<AbnormalPoint> compareByImportance = (ab1, ab2) -> {
-        if (ab1.type != ab2.type) {
+    public AbnormalType getType()
+    {
+        return type;
+    }
+
+    public void setType(AbnormalType type)
+    {
+        this.type = type;
+    }
+
+    public TimedEvent getSite()
+    {
+        return site;
+    }
+
+    public void setSite(TimedEvent site)
+    {
+        this.site = site;
+    }
+
+    public List<I18nStringView> getDefaultSuggestions()
+    {
+        return defaultSuggestions;
+    }
+
+    public void setDefaultSuggestions(List<I18nStringView> defaultSuggestions)
+    {
+        this.defaultSuggestions = defaultSuggestions;
+    }
+
+    public static final Comparator<AbnormalPoint> compareByImportance = (ab1, ab2) ->
+    {
+        if (ab1.type != ab2.type)
+        {
             return ab1.type.getOrdinal() - ab2.type.getOrdinal();
         }
         return 0;
     };
 
-    public void generateDefaultSuggestions(GCModel model) {
+    public void generateDefaultSuggestions(GCModel model)
+    {
         this.defaultSuggestions = new DefaultSuggestionGenerator(model, this).generate();
     }
 
-    public AbnormalPointVO toVO() {
+    public AbnormalPointVO toVO()
+    {
         AbnormalPointVO vo = new AbnormalPointVO();
         vo.setType(type.getName());
         vo.setDefaultSuggestions(defaultSuggestions);
@@ -55,18 +88,38 @@ public class AbnormalPoint {
     }
 
     @Override
-    public String toString() {
+    public String toString()
+    {
         return "AbnormalPoint{" +
                 "type=" + type +
                 ", defaultSuggestions=" + defaultSuggestions +
                 '}';
     }
 
-    @Data
-    @NoArgsConstructor
-    public static class AbnormalPointVO {
+    public static class AbnormalPointVO
+    {
         // don't use I18nStringView because frontend need to check this field
         private String type;
         private List<I18nStringView> defaultSuggestions;
+
+        public String getType()
+        {
+            return type;
+        }
+
+        public void setType(String type)
+        {
+            this.type = type;
+        }
+
+        public List<I18nStringView> getDefaultSuggestions()
+        {
+            return defaultSuggestions;
+        }
+
+        public void setDefaultSuggestions(List<I18nStringView> defaultSuggestions)
+        {
+            this.defaultSuggestions = defaultSuggestions;
+        }
     }
 }

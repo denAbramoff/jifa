@@ -15,19 +15,35 @@ package org.eclipse.jifa.server.domain.entity.shared;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
-import lombok.Getter;
-import lombok.Setter;
 
 @SuppressWarnings("JpaDataSourceORMInspection")
 @Table(name = "configurations")
 @Entity
-@Getter
-@Setter
-public class ConfigurationEntity extends BaseEntity {
-
+public class ConfigurationEntity extends BaseEntity
+{
     @Column(unique = true, nullable = false, updatable = false)
     private String uniqueName;
 
     @Column(nullable = false, length = 4096)
     private String content;
+
+    public String getUniqueName()
+    {
+        return uniqueName;
+    }
+
+    public void setUniqueName(String uniqueName)
+    {
+        this.uniqueName = uniqueName;
+    }
+
+    public String getContent()
+    {
+        return content;
+    }
+
+    public void setContent(String content)
+    {
+        this.content = content;
+    }
 }

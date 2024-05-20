@@ -12,8 +12,6 @@
  ********************************************************************************/
 package org.eclipse.jifa.jfr.model.jfr;
 
-import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
 import org.eclipse.jifa.jfr.model.symbol.SymbolBase;
 import org.eclipse.jifa.jfr.model.symbol.SymbolTable;
 
@@ -34,46 +32,106 @@ import java.util.Objects;
 
 import static org.eclipse.jifa.jfr.common.EventConstant.ACTIVE_SETTING;
 
-@Slf4j
-public class RecordedEvent {
+public class RecordedEvent
+{
     private static final long NANOS_PER_SECOND = 1000_000_000L;
 
     private final IItem item;
 
     private long startTime;
     private long endTime = -1;
-    @Getter
+
     private RecordedStackTrace stackTrace;
-    @Getter
+
     private RecordedThread thread;
-    @Getter
+
     private EventType eventType;
-    @Getter
+
     private ActiveSetting activeSetting = null;
 
-    public static RecordedEvent newInstance(IItem item, SymbolTable<SymbolBase> symbols) {
+    public static RecordedEvent newInstance(IItem item, SymbolTable<SymbolBase> symbols)
+    {
         RecordedEvent event = new RecordedEvent(item);
         event.init(symbols);
         return event;
     }
 
-    private RecordedEvent(IItem item) {
+    private RecordedEvent(IItem item)
+    {
         this.item = item;
     }
 
-    private void init(SymbolTable<SymbolBase> symbols) {
+    public IItem getItem()
+    {
+        return item;
+    }
+
+    public void setStartTime(long startTime)
+    {
+        this.startTime = startTime;
+    }
+
+    public void setEndTime(long endTime)
+    {
+        this.endTime = endTime;
+    }
+
+    public RecordedStackTrace getStackTrace()
+    {
+        return stackTrace;
+    }
+
+    public void setStackTrace(RecordedStackTrace stackTrace)
+    {
+        this.stackTrace = stackTrace;
+    }
+
+    public RecordedThread getThread()
+    {
+        return thread;
+    }
+
+    public void setThread(RecordedThread thread)
+    {
+        this.thread = thread;
+    }
+
+    public EventType getEventType()
+    {
+        return eventType;
+    }
+
+    public void setEventType(EventType eventType)
+    {
+        this.eventType = eventType;
+    }
+
+    public ActiveSetting getActiveSetting()
+    {
+        return activeSetting;
+    }
+
+    public void setActiveSetting(ActiveSetting activeSetting)
+    {
+        this.activeSetting = activeSetting;
+    }
+
+    private void init(SymbolTable<SymbolBase> symbols)
+    {
         IMCThread imcThread = getValue("eventThread");
-        if (imcThread == null) {
+        if (imcThread == null)
+        {
             imcThread = getValue("sampledThread");
         }
 
-        if (imcThread != null) {
+        if (imcThread != null)
+        {
             thread = new RecordedThread(imcThread);
         }
 
         Object value = getValue("startTime");
-        if (value instanceof IQuantity) {
-            IQuantity v = (IQuantity) value;
+        if (value instanceof IQuantity v)
+        {
             startTime = toNanos(v, UnitLookup.EPOCH_NS);
         }
 
@@ -81,24 +139,32 @@ public class RecordedEvent {
         String itemTypeId = itemType.getIdentifier();
 
         // fix for JDK Mission Control lib
-        if ((itemTypeId.startsWith(EventConstant.EXECUTION_SAMPLE) && !itemTypeId.equals(EventConstant.EXECUTION_SAMPLE))) {
+        if ((itemTypeId.startsWith(EventConstant.EXECUTION_SAMPLE) && !itemTypeId.equals(
+                EventConstant.EXECUTION_SAMPLE)))
+        {
             itemTypeId = EventConstant.EXECUTION_SAMPLE;
-        } else if (itemTypeId.startsWith(EventConstant.OBJECT_ALLOCATION_OUTSIDE_TLAB)
-                && !itemTypeId.equals(EventConstant.OBJECT_ALLOCATION_OUTSIDE_TLAB)) {
+        }
+        else if (itemTypeId.startsWith(EventConstant.OBJECT_ALLOCATION_OUTSIDE_TLAB)
+                && !itemTypeId.equals(EventConstant.OBJECT_ALLOCATION_OUTSIDE_TLAB))
+        {
             itemTypeId = EventConstant.OBJECT_ALLOCATION_OUTSIDE_TLAB;
-        } else if (itemTypeId.startsWith(EventConstant.OBJECT_ALLOCATION_IN_NEW_TLAB)
-                && !itemTypeId.equals(EventConstant.OBJECT_ALLOCATION_IN_NEW_TLAB)) {
+        }
+        else if (itemTypeId.startsWith(EventConstant.OBJECT_ALLOCATION_IN_NEW_TLAB)
+                && !itemTypeId.equals(EventConstant.OBJECT_ALLOCATION_IN_NEW_TLAB))
+        {
             itemTypeId = EventConstant.OBJECT_ALLOCATION_IN_NEW_TLAB;
         }
 
         this.eventType = new EventType(itemTypeId);
 
         IMCStackTrace s = getValue("stackTrace");
-        if (s != null) {
+        if (s != null)
+        {
             List<? extends IMCFrame> frames = s.getFrames();
             RecordedStackTrace st = new RecordedStackTrace();
             List<RecordedFrame> list = new ArrayList<>();
-            frames.forEach(frame -> {
+            frames.forEach(frame ->
+            {
                 IMCMethod method = frame.getMethod();
 
                 RecordedMethod m = new RecordedMethod();
@@ -109,16 +175,22 @@ public class RecordedEvent {
                 RecordedClass c = new RecordedClass();
                 c.setName(type.getTypeName());
                 c.setPackageName(type.getPackage().getName());
-                if (symbols.isContains(c)) {
-                    c = (RecordedClass) symbols.get(c);
-                } else {
+                if (symbols.isContains(c))
+                {
+                    c = (RecordedClass)symbols.get(c);
+                }
+                else
+                {
                     symbols.put(c);
                 }
                 m.setType(c);
                 m.setName(method.getMethodName());
-                if (symbols.isContains(m)) {
-                    m = (RecordedMethod) symbols.get(m);
-                } else {
+                if (symbols.isContains(m))
+                {
+                    m = (RecordedMethod)symbols.get(m);
+                }
+                else
+                {
                     symbols.put(m);
                 }
 
@@ -127,124 +199,163 @@ public class RecordedEvent {
                 f.setBytecodeIndex(frame.getBCI());
                 f.setType(frame.getType().getName());
 
-                if (symbols.isContains(f)) {
-                    f = (RecordedFrame) symbols.get(f);
-                } else {
+                if (symbols.isContains(f))
+                {
+                    f = (RecordedFrame)symbols.get(f);
+                }
+                else
+                {
                     symbols.put(f);
                 }
 
                 list.add(f);
             });
             st.setFrames(list);
-            if (symbols.isContains(st)) {
-                st = (RecordedStackTrace) symbols.get(st);
-            } else {
+            if (symbols.isContains(st))
+            {
+                st = (RecordedStackTrace)symbols.get(st);
+            }
+            else
+            {
                 symbols.put(st);
             }
             stackTrace = st;
         }
 
-        if (ACTIVE_SETTING.equals(itemType.getIdentifier())) {
+        if (ACTIVE_SETTING.equals(itemType.getIdentifier()))
+        {
             String eventName = null;
             long eventId = -1;
             String settingName = null;
-            for (Map.Entry<IAccessorKey<?>, ? extends IDescribable> entry : itemType.getAccessorKeys().entrySet()) {
-                if (entry.getKey().getIdentifier().equals("settingFor")) {
+            for (Map.Entry<IAccessorKey<?>, ? extends IDescribable> entry : itemType.getAccessorKeys().entrySet())
+            {
+                if (entry.getKey().getIdentifier().equals("settingFor"))
+                {
                     IMemberAccessor<?, IItem> accessor = itemType.getAccessor(entry.getKey());
-                    LabeledIdentifier id = (LabeledIdentifier) accessor.getMember(item);
+                    LabeledIdentifier id = (LabeledIdentifier)accessor.getMember(item);
                     eventName = id.getInterfaceId();
                     eventId = id.getImplementationId();
                     continue;
                 }
-                if (entry.getKey().getIdentifier().equals("name")) {
+                if (entry.getKey().getIdentifier().equals("name"))
+                {
                     IMemberAccessor<?, IItem> accessor = itemType.getAccessor(entry.getKey());
-                    settingName = (String) accessor.getMember(item);
+                    settingName = (String)accessor.getMember(item);
                 }
-                if (eventName != null && settingName != null && eventId >= 0) {
+                if (eventName != null && settingName != null && eventId >= 0)
+                {
                     break;
                 }
             }
-            if (eventName != null && settingName != null && eventId >= 0) {
+            if (eventName != null && settingName != null && eventId >= 0)
+            {
                 this.activeSetting = new ActiveSetting(eventName, eventId, settingName);
             }
         }
     }
 
     @SuppressWarnings("unchecked")
-    public final <T> T getValue(String name) {
+    public final <T> T getValue(String name)
+    {
         IType<IItem> itemType = ItemToolkit.getItemType(item);
-        for (Map.Entry<IAccessorKey<?>, ? extends IDescribable> entry : itemType.getAccessorKeys().entrySet()) {
+        for (Map.Entry<IAccessorKey<?>, ? extends IDescribable> entry : itemType.getAccessorKeys().entrySet())
+        {
             IMemberAccessor<?, IItem> accessor = itemType.getAccessor(entry.getKey());
-            if (entry.getKey().getIdentifier().equals(name)) {
-                return (T) accessor.getMember(item);
+            if (entry.getKey().getIdentifier().equals(name))
+            {
+                return (T)accessor.getMember(item);
             }
         }
         return null;
     }
 
-    public Duration getDuration() {
+    public Duration getDuration()
+    {
         return Duration.ofNanos(getDurationNano());
     }
 
-    public long getDurationNano() {
+    public long getDurationNano()
+    {
         return getEndTimeNanos() - startTime;
     }
 
-    public String getString(String name) {
+    public String getString(String name)
+    {
         return getValue(name);
     }
 
-    public int getInt(String name) {
+    public int getInt(String name)
+    {
         Number n = getValue(name);
-        if (n != null) {
+        if (n != null)
+        {
             return n.intValue();
-        } else {
+        }
+        else
+        {
             return 0;
         }
     }
 
-    public float getFloat(String name) {
+    public float getFloat(String name)
+    {
         Number n = getValue(name);
-        if (n != null) {
+        if (n != null)
+        {
             return n.floatValue();
-        } else {
+        }
+        else
+        {
             return 0;
         }
     }
 
-    public long getLong(String name) {
+    public long getLong(String name)
+    {
         Number n = getValue(name);
-        if (n != null) {
+        if (n != null)
+        {
             return n.longValue();
-        } else {
+        }
+        else
+        {
             return 0;
         }
     }
 
-    public RecordedThread getThread(String key) {
+    public RecordedThread getThread(String key)
+    {
         IMCThread imcThread = getValue(key);
         return imcThread == null ? null : new RecordedThread(imcThread);
     }
 
-    public Instant getStartTime() {
+    public Instant getStartTime()
+    {
         return Instant.ofEpochSecond(startTime / NANOS_PER_SECOND, startTime % NANOS_PER_SECOND);
     }
 
-    public Instant getEndTime() {
+    public Instant getEndTime()
+    {
         long endTime = getEndTimeNanos();
         return Instant.ofEpochSecond(endTime / NANOS_PER_SECOND, endTime % NANOS_PER_SECOND);
     }
 
-    public long getStartTimeNanos() {
+    public long getStartTimeNanos()
+    {
         return startTime;
     }
 
-    private long getEndTimeNanos() {
-        if (endTime < 0) {
+    private long getEndTimeNanos()
+    {
+        if (endTime < 0)
+        {
             Object value = getValue("duration");
-            if (value instanceof IQuantity) {
-                endTime = startTime + toNanos((IQuantity) value, UnitLookup.NANOSECOND);
-            } else {
+            if (value instanceof IQuantity quantity)
+            {
+                endTime = startTime + toNanos(quantity, UnitLookup.NANOSECOND);
+            }
+            else
+            {
                 throw new RuntimeException("should not reach here");
             }
         }
@@ -252,34 +363,43 @@ public class RecordedEvent {
         return endTime;
     }
 
-    private static long toNanos(IQuantity value, IUnit targetUnit) {
+    private static long toNanos(IQuantity value, IUnit targetUnit)
+    {
         IScalarAffineTransform t = value.getUnit().valueTransformTo(targetUnit);
         return t.targetValue(value.longValue());
     }
 
-    private static String stringify(String indent, Object value) {
-        if (value instanceof IMCMethod) {
-            return indent + stringifyMethod((IMCMethod) value);
+    private static String stringify(String indent, Object value)
+    {
+        if (value instanceof IMCMethod imcMethod)
+        {
+            return indent + stringifyMethod(imcMethod);
         }
-        if (value instanceof IMCType) {
-            return indent + stringifyType((IMCType) value);
+        if (value instanceof IMCType imcType)
+        {
+            return indent + stringifyType(imcType);
         }
-        if (value instanceof IQuantity) {
-            return ((IQuantity) value).persistableString();
+        if (value instanceof IQuantity iQuantity)
+        {
+            return iQuantity.persistableString();
         }
 
-        if (value instanceof IDescribable) {
-            String name = ((IDescribable) value).getName();
+        if (value instanceof IDescribable iDescribable)
+        {
+            String name = iDescribable.getName();
             return (name != null) ? name : value.toString();
         }
-        if (value == null) {
+        if (value == null)
+        {
             return "null";
         }
-        if (value.getClass().isArray()) {
+        if (value.getClass().isArray())
+        {
             StringBuilder buffer = new StringBuilder();
-            Object[] values = (Object[]) value;
-            buffer.append(" [" + values.length + "]");
-            for (Object o : values) {
+            Object[] values = (Object[])value;
+            buffer.append(" [").append(values.length).append("]");
+            for (Object o : values)
+            {
                 buffer.append(indent);
                 buffer.append(stringify(indent + "  ", o));
             }
@@ -288,12 +408,14 @@ public class RecordedEvent {
         return value.toString();
     }
 
-    private static String stringifyType(IMCType type) {
+    private static String stringifyType(IMCType type)
+    {
         return type.getPackage() == null ?
                 type.getTypeName() : formatPackage(type.getPackage()) + "." + type.getTypeName();
     }
 
-    private static String stringifyMethod(IMCMethod method) {
+    private static String stringifyMethod(IMCMethod method)
+    {
         StringBuilder buffer = new StringBuilder();
         Integer modifier = method.getModifier();
         buffer.append(formatPackage(method.getType().getPackage()));
@@ -303,7 +425,8 @@ public class RecordedEvent {
         buffer.append(method.getMethodName());
         buffer.append(method.getFormalDescriptor());
         buffer.append("\"");
-        if (modifier != null) {
+        if (modifier != null)
+        {
             buffer.append(" modifier=\"");
             buffer.append(Modifier.toString(method.getModifier()));
             buffer.append("\"");
@@ -311,20 +434,33 @@ public class RecordedEvent {
         return buffer.toString();
     }
 
-    private static String formatPackage(IMCPackage mcPackage) {
+    private static String formatPackage(IMCPackage mcPackage)
+    {
         return FormatToolkit.getPackage(mcPackage);
     }
 
-    public record ActiveSetting(String eventType, Long eventId, String settingName) {
+    public record ActiveSetting(String eventType, Long eventId, String settingName)
+    {
         @Override
-        public boolean equals(Object b) {
-            if (!(b instanceof ActiveSetting other)) {
+        public boolean equals(Object b)
+        {
+            if (!(b instanceof ActiveSetting other))
+            {
                 return false;
             }
 
             return Objects.equals(eventType, other.eventType())
                     && Objects.equals(eventId, other.eventId())
                     && Objects.equals(settingName, other.settingName());
+        }
+
+        @Override
+        public int hashCode()
+        {
+            int result = eventType != null ? eventType.hashCode() : 0;
+            result = 31 * result + (eventId != null ? eventId.hashCode() : 0);
+            result = 31 * result + (settingName != null ? settingName.hashCode() : 0);
+            return result;
         }
     }
 }

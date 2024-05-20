@@ -13,29 +13,48 @@
 
 package org.eclipse.jifa.tda.model;
 
-import lombok.Data;
-
 import java.util.Objects;
 
-@Data
-public class ConcurrentLock {
-
+public class ConcurrentLock
+{
     private long address;
 
     private String clazz;
 
+    public long getAddress()
+    {
+        return address;
+    }
+
+    public void setAddress(long address)
+    {
+        this.address = address;
+    }
+
+    public String getClazz()
+    {
+        return clazz;
+    }
+
+    public void setClazz(String clazz)
+    {
+        this.clazz = clazz;
+    }
+
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(Object o)
+    {
         if (this == o)
             return true;
         if (o == null || getClass() != o.getClass())
             return false;
-        ConcurrentLock that = (ConcurrentLock) o;
+        ConcurrentLock that = (ConcurrentLock)o;
         return address == that.address && Objects.equals(clazz, that.clazz);
     }
 
     @Override
-    public int hashCode() {
+    public int hashCode()
+    {
         return Objects.hash(address, clazz);
     }
 }

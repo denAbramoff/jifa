@@ -1,18 +1,4 @@
-/********************************************************************************
- * Copyright (c) 2023 Contributors to the Eclipse Foundation
- *
- * See the NOTICE file(s) distributed with this work for additional
- * information regarding copyright ownership.
- *
- * This program and the accompanying materials are made available under the
- * terms of the Eclipse Public License 2.0 which is available at
- * http://www.eclipse.org/legal/epl-2.0
- *
- * SPDX-License-Identifier: EPL-2.0
- ********************************************************************************/
 package org.eclipse.jifa.common.util;
-
-import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -27,8 +13,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * Executor factory
  */
-@Slf4j
-public class ExecutorFactory {
+
+public class ExecutorFactory
+{
+    private static final org.slf4j.Logger LOG = org.slf4j.LoggerFactory.getLogger(ExecutorFactory.class);
 
     private static final int DEFAULT_COMMON_THREAD_POOL_SIZE = Runtime.getRuntime().availableProcessors() * 2;
 
@@ -43,9 +31,11 @@ public class ExecutorFactory {
      *
      * @param commonThreadPoolSize common thread pool size
      */
-    public static synchronized void initialize(int commonThreadPoolSize) {
+    public static synchronized void initialize(int commonThreadPoolSize)
+    {
 
-        if (initialized) {
+        if (initialized)
+        {
             throw new IllegalStateException("ExecutorFactory is already configured");
         }
 
@@ -58,7 +48,8 @@ public class ExecutorFactory {
      * @param namePrefix the thread name prefix
      * @return a new executor
      */
-    public static Executor newExecutor(String namePrefix) {
+    public static Executor newExecutor(String namePrefix)
+    {
         ensureInitialized();
         return newExecutor(namePrefix, COMMON_THREAD_POOL_SIZE, Integer.MAX_VALUE);
     }
@@ -71,10 +62,12 @@ public class ExecutorFactory {
      * @param queueCapacity queue capacity
      * @return a new executor
      */
-    public static Executor newExecutor(String namePrefix, int nThreads, int queueCapacity) {
+    public static Executor newExecutor(String namePrefix, int nThreads, int queueCapacity)
+    {
         ensureInitialized();
 
-        if (namePrefix == null || nThreads <= 0) {
+        if (namePrefix == null || nThreads <= 0)
+        {
             throw new IllegalArgumentException();
         }
 
@@ -82,13 +75,14 @@ public class ExecutorFactory {
 
         ThreadPoolExecutor executor =
                 new ThreadPoolExecutor(nThreads, nThreads,
-                                       0L, TimeUnit.MILLISECONDS,
-                                       new LinkedBlockingQueue<>(queueCapacity),
-                                       r -> {
-                                           Thread thread = new Thread(r, namePrefix + " - " + counter.getAndIncrement());
-                                           thread.setDaemon(true);
-                                           return thread;
-                                       });
+                        0L, TimeUnit.MILLISECONDS,
+                        new LinkedBlockingQueue<>(queueCapacity),
+                        r ->
+                        {
+                            Thread thread = new Thread(r, namePrefix + " - " + counter.getAndIncrement());
+                            thread.setDaemon(true);
+                            return thread;
+                        });
 
         EXECUTORS.put(executor, namePrefix);
         return executor;
@@ -101,10 +95,12 @@ public class ExecutorFactory {
      * @param nThreads   pool size
      * @return a new executor
      */
-    public static ScheduledExecutorService newScheduledExecutorService(String namePrefix, int nThreads) {
+    public static ScheduledExecutorService newScheduledExecutorService(String namePrefix, int nThreads)
+    {
         ensureInitialized();
 
-        if (namePrefix == null || nThreads <= 0) {
+        if (namePrefix == null || nThreads <= 0)
+        {
             throw new IllegalArgumentException();
         }
 
@@ -112,11 +108,12 @@ public class ExecutorFactory {
 
         ScheduledThreadPoolExecutor executor =
                 new ScheduledThreadPoolExecutor(nThreads,
-                                                r -> {
-                                                    Thread thread = new Thread(r, namePrefix + " - " + counter.getAndIncrement());
-                                                    thread.setDaemon(true);
-                                                    return thread;
-                                                });
+                        r ->
+                        {
+                            Thread thread = new Thread(r, namePrefix + " - " + counter.getAndIncrement());
+                            thread.setDaemon(true);
+                            return thread;
+                        });
 
         EXECUTORS.put(executor, namePrefix);
         return executor;
@@ -127,28 +124,35 @@ public class ExecutorFactory {
      * Print the statistic of all executors created by this factory
      *
      */
-    public static void printStatistic() {
-        for (Map.Entry<ThreadPoolExecutor, String> entry : EXECUTORS.entrySet()) {
+    public static void printStatistic()
+    {
+        for (Map.Entry<ThreadPoolExecutor, String> entry : EXECUTORS.entrySet())
+        {
             ThreadPoolExecutor pool = entry.getKey();
-            log.info("{}[{}]: active thread count = {}, total thread count = {}, queue size = {}, queue remaining capacity = {}, completed task count = {}",
-                        pool instanceof ScheduledExecutorService ? "Scheduled Executor" : "Executor",
-                        entry.getValue(),
-                        pool.getActiveCount(),
-                        pool.getMaximumPoolSize(),
-                        pool.getQueue().size(),
-                        pool.getQueue().remainingCapacity(),
-                        pool.getCompletedTaskCount());
+            LOG.info("{}[{}]: active thread count = {}, total thread count = {}, queue size = {}, queue remaining "
+                            + "capacity = {}, completed task count = {}",
+                    pool instanceof ScheduledExecutorService ? "Scheduled Executor" : "Executor",
+                    entry.getValue(),
+                    pool.getActiveCount(),
+                    pool.getMaximumPoolSize(),
+                    pool.getQueue().size(),
+                    pool.getQueue().remainingCapacity(),
+                    pool.getCompletedTaskCount());
         }
     }
 
-    private static void ensureInitialized() {
-        if (!initialized) {
+    private static void ensureInitialized()
+    {
+        if (!initialized)
+        {
             doInitialize(DEFAULT_COMMON_THREAD_POOL_SIZE);
         }
     }
 
-    private static synchronized void doInitialize(int commonThreadPoolSize) {
-        if (initialized) {
+    private static synchronized void doInitialize(int commonThreadPoolSize)
+    {
+        if (initialized)
+        {
             return;
         }
 

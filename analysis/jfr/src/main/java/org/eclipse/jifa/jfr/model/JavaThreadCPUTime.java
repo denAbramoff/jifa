@@ -12,7 +12,6 @@
  ********************************************************************************/
 package org.eclipse.jifa.jfr.model;
 
-import org.eclipse.jifa.jfr.model.TaskCPUTime;
-
-public class JavaThreadCPUTime extends TaskCPUTime {
+public class JavaThreadCPUTime extends TaskCPUTime
+{
 }

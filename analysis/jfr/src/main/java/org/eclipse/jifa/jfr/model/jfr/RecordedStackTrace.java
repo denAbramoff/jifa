@@ -12,42 +12,63 @@
  ********************************************************************************/
 package org.eclipse.jifa.jfr.model.jfr;
 
-import lombok.Getter;
-import lombok.Setter;
 import org.eclipse.jifa.jfr.model.symbol.SymbolBase;
 
 import java.util.List;
 import java.util.Objects;
 
-@Setter
-@Getter
-public class RecordedStackTrace extends SymbolBase {
+public class RecordedStackTrace extends SymbolBase
+{
     private boolean truncated;
     private List<RecordedFrame> frames;
 
-    public boolean isEquals(Object b) {
-        if (!(b instanceof RecordedStackTrace)) {
+    public boolean isTruncated()
+    {
+        return truncated;
+    }
+
+    public void setTruncated(boolean truncated)
+    {
+        this.truncated = truncated;
+    }
+
+    public List<RecordedFrame> getFrames()
+    {
+        return frames;
+    }
+
+    public void setFrames(List<RecordedFrame> frames)
+    {
+        this.frames = frames;
+    }
+
+    public boolean isEquals(Object b)
+    {
+        if (!(b instanceof RecordedStackTrace t2))
+        {
             return false;
         }
 
-        RecordedStackTrace t2 = (RecordedStackTrace) b;
-
-        if (truncated != t2.isTruncated()) {
+        if (truncated != t2.isTruncated())
+        {
             return false;
         }
 
-        if (frames == null) {
+        if (frames == null)
+        {
             return t2.getFrames() == null;
         }
 
-        if (frames.size() != t2.getFrames().size()) {
+        if (frames.size() != t2.getFrames().size())
+        {
             return false;
         }
 
         return frames.equals(t2.getFrames());
     }
 
-    public int genHashCode() {
+    public int genHashCode()
+    {
         return Objects.hash(truncated, frames);
     }
 }

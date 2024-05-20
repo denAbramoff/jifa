@@ -17,7 +17,8 @@ import org.eclipse.jifa.gclog.util.I18nStringView;
 import java.util.HashMap;
 import java.util.Map;
 
-public class AbnormalType {
+public class AbnormalType
+{
     public static String I18N_PREFIX = "jifa.gclog.diagnose.abnormal.";
     private static Map<String, AbnormalType> name2Type = new HashMap<>();
 
@@ -52,34 +53,39 @@ public class AbnormalType {
     public static AbnormalType TO_SPACE_EXHAUSTED = new AbnormalType("toSpaceExhausted");
     public static AbnormalType LAST_TYPE = new AbnormalType("lastType");
 
-
     private String name;
     private int ordinal;
 
-    private AbnormalType(String name) {
+    private AbnormalType(String name)
+    {
         this.name = name;
         ordinal = name2Type.size();
         name2Type.put(name, this);
     }
 
-    public static AbnormalType getType(String name) {
+    public static AbnormalType getType(String name)
+    {
         return name2Type.getOrDefault(name, null);
     }
 
-    public String getName() {
+    public String getName()
+    {
         return name;
     }
 
     @Override
-    public String toString() {
+    public String toString()
+    {
         return name;
     }
 
-    public I18nStringView toI18nStringView() {
+    public I18nStringView toI18nStringView()
+    {
         return new I18nStringView(I18N_PREFIX + name);
     }
 
-    public int getOrdinal() {
+    public int getOrdinal()
+    {
         return ordinal;
     }
 }

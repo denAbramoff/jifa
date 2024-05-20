@@ -16,39 +16,48 @@ import org.eclipse.jifa.common.util.Validate;
 import org.eclipse.jifa.server.enums.Role;
 import org.springframework.beans.factory.annotation.Autowired;
 
-public abstract class ConfigurationAccessor {
-
+public abstract class ConfigurationAccessor
+{
     @Autowired
     protected Configuration config;
 
-    protected final Role getRole() {
+    protected final Role getRole()
+    {
         return config.getRole();
     }
 
-    protected final boolean isStandaloneWorker() {
+    protected final boolean isStandaloneWorker()
+    {
         return getRole() == Role.STANDALONE_WORKER;
     }
 
-    protected final boolean isStaticWorker() {
+    protected final boolean isStaticWorker()
+    {
         return getRole() == Role.STATIC_WORKER;
     }
 
-    protected final boolean isElasticWorker() {
+    protected final boolean isElasticWorker()
+    {
         return getRole() == Role.ELASTIC_WORKER;
     }
 
-    protected final boolean isWorker() {
+    protected final boolean isWorker()
+    {
         return isStandaloneWorker() || isStaticWorker() || isElasticWorker();
     }
 
-    protected final boolean isMaster() {
+    protected final boolean isMaster()
+    {
         return getRole() == Role.MASTER;
     }
 
-    protected final void mustBe(Role... roles) {
+    protected final void mustBe(Role... roles)
+    {
         boolean matched = false;
-        for (Role role : roles) {
-            if (role == getRole()) {
+        for (Role role : roles)
+        {
+            if (role == getRole())
+            {
                 matched = true;
                 break;
             }
@@ -56,10 +65,13 @@ public abstract class ConfigurationAccessor {
         Validate.isTrue(matched);
     }
 
-    protected final void mustNotBe(Role... roles) {
+    protected final void mustNotBe(Role... roles)
+    {
         boolean matched = false;
-        for (Role role : roles) {
-            if (role == getRole()) {
+        for (Role role : roles)
+        {
+            if (role == getRole())
+            {
                 matched = true;
                 break;
             }

@@ -15,8 +15,7 @@ package org.eclipse.jifa.server.domain.entity.cluster;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
-import lombok.Getter;
-import lombok.Setter;
+
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
@@ -24,10 +23,8 @@ import java.time.LocalDateTime;
 @SuppressWarnings("JpaDataSourceORMInspection")
 @Table(name = "static_workers")
 @Entity
-@Getter
-@Setter
-public class StaticWorkerEntity extends WorkerEntity {
-
+public class StaticWorkerEntity extends WorkerEntity
+{
     @Column(nullable = false)
     private long availableSpace;
 
@@ -37,4 +34,34 @@ public class StaticWorkerEntity extends WorkerEntity {
     @Column(nullable = false)
     @UpdateTimestamp
     private LocalDateTime lastModifiedTime;
+
+    public long getAvailableSpace()
+    {
+        return availableSpace;
+    }
+
+    public void setAvailableSpace(long availableSpace)
+    {
+        this.availableSpace = availableSpace;
+    }
+
+    public long getTotalSpace()
+    {
+        return totalSpace;
+    }
+
+    public void setTotalSpace(long totalSpace)
+    {
+        this.totalSpace = totalSpace;
+    }
+
+    public LocalDateTime getLastModifiedTime()
+    {
+        return lastModifiedTime;
+    }
+
+    public void setLastModifiedTime(LocalDateTime lastModifiedTime)
+    {
+        this.lastModifiedTime = lastModifiedTime;
+    }
 }

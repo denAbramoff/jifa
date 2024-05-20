@@ -12,13 +12,8 @@
  ********************************************************************************/
 package org.eclipse.jifa.jfr.model;
 
-import lombok.Getter;
-import lombok.Setter;
-
-@Setter
-@Getter
-public class Task {
-
+public class Task
+{
     private long id;
 
     private String name;
@@ -28,4 +23,44 @@ public class Task {
 
     // unit: ms, -1 means unknown
     private long end = -1;
+
+    public long getId()
+    {
+        return id;
+    }
+
+    public void setId(long id)
+    {
+        this.id = id;
+    }
+
+    public String getName()
+    {
+        return name;
+    }
+
+    public void setName(String name)
+    {
+        this.name = name;
+    }
+
+    public long getStart()
+    {
+        return start;
+    }
+
+    public void setStart(long start)
+    {
+        this.start = start;
+    }
+
+    public long getEnd()
+    {
+        return end;
+    }
+
+    public void setEnd(long end)
+    {
+        this.end = end;
+    }
 }

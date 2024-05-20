@@ -16,11 +16,13 @@ import org.eclipse.jifa.common.domain.exception.ShouldNotReachHereException;
 import org.eclipse.jifa.server.domain.dto.FileTransferRequest;
 import org.eclipse.jifa.server.enums.FileTransferMethod;
 
-public abstract class FileTransferUtil {
-
-    public static String extractOriginalName(FileTransferRequest request) {
+public abstract class FileTransferUtil
+{
+    public static String extractOriginalName(FileTransferRequest request)
+    {
         FileTransferMethod method = request.getMethod();
-        String source = switch (method) {
+        String source = switch (method)
+        {
             case OSS -> request.getOssObjectKey();
             case S3 -> request.getS3ObjectKey();
             case SCP -> request.getScpSourcePath();
@@ -30,7 +32,8 @@ public abstract class FileTransferUtil {
         };
 
         String name = source.substring(source.lastIndexOf(java.io.File.separatorChar) + 1);
-        if (method == FileTransferMethod.URL && name.contains("?")) {
+        if (method == FileTransferMethod.URL && name.contains("?"))
+        {
             name = name.substring(0, name.indexOf("?"));
         }
 

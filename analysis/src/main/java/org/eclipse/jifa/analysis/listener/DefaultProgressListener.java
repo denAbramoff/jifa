@@ -16,8 +16,11 @@ package org.eclipse.jifa.analysis.listener;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
-public class DefaultProgressListener implements ProgressListener {
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+public class DefaultProgressListener implements ProgressListener
+{
     private final StringBuffer log = new StringBuffer();
 
     private int total;
@@ -26,43 +29,51 @@ public class DefaultProgressListener implements ProgressListener {
 
     private String lastSubTask;
 
-    private void append(String msg) {
+    private void append(String msg)
+    {
         log.append(msg);
         log.append(System.lineSeparator());
     }
 
     @Override
-    public void beginTask(String name, int workload) {
+    public void beginTask(String name, int workload)
+    {
         total += workload;
         append(String.format("[Begin task] %s", name));
     }
 
     @Override
-    public void subTask(String s) {
-        if (lastSubTask == null || !lastSubTask.equals(s)) {
+    public void subTask(String s)
+    {
+        if (lastSubTask == null || !lastSubTask.equals(s))
+        {
             lastSubTask = s;
             append(String.format("[Sub task] %s", s));
         }
     }
 
     @Override
-    public void worked(int i) {
+    public void worked(int i)
+    {
         done += i;
     }
 
     @Override
-    public void sendUserMessage(Level level, String message, Throwable throwable) {
+    public void sendUserMessage(Level level, String message, Throwable throwable)
+    {
         StringWriter sw = new StringWriter();
-        switch (level) {
-            case INFO -> sw.append("[INFO] ");
-            case WARNING -> sw.append("[WARNING] ");
-            case ERROR -> sw.append("[ERROR] ");
-            default -> sw.append("[UNKNOWN] ");
+        switch (level)
+        {
+        case INFO -> sw.append("[INFO] ");
+        case WARNING -> sw.append("[WARNING] ");
+        case ERROR -> sw.append("[ERROR] ");
+        default -> sw.append("[UNKNOWN] ");
         }
 
         sw.append(message);
 
-        if (throwable != null) {
+        if (throwable != null)
+        {
             sw.append(System.lineSeparator());
             throwable.printStackTrace(new PrintWriter(sw));
         }
@@ -71,17 +82,20 @@ public class DefaultProgressListener implements ProgressListener {
     }
 
     @Override
-    public void reset() {
+    public void reset()
+    {
         this.total = this.done = 0;
     }
 
     @Override
-    public String log() {
+    public String log()
+    {
         return log.toString();
     }
 
     @Override
-    public double percent() {
-        return total == 0 ? 0 : ((double) done) / ((double) total);
+    public double percent()
+    {
+        return total == 0 ? 0 : ((double)done) / ((double)total);
     }
 }

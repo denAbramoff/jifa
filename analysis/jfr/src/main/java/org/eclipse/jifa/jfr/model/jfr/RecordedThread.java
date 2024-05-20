@@ -12,49 +12,83 @@
  ********************************************************************************/
 package org.eclipse.jifa.jfr.model.jfr;
 
-import lombok.Getter;
-import lombok.Setter;
-import lombok.extern.slf4j.Slf4j;
 import org.openjdk.jmc.common.IMCThread;
 import org.openjdk.jmc.common.unit.IQuantity;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Field;
 
-@Slf4j
-public class RecordedThread {
-    @Setter
-    @Getter
+public class RecordedThread
+{
+    private static final Logger LOG = LoggerFactory.getLogger(RecordedThread.class);
     private long javaThreadId;
-    @Getter
     private String javaName;
-    @Setter
     private long osThreadId;
 
-    public RecordedThread(String javaName, long javaThreadId, long osThreadId) {
+    public RecordedThread(String javaName, long javaThreadId, long osThreadId)
+    {
         this.javaName = javaName;
         this.javaThreadId = javaThreadId;
         this.osThreadId = osThreadId;
     }
 
-    public RecordedThread(IMCThread imcThread) {
+    public RecordedThread(IMCThread imcThread)
+    {
         this.javaThreadId = imcThread.getThreadId();
         this.javaName = imcThread.getThreadName();
-        try {
+        try
+        {
             Field f = imcThread.getClass().getDeclaredField("osThreadId");
             f.setAccessible(true);
             Object value = f.get(imcThread);
-            if (value instanceof IQuantity) {
-                this.osThreadId = ((IQuantity) value).longValue();
+            if (value instanceof IQuantity iQuantity)
+            {
+                this.osThreadId = iQuantity.longValue();
             }
-        } catch (Exception e) {
-            log.error(e.getMessage(), e);
         }
-        if (this.javaThreadId == 0 && this.osThreadId > 0) {
+        catch (Exception e)
+        {
+            LOG.error(e.getMessage(), e);
+        }
+        if (this.javaThreadId == 0 && this.osThreadId > 0)
+        {
             this.javaThreadId = -this.osThreadId;
         }
     }
 
-    public long getOSThreadId() {
+    public long getJavaThreadId()
+    {
+        return javaThreadId;
+    }
+
+    public void setJavaThreadId(long javaThreadId)
+    {
+        this.javaThreadId = javaThreadId;
+    }
+
+    public String getJavaName()
+    {
+        return javaName;
+    }
+
+    public void setJavaName(String javaName)
+    {
+        this.javaName = javaName;
+    }
+
+    public long getOsThreadId()
+    {
+        return osThreadId;
+    }
+
+    public void setOsThreadId(long osThreadId)
+    {
+        this.osThreadId = osThreadId;
+    }
+
+    public long getOSThreadId()
+    {
         return osThreadId;
     }
 }

@@ -12,44 +12,74 @@
  ********************************************************************************/
 package org.eclipse.jifa.jfr.model;
 
-import lombok.Getter;
-import lombok.Setter;
 import org.eclipse.jifa.jfr.model.symbol.SymbolBase;
 
 import java.util.Objects;
 
-public class Frame extends SymbolBase {
-
-    @Setter
-    @Getter
+public class Frame extends SymbolBase
+{
     private Method method;
-
-    @Setter
-    @Getter
     private int line;
-
     private String string;
 
-    public String toString() {
-        if (this.string != null) {
+    public Method getMethod()
+    {
+        return method;
+    }
+
+    public int getLine()
+    {
+        return line;
+    }
+
+    public String getString()
+    {
+        return string;
+    }
+
+    public void setMethod(Method method)
+    {
+        this.method = method;
+    }
+
+    public void setLine(int line)
+    {
+        this.line = line;
+    }
+
+    public void setString(String string)
+    {
+        this.string = string;
+    }
+
+    public String toString()
+    {
+        if (this.string != null)
+        {
             return string;
         }
 
-        if (this.line == 0) {
+        if (this.line == 0)
+        {
             this.string = method.toString();
-        } else {
+        }
+        else
+        {
             this.string = String.format("%s:%d", method, line);
         }
 
         return this.string;
     }
 
-    public int genHashCode() {
+    public int genHashCode()
+    {
         return Objects.hash(method, line);
     }
 
-    public boolean isEquals(Object b) {
-        if (!(b instanceof Frame f2)) {
+    public boolean isEquals(Object b)
+    {
+        if (!(b instanceof Frame f2))
+        {
             return false;
         }
 

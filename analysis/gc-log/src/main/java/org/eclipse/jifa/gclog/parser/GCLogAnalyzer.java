@@ -13,32 +13,37 @@
 
 package org.eclipse.jifa.gclog.parser;
 
-import lombok.extern.slf4j.Slf4j;
 import org.eclipse.jifa.analysis.listener.DefaultProgressListener;
 import org.eclipse.jifa.analysis.listener.ProgressListener;
 import org.eclipse.jifa.common.domain.exception.CommonException;
 import org.eclipse.jifa.gclog.model.GCModel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 
-@Slf4j
-public class GCLogAnalyzer {
+public class GCLogAnalyzer
+{
+    private static final Logger LOG = LoggerFactory.getLogger(GCLogAnalyzer.class);
     private final File file;
     private final ProgressListener listener;
 
     private final int MAX_SINGLE_LINE_LENGTH = 2048; // max length in hotspot
 
-    public GCLogAnalyzer(File file, ProgressListener listener) {
+    public GCLogAnalyzer(File file, ProgressListener listener)
+    {
         this.file = file;
         this.listener = listener;
     }
 
-    public GCModel parse() throws Exception {
+    public GCModel parse() throws Exception
+    {
         BufferedReader br = null;
-        try {
+        try
+        {
             br = new BufferedReader(new FileReader(file));
             listener.beginTask("Paring " + file.getName(), 1000);
             listener.sendUserMessage(ProgressListener.Level.INFO, "Deciding gc log format.", null);
@@ -50,9 +55,12 @@ public class GCLogAnalyzer {
             GCLogParser parser = logParserFactory.getParser(br);
             listener.worked(100);
 
-            try {
+            try
+            {
                 br.reset();
-            } catch (IOException e) {
+            }
+            catch (IOException e)
+            {
                 // Recreate stream in case mark invalid. This is unlikely but possible when the log
                 // contains undesired characters
                 br.close();
@@ -62,8 +70,9 @@ public class GCLogAnalyzer {
             // read original info from log file
             listener.sendUserMessage(ProgressListener.Level.INFO, "Parsing gc log file.", null);
             GCModel model = parser.parse(br);
-            if (model.isEmpty()) {
-                throw new CommonException("Fail to find any gc event in this log.");
+            if (model.isEmpty())
+            {
+                throw new CommonException("Fail to find any gc event in this LOG.");
             }
             listener.worked(500);
 
@@ -72,11 +81,16 @@ public class GCLogAnalyzer {
             model.calculateDerivedInfo(listener);
 
             return model;
-        } catch (Exception e) {
-            log.info("fail to parse gclog {}: {}", file.getName(), e.getMessage());
+        }
+        catch (Exception e)
+        {
+            LOG.info("fail to parse gclog {}: {}", file.getName(), e.getMessage());
             throw e;
-        } finally {
-            if (br != null) {
+        }
+        finally
+        {
+            if (br != null)
+            {
                 br.close();
             }
         }

@@ -13,6 +13,7 @@
 package org.eclipse.jifa.server.service.impl;
 
 import jakarta.annotation.PostConstruct;
+
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jifa.common.domain.exception.ShouldNotReachHereException;
 import org.eclipse.jifa.common.util.Validate;
@@ -28,6 +29,7 @@ import org.eclipse.jifa.server.repository.UserRepo;
 import org.eclipse.jifa.server.service.CipherService;
 import org.eclipse.jifa.server.service.JwtService;
 import org.eclipse.jifa.server.service.UserService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -44,8 +46,8 @@ import static org.eclipse.jifa.server.enums.ServerErrorCode.USERNAME_EXISTS;
 import static org.eclipse.jifa.server.enums.ServerErrorCode.USER_NOT_FOUND;
 
 @Service
-public class UserServiceImpl extends ConfigurationAccessor implements UserService {
-
+public class UserServiceImpl extends ConfigurationAccessor implements UserService
+{
     private final TransactionTemplate transactionTemplate;
     private final UserRepo userRepo;
     private final LoginDataRepo loginDataRepo;
@@ -54,13 +56,15 @@ public class UserServiceImpl extends ConfigurationAccessor implements UserServic
     private final PasswordEncoder encoder;
     private final JwtService jwtService;
 
+    @Autowired
     public UserServiceImpl(TransactionTemplate transactionTemplate,
-                           UserRepo userRepo,
-                           LoginDataRepo loginDataRepo,
-                           ExternalLoginDataRepo externalLoginDataRepo,
-                           CipherService cipherService,
-                           PasswordEncoder encoder,
-                           JwtService jwtService) {
+            UserRepo userRepo,
+            LoginDataRepo loginDataRepo,
+            ExternalLoginDataRepo externalLoginDataRepo,
+            CipherService cipherService,
+            PasswordEncoder encoder,
+            JwtService jwtService)
+    {
         this.transactionTemplate = transactionTemplate;
         this.userRepo = userRepo;
         this.loginDataRepo = loginDataRepo;
@@ -71,16 +75,23 @@ public class UserServiceImpl extends ConfigurationAccessor implements UserServic
     }
 
     @PostConstruct
-    private void init() {
-        if (userRepo.count() == 0 && StringUtils.isNotBlank(config.getAdminUsername())) {
+    private void init()
+    {
+        if (userRepo.count() == 0 && StringUtils.isNotBlank(config.getAdminUsername()))
+        {
             Optional<LoginDataEntity> defaultAdmin = loginDataRepo.findByUsername(config.getAdminUsername());
-            if (defaultAdmin.isPresent()) {
+            if (defaultAdmin.isPresent())
+            {
                 return;
             }
-            try {
+            try
+            {
                 register("Admin", config.getAdminUsername(), cipherService.encrypt(config.getAdminPassword()), true);
-            } catch (Throwable t) {
-                if (loginDataRepo.findByUsername(config.getAdminUsername()).isEmpty()) {
+            }
+            catch (Throwable t)
+            {
+                if (loginDataRepo.findByUsername(config.getAdminUsername()).isEmpty())
+                {
                     throw t;
                 }
             }
@@ -88,23 +99,27 @@ public class UserServiceImpl extends ConfigurationAccessor implements UserServic
     }
 
     @Override
-    public JifaAuthenticationToken login(String username, String password) {
+    public JifaAuthenticationToken login(String username, String password)
+    {
         LoginDataEntity loginData = loginDataRepo.findByUsername(username).orElse(null);
         Validate.notNull(loginData, USER_NOT_FOUND);
         Validate.isTrue(encoder.matches(cipherService.decrypt(password), loginData.getPasswordHash()),
-                        INCORRECT_PASSWORD);
+                INCORRECT_PASSWORD);
         return jwtService.generateToken(loginData.getUser());
     }
 
     @Override
-    public JifaAuthenticationToken handleOauth2Login(OAuth2AuthenticationToken token) {
+    public JifaAuthenticationToken handleOauth2Login(OAuth2AuthenticationToken token)
+    {
         String provider = token.getAuthorizedClientRegistrationId();
         String principalName = token.getPrincipal().getName();
 
         Optional<ExternalLoginDataEntity> optional =
-                externalLoginDataRepo.findByMethodAndProviderAndAndPrincipalName(ExternalLoginMethod.OAUTH2, provider, principalName);
+                externalLoginDataRepo.findByMethodAndProviderAndAndPrincipalName(ExternalLoginMethod.OAUTH2, provider,
+                        principalName);
 
-        if (optional.isPresent()) {
+        if (optional.isPresent())
+        {
             return jwtService.generateToken(optional.get().getUser());
         }
 
@@ -116,7 +131,8 @@ public class UserServiceImpl extends ConfigurationAccessor implements UserServic
         externalLoginData.setProvider(provider);
         externalLoginData.setPrincipalName(principalName);
 
-        return jwtService.generateToken(transactionTemplate.execute(status -> {
+        return jwtService.generateToken(transactionTemplate.execute(status ->
+        {
             UserEntity user = userRepo.save(createUser(name, false));
             externalLoginData.setUser(user);
             externalLoginDataRepo.save(externalLoginData);
@@ -125,14 +141,16 @@ public class UserServiceImpl extends ConfigurationAccessor implements UserServic
     }
 
     @Override
-    public JifaAuthenticationToken register(String name, String username, String password, boolean admin) {
+    public JifaAuthenticationToken register(String name, String username, String password, boolean admin)
+    {
         Validate.isTrue(loginDataRepo.findByUsername(username).isEmpty(), USERNAME_EXISTS);
 
         LoginDataEntity loginData = new LoginDataEntity();
         loginData.setUsername(username);
         loginData.setPasswordHash(encoder.encode(cipherService.decrypt(password)));
 
-        UserEntity user = transactionTemplate.execute(status -> {
+        UserEntity user = transactionTemplate.execute(status ->
+        {
             loginData.setUser(userRepo.save(createUser(name, admin)));
             loginDataRepo.save(loginData);
             return loginData.getUser();
@@ -142,17 +160,21 @@ public class UserServiceImpl extends ConfigurationAccessor implements UserServic
     }
 
     @Override
-    public Long getCurrentUserId() {
-        if (!config.isAllowLogin()) {
+    public Long getCurrentUserId()
+    {
+        if (!config.isAllowLogin())
+        {
             return null;
         }
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication instanceof JifaAuthenticationToken token) {
+        if (authentication instanceof JifaAuthenticationToken token)
+        {
             return token.getUserId();
         }
 
-        if (authentication instanceof AnonymousAuthenticationToken) {
+        if (authentication instanceof AnonymousAuthenticationToken)
+        {
             return null;
         }
 
@@ -160,17 +182,21 @@ public class UserServiceImpl extends ConfigurationAccessor implements UserServic
     }
 
     @Override
-    public boolean isCurrentUserAdmin() {
-        if (!config.isAllowLogin()) {
+    public boolean isCurrentUserAdmin()
+    {
+        if (!config.isAllowLogin())
+        {
             return false;
         }
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication instanceof JifaAuthenticationToken token) {
+        if (authentication instanceof JifaAuthenticationToken token)
+        {
             return token.isAdmin();
         }
 
-        if (authentication instanceof AnonymousAuthenticationToken) {
+        if (authentication instanceof AnonymousAuthenticationToken)
+        {
             return false;
         }
 
@@ -178,21 +204,26 @@ public class UserServiceImpl extends ConfigurationAccessor implements UserServic
     }
 
     @Override
-    public String getCurrentUserJwtTokenOrNull() {
-        if (!config.isAllowLogin()) {
+    public String getCurrentUserJwtTokenOrNull()
+    {
+        if (!config.isAllowLogin())
+        {
             return null;
         }
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null) {
+        if (authentication == null)
+        {
             return null;
         }
 
-        if (authentication instanceof JifaAuthenticationToken token) {
+        if (authentication instanceof JifaAuthenticationToken token)
+        {
             return token.getToken();
         }
 
-        if (authentication instanceof AnonymousAuthenticationToken) {
+        if (authentication instanceof AnonymousAuthenticationToken)
+        {
             return null;
         }
 
@@ -200,17 +231,21 @@ public class UserServiceImpl extends ConfigurationAccessor implements UserServic
     }
 
     @Override
-    public UserEntity getCurrentUser() {
-        if (!config.isAllowLogin()) {
+    public UserEntity getCurrentUser()
+    {
+        if (!config.isAllowLogin())
+        {
             return null;
         }
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication instanceof JifaAuthenticationToken token) {
+        if (authentication instanceof JifaAuthenticationToken token)
+        {
             return userRepo.findById(token.getUserId()).orElseThrow(() -> CE(USER_NOT_FOUND));
         }
 
-        if (authentication instanceof AnonymousAuthenticationToken) {
+        if (authentication instanceof AnonymousAuthenticationToken)
+        {
             return null;
         }
 
@@ -218,24 +253,29 @@ public class UserServiceImpl extends ConfigurationAccessor implements UserServic
     }
 
     @Override
-    public UserEntity getCurrentUserRef() {
-        if (!config.isAllowLogin()) {
+    public UserEntity getCurrentUserRef()
+    {
+        if (!config.isAllowLogin())
+        {
             return null;
         }
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication instanceof JifaAuthenticationToken token) {
+        if (authentication instanceof JifaAuthenticationToken token)
+        {
             return userRepo.getReferenceById(token.getUserId());
         }
 
-        if (authentication instanceof AnonymousAuthenticationToken) {
+        if (authentication instanceof AnonymousAuthenticationToken)
+        {
             return null;
         }
 
         throw new ShouldNotReachHereException();
     }
 
-    private UserEntity createUser(String name, boolean admin) {
+    private static UserEntity createUser(String name, boolean admin)
+    {
         UserEntity user = new UserEntity();
         user.setName(name);
         user.setAdmin(admin);

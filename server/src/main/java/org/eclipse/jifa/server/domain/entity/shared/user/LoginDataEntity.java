@@ -16,17 +16,14 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
-import lombok.Getter;
-import lombok.Setter;
+
 import org.eclipse.jifa.server.domain.entity.shared.BaseEntity;
 
 @SuppressWarnings("JpaDataSourceORMInspection")
 @Entity
 @Table(name = "login_data")
-@Getter
-@Setter
-public class LoginDataEntity extends BaseEntity {
-
+public class LoginDataEntity extends BaseEntity
+{
     @OneToOne(optional = false)
     private UserEntity user;
 
@@ -35,4 +32,34 @@ public class LoginDataEntity extends BaseEntity {
 
     @Column(length = 64)
     private String passwordHash;
+
+    public UserEntity getUser()
+    {
+        return user;
+    }
+
+    public void setUser(UserEntity user)
+    {
+        this.user = user;
+    }
+
+    public String getUsername()
+    {
+        return username;
+    }
+
+    public void setUsername(String username)
+    {
+        this.username = username;
+    }
+
+    public String getPasswordHash()
+    {
+        return passwordHash;
+    }
+
+    public void setPasswordHash(String passwordHash)
+    {
+        this.passwordHash = passwordHash;
+    }
 }

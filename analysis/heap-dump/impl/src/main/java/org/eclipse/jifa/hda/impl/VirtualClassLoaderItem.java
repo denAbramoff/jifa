@@ -25,7 +25,8 @@ import org.eclipse.mat.snapshot.ISnapshot;
 import static org.eclipse.jifa.hda.api.Model.DominatorTree;
 
 @UseAccessor
-public class VirtualClassLoaderItem extends DominatorTree.ClassLoaderItem {
+public class VirtualClassLoaderItem extends DominatorTree.ClassLoaderItem
+{
     static final int COLUMN_LABEL = 0;
     static final int COLUMN_OBJECTS = 1;
     static final int COLUMN_SHALLOW = 2;
@@ -36,7 +37,8 @@ public class VirtualClassLoaderItem extends DominatorTree.ClassLoaderItem {
     transient final IStructuredResult results;
     transient final Object e;
 
-    public VirtualClassLoaderItem(final ISnapshot snapshot, final IStructuredResult results, final Object e) {
+    public VirtualClassLoaderItem(final ISnapshot snapshot, final IStructuredResult results, final Object e)
+    {
         this.snapshot = snapshot;
         this.results = results;
         this.e = e;
@@ -44,65 +46,82 @@ public class VirtualClassLoaderItem extends DominatorTree.ClassLoaderItem {
     }
 
     @Override
-    public String getSuffix() {
+    public String getSuffix()
+    {
         return null;
     }
 
     @Override
-    public int getObjectId() {
+    public int getObjectId()
+    {
         return objectId;
     }
 
     @Override
-    public int getObjectType() {
-        try {
+    public int getObjectType()
+    {
+        try
+        {
             return HeapDumpAnalyzerImpl.typeOf(snapshot.getObject(objectId));
-        } catch (SnapshotException se) {
+        }
+        catch (SnapshotException se)
+        {
             throw new AnalysisException(se);
         }
     }
 
     @Override
-    public boolean isGCRoot() {
+    public boolean isgCRoot()
+    {
         return snapshot.isGCRoot(objectId);
     }
 
     @Override
-    public String getLabel() {
-        return EscapeUtil.unescapeLabel((String) results.getColumnValue(e, COLUMN_LABEL));
+    public String getLabel()
+    {
+        return EscapeUtil.unescapeLabel((String)results.getColumnValue(e, COLUMN_LABEL));
     }
 
     @Override
-    public long getObjects() {
+    public long getObjects()
+    {
         Object value = results.getColumnValue(e, COLUMN_OBJECTS);
-        if (value != null) {
-            return (Integer) value;
-        } else {
+        if (value != null)
+        {
+            return (Integer)value;
+        }
+        else
+        {
             return 0;
         }
     }
 
     @Override
-    public int[] getObjectIds() {
+    public int[] getObjectIds()
+    {
         IContextObject context = results.getContext(e);
-        if (context instanceof IContextObjectSet set) {
+        if (context instanceof IContextObjectSet set)
+        {
             return set.getObjectIds();
         }
         return null;
     }
 
     @Override
-    public long getShallowSize() {
-        return ((Bytes) results.getColumnValue(e, COLUMN_SHALLOW)).getValue();
+    public long getShallowSize()
+    {
+        return ((Bytes)results.getColumnValue(e, COLUMN_SHALLOW)).getValue();
     }
 
     @Override
-    public long getRetainedSize() {
-        return ((Bytes) results.getColumnValue(e, COLUMN_RETAINED)).getValue();
+    public long getRetainedSize()
+    {
+        return ((Bytes)results.getColumnValue(e, COLUMN_RETAINED)).getValue();
     }
 
     @Override
-    public double getPercent() {
-        return (Double) results.getColumnValue(e, COLUMN_PERCENT);
+    public double getPercent()
+    {
+        return (Double)results.getColumnValue(e, COLUMN_PERCENT);
     }
 }

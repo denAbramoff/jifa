@@ -20,10 +20,7 @@ import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParseException;
 import com.google.gson.annotations.JsonAdapter;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
-import lombok.extern.slf4j.Slf4j;
+
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jifa.analysis.annotation.ApiMeta;
 import org.eclipse.jifa.analysis.listener.ProgressListener;
@@ -104,8 +101,9 @@ import static org.eclipse.jifa.gclog.model.modeInfo.GCCollectorType.ZGC;
 /**
  * GCModel contains all direct information from log and analysed data for query
  */
-@Slf4j
-public abstract class GCModel {
+
+public abstract class GCModel
+{
     // These 3 event lists below are used to support events like young/mixed/old/full. Other events. like
     // safepoint, allocation stall will be save in other lists. gcEvents and allEvents may be used in parsing.
     // When calculating derived info, gcEvents may be transformed, and allEvents and gcCollectionEvents will be
@@ -133,129 +131,169 @@ public abstract class GCModel {
     private GCLogStyle logStyle;
     private GCLogMetadata metadata;
 
-    private final Cache<AnalysisConfig, GlobalDiagnoseInfo> globalDiagnoseInfoCache = CacheBuilder.newBuilder().maximumSize(3).build();
+    private final Cache<AnalysisConfig, GlobalDiagnoseInfo> globalDiagnoseInfoCache = CacheBuilder.newBuilder()
+            .maximumSize(3)
+            .build();
     private boolean metaspaceCapacityReliable = false;
 
-    public GCModel() {
+    public GCModel()
+    {
     }
 
-    public GCModel(GCCollectorType collectorType) {
+    public GCModel(GCCollectorType collectorType)
+    {
         this.collectorType = collectorType;
     }
 
-    public void setCollectorType(GCCollectorType collectorType) {
+    public void setCollectorType(GCCollectorType collectorType)
+    {
         this.collectorType = collectorType;
     }
 
-    public GCCollectorType getCollectorType() {
+    public GCCollectorType getCollectorType()
+    {
         return collectorType;
     }
 
-    public GCLogStyle getLogStyle() {
+    public GCLogStyle getLogStyle()
+    {
         return logStyle;
     }
 
-    public void setLogStyle(GCLogStyle logStyle) {
+    public void setLogStyle(GCLogStyle logStyle)
+    {
         this.logStyle = logStyle;
     }
 
-    public List<GCEvent> getGcCollectionEvents() {
+    public List<GCEvent> getGcCollectionEvents()
+    {
         return gcCollectionEvents;
     }
 
-    public double getStartTime() {
+    public double getStartTime()
+    {
         return startTime;
     }
 
-    public double getEndTime() {
+    public double getEndTime()
+    {
         return endTime;
     }
 
     private static final double START_TIME_ZERO_THRESHOLD = 60000;
 
-    public void setStartTime(double startTime) {
-        if (startTime < START_TIME_ZERO_THRESHOLD) {
+    public void setStartTime(double startTime)
+    {
+        if (startTime < START_TIME_ZERO_THRESHOLD)
+        {
             startTime = 0;
         }
         this.startTime = startTime;
     }
 
-    public boolean isGenerational() {
+    public boolean isGenerational()
+    {
         return collectorType != ZGC;
     }
 
-    public boolean isPauseless() {
+    public boolean isPauseless()
+    {
         return collectorType == ZGC;
     }
 
-    public List<GCEvent> getAllEvents() {
+    public List<GCEvent> getAllEvents()
+    {
         return allEvents;
     }
 
-    public void setEndTime(double endTime) {
+    public void setEndTime(double endTime)
+    {
         this.endTime = endTime;
     }
 
-    public double getDuration() {
+    public double getDuration()
+    {
         return getEndTime() - getStartTime();
     }
 
-    public boolean isEmpty() {
+    public boolean isEmpty()
+    {
         return gcEvents.isEmpty();
     }
 
-    public List<GCEvent> getGcEvents() {
+    public List<GCEvent> getGcEvents()
+    {
         return gcEvents;
     }
 
-    public void setGcEvents(List<GCEvent> gcEvents) {
+    public void setGcEvents(List<GCEvent> gcEvents)
+    {
         this.gcEvents = gcEvents;
     }
 
-    public GCEvent createAndGetEvent() {
+    public GCEvent createAndGetEvent()
+    {
         GCEvent event = new GCEvent();
         gcEvents.add(event);
         return event;
     }
 
-    public boolean hasHumongousArea() {
+    public boolean hasHumongousArea()
+    {
         return collectorType == G1 && logStyle == GCLogStyle.UNIFIED;
     }
 
-    public boolean hasOldGC() {
+    public boolean hasOldGC()
+    {
         return collectorType == G1 || collectorType == CMS;
     }
 
-    public <T extends TimedEvent> void iterateEventsWithinTimeRange(List<T> eventList, TimeRange range, Consumer<T> consumer) {
+    public <T extends TimedEvent> void iterateEventsWithinTimeRange(List<T> eventList, TimeRange range,
+            Consumer<T> consumer)
+    {
         int indexLow = binarySearchEventIndex(eventList, range.getStart(), true);
         int indexHigh = binarySearchEventIndex(eventList, range.getEnd(), false);
 
-        for (int i = indexLow; i < indexHigh; i++) {
+        for (int i = indexLow; i < indexHigh; i++)
+        {
             consumer.accept(eventList.get(i));
         }
     }
 
     // Return index of the first event after time if searchLow, first event after time if !searchLow  .
     // eventList must be ordered by startTime.
-    private int binarySearchEventIndex(List<? extends TimedEvent> eventList, double time, boolean searchLow) {
-        if (searchLow && time <= getStartTime()) {
+    private int binarySearchEventIndex(List<? extends TimedEvent> eventList, double time, boolean searchLow)
+    {
+        if (searchLow && time <= getStartTime())
+        {
             return 0;
-        } else if (!searchLow && time >= getEndTime()) {
+        }
+        else if (!searchLow && time >= getEndTime())
+        {
             return eventList.size();
         }
 
         TimedEvent eventForSearching = new TimedEvent(time);
-        int result = Collections.binarySearch(eventList, eventForSearching, Comparator.comparingDouble(TimedEvent::getStartTime));
-        if (result < 0) {
+        int result = Collections.binarySearch(eventList, eventForSearching,
+                Comparator.comparingDouble(TimedEvent::getStartTime));
+        if (result < 0)
+        {
             return -(result + 1);
-        } else {
-            if (searchLow) {
-                while (result >= 0 && eventList.get(result).getStartTime() >= time) {
+        }
+        else
+        {
+            if (searchLow)
+            {
+                while (result >= 0 && eventList.get(result).getStartTime() >= time)
+                {
                     result--;
                 }
                 return result + 1;
-            } else {
-                while (result < eventList.size() && eventList.get(result).getStartTime() <= time) {
+            }
+            else
+            {
+                while (result < eventList.size() && eventList.get(result).getStartTime() <= time)
+                {
                     result++;
                 }
                 return result;
@@ -263,24 +301,30 @@ public abstract class GCModel {
         }
     }
 
-    public List<Safepoint> getSafepoints() {
+    public List<Safepoint> getSafepoints()
+    {
         return safepoints;
     }
 
-    public void addSafepoint(Safepoint safepoint) {
+    public void addSafepoint(Safepoint safepoint)
+    {
         safepoints.add(safepoint);
     }
 
-    public List<ThreadEvent> getOoms() {
+    public List<ThreadEvent> getOoms()
+    {
         return ooms;
     }
 
-    public void addOom(ThreadEvent oom) {
+    public void addOom(ThreadEvent oom)
+    {
         ooms.add(oom);
     }
 
-    private TimeRange makeValidTimeRange(TimeRange range) {
-        if (range == null) {
+    private TimeRange makeValidTimeRange(TimeRange range)
+    {
+        if (range == null)
+        {
             return new TimeRange(getStartTime(), getEndTime());
         }
         double start = Math.max(range.getStart(), getStartTime());
@@ -288,9 +332,11 @@ public abstract class GCModel {
         return new TimeRange(start, end);
     }
 
-    private void putPhaseStatisticData(GCEvent event, String name, Map<String, DoubleData[]> map, boolean phase) {
+    private static void putPhaseStatisticData(GCEvent event, String name, Map<String, DoubleData[]> map, boolean phase)
+    {
         DoubleData[] data = map.getOrDefault(name, null);
-        if (data == null) {
+        if (data == null)
+        {
             data = new DoubleData[2];
             data[0] = new DoubleData();
             data[1] = new DoubleData();
@@ -300,43 +346,59 @@ public abstract class GCModel {
         data[1].add(event.getDuration());
     }
 
-    private PhaseStatisticItem makePhaseStatisticItem(String name, DoubleData[] data) {
+    private static PhaseStatisticItem makePhaseStatisticItem(String name, DoubleData[] data)
+    {
         return new PhaseStatisticItem(name, data[1].getN(), data[0].average(), data[0].getMin()
                 , data[1].average(), data[1].getMax(), data[1].getSum());
     }
 
     @ApiMeta("phaseStatistics")
-    public PhaseStatistics getPhaseStatistics(TimeRange range) {
+    public PhaseStatistics getPhaseStatistics(TimeRange range)
+    {
         range = makeValidTimeRange(range);
         List<GCEventType> parents = getParentEventTypes();
         // DoubleData[] is an array of interval and duration
         Map<String, DoubleData[]> parentData = new HashMap<>();
         List<Map<String, DoubleData[]>> phaseData = new ArrayList<>();
         List<Map<String, DoubleData[]>> causeData = new ArrayList<>();
-        for (int i = 0; i < parents.size(); i++) {
+        for (int i = 0; i < parents.size(); i++)
+        {
             phaseData.add(new HashMap<>());
             causeData.add(new HashMap<>());
         }
-        iterateEventsWithinTimeRange(gcEvents, range, event -> {
+        iterateEventsWithinTimeRange(gcEvents, range, event ->
+        {
             int index = parents.indexOf(event.getEventType());
-            if (index < 0) {
+            if (index < 0)
+            {
                 return;
             }
             putPhaseStatisticData(event, event.getEventType().getName(), parentData, true);
-            if (event.getCause() != null) {
+            if (event.getCause() != null)
+            {
                 putPhaseStatisticData(event, event.getCause().getName(), causeData.get(index), false);
             }
             event.phasesDoDFS(phase -> putPhaseStatisticData(phase, phase.getEventType().getName(),
-                                                             phaseData.get(index), true));
+                    phaseData.get(index), true));
         });
         List<ParentStatisticsInfo> result = new ArrayList<>();
-        for (int i = 0; i < parents.size(); i++) {
+        for (int i = 0; i < parents.size(); i++)
+        {
             String name = parents.get(i).getName();
-            if (parentData.containsKey(name)) {
+            if (parentData.containsKey(name))
+            {
                 result.add(new ParentStatisticsInfo(
                         makePhaseStatisticItem(parents.get(i).getName(), parentData.get(name)),
-                        phaseData.get(i).entrySet().stream().map(entry -> makePhaseStatisticItem(entry.getKey(), entry.getValue())).collect(Collectors.toList()),
-                        causeData.get(i).entrySet().stream().map(entry -> makePhaseStatisticItem(entry.getKey(), entry.getValue())).collect(Collectors.toList())
+                        phaseData.get(i)
+                                .entrySet()
+                                .stream()
+                                .map(entry -> makePhaseStatisticItem(entry.getKey(), entry.getValue()))
+                                .collect(Collectors.toList()),
+                        causeData.get(i)
+                                .entrySet()
+                                .stream()
+                                .map(entry -> makePhaseStatisticItem(entry.getKey(), entry.getValue()))
+                                .collect(Collectors.toList())
                 ));
             }
         }
@@ -344,12 +406,12 @@ public abstract class GCModel {
     }
 
     @ApiMeta("pauseStatistics")
-    public PauseStatistics getPauseStatistics(TimeRange range) {
+    public PauseStatistics getPauseStatistics(TimeRange range)
+    {
         range = makeValidTimeRange(range);
         DoubleData pause = new DoubleData(true);
-        iterateEventsWithinTimeRange(gcEvents, range, e -> {
-            e.pauseEventOrPhasesDo(event -> pause.add(event.getPause()));
-        });
+        iterateEventsWithinTimeRange(gcEvents, range,
+                e -> e.pauseEventOrPhasesDo(event -> pause.add(event.getPause())));
         return new PauseStatistics(
                 pause.getN() == 0 ? Constant.UNKNOWN_DOUBLE : 1 - pause.getSum() / range.length(),
                 pause.average(),
@@ -360,56 +422,68 @@ public abstract class GCModel {
     }
 
     @ApiMeta("pauseDistribution")
-    public Map<String, int[]> getPauseDistribution(TimeRange range, int[] partitions) {
+    public Map<String, int[]> getPauseDistribution(TimeRange range, int[] partitions)
+    {
         range = makeValidTimeRange(range);
 
         Map<String, int[]> distribution = new HashMap<>();
-        iterateEventsWithinTimeRange(gcEvents, range, e -> {
-            e.pauseEventOrPhasesDo(event -> {
-                if (event.getPause() >= 0) {
-                    String eventType = event.getEventType().getName();
-                    int pause = (int) event.getPause();
-                    int index = Arrays.binarySearch(partitions, pause);
-                    if (index < 0) {
-                        index = -index - 2;
-                    }
-                    if (index < 0) {
-                        return;
-                    }
-                    int[] nums = distribution.getOrDefault(eventType, null);
-                    if (nums == null) {
-                        nums = new int[partitions.length];
-                        distribution.put(eventType, nums);
-                    }
-                    nums[index]++;
+        iterateEventsWithinTimeRange(gcEvents, range, e -> e.pauseEventOrPhasesDo(event ->
+        {
+            if (event.getPause() >= 0)
+            {
+                String eventType = event.getEventType().getName();
+                int pause = (int)event.getPause();
+                int index = Arrays.binarySearch(partitions, pause);
+                if (index < 0)
+                {
+                    index = -index - 2;
                 }
-            });
-        });
+                if (index < 0)
+                {
+                    return;
+                }
+                int[] nums = distribution.getOrDefault(eventType, null);
+                if (nums == null)
+                {
+                    nums = new int[partitions.length];
+                    distribution.put(eventType, nums);
+                }
+                nums[index]++;
+            }
+        }));
         return distribution;
     }
 
     @ApiMeta("memoryStatistics")
-    public MemoryStatistics getMemoryStatistics(TimeRange range) {
+    public MemoryStatistics getMemoryStatistics(TimeRange range)
+    {
         range = makeValidTimeRange(range);
 
         // 1st dimension is generation, see definition of MemoryStatistics
-        // 2nd dimension is capacityAvg, usedMax, usedAvgAfterFullGC,usedAvgAfterOldGC see definition of MemoryStatisticsItem
+        // 2nd dimension is capacityAvg, usedMax, usedAvgAfterFullGC,usedAvgAfterOldGC see definition of
+        // MemoryStatisticsItem
         // usedAvgAfterOldGC is more complicated, will deal with it afterwards
         LongData[][] data = new LongData[5][4];
-        MemoryArea[] generations = {YOUNG, OLD, HUMONGOUS, HEAP, METASPACE};
-        for (int i = 0; i < 5; i++) {
-            for (int j = 0; j < 4; j++) {
+        MemoryArea[] generations = { YOUNG, OLD, HUMONGOUS, HEAP, METASPACE };
+        for (int i = 0; i < 5; i++)
+        {
+            for (int j = 0; j < 4; j++)
+            {
                 data[i][j] = new LongData();
             }
         }
-        iterateEventsWithinTimeRange(gcCollectionEvents, range, event -> {
-            for (int genIndex = 0; genIndex < generations.length; genIndex++) {
+        iterateEventsWithinTimeRange(gcCollectionEvents, range, event ->
+        {
+            for (int genIndex = 0; genIndex < generations.length; genIndex++)
+            {
                 MemoryArea generation = generations[genIndex];
                 GCMemoryItem memory = event.getMemoryItem(generation);
-                if (memory != null) {
+                if (memory != null)
+                {
                     data[genIndex][0].add(memory.getPostCapacity());
                     data[genIndex][1].add(Math.max(memory.getPreUsed(), memory.getPostUsed()));
-                    if (event.isFullGC() && generation != YOUNG) {
+                    if (event.isFullGC() && generation != YOUNG)
+                    {
                         data[genIndex][2].add(memory.getPostUsed());
                     }
                 }
@@ -419,143 +493,192 @@ public abstract class GCModel {
 
         // generate result
         MemoryStatistics statistics = new MemoryStatistics();
-        statistics.setYoung(new MemoryStatisticsItem((long) data[0][0].average(), data[0][1].getMax(), Constant.UNKNOWN_LONG, Constant.UNKNOWN_LONG));
-        statistics.setOld(new MemoryStatisticsItem((long) data[1][0].average(), data[1][1].getMax(), (long) data[1][2].average(), (long) data[1][3].average()));
-        statistics.setHumongous(new MemoryStatisticsItem((long) data[2][0].average(), data[2][1].getMax(), (long) data[2][2].average(), (long) data[2][3].average()));
-        statistics.setHeap(new MemoryStatisticsItem((long) data[3][0].average(), data[3][1].getMax(), (long) data[3][2].average(), (long) data[3][3].average()));
-        statistics.setMetaspace(new MemoryStatisticsItem(Constant.UNKNOWN_LONG, data[4][1].getMax(), (long) data[4][2].average(), (long) data[4][3].average()));
+        statistics.setYoung(
+                new MemoryStatisticsItem((long)data[0][0].average(), data[0][1].getMax(), Constant.UNKNOWN_LONG,
+                        Constant.UNKNOWN_LONG));
+        statistics.setOld(
+                new MemoryStatisticsItem((long)data[1][0].average(), data[1][1].getMax(), (long)data[1][2].average(),
+                        (long)data[1][3].average()));
+        statistics.setHumongous(
+                new MemoryStatisticsItem((long)data[2][0].average(), data[2][1].getMax(), (long)data[2][2].average(),
+                        (long)data[2][3].average()));
+        statistics.setHeap(
+                new MemoryStatisticsItem((long)data[3][0].average(), data[3][1].getMax(), (long)data[3][2].average(),
+                        (long)data[3][3].average()));
+        statistics.setMetaspace(
+                new MemoryStatisticsItem(Constant.UNKNOWN_LONG, data[4][1].getMax(), (long)data[4][2].average(),
+                        (long)data[4][3].average()));
         // Metaspace capacity printed in gclog may be reserve space rather than commit size, so we
         // try to read it from vm option
-        if (isMetaspaceCapacityReliable()) {
-            statistics.getMetaspace().setCapacityAvg((long) data[4][0].average());
-        } else if (vmOptions != null) {
+        if (isMetaspaceCapacityReliable())
+        {
+            statistics.getMetaspace().setCapacityAvg((long)data[4][0].average());
+        }
+        else if (vmOptions != null)
+        {
             statistics.getMetaspace().setCapacityAvg(vmOptions.getMetaspaceSize());
         }
         return statistics;
     }
 
-    protected void calculateUsedAvgAfterOldGC(TimeRange range, LongData[][] data) {
+    protected void calculateUsedAvgAfterOldGC(TimeRange range, LongData[][] data)
+    {
         // for overriding
     }
 
     @ApiMeta("objectStatistics")
-    public ObjectStatistics getObjectStatistics(TimeRange range) {
+    public ObjectStatistics getObjectStatistics(TimeRange range)
+    {
         range = makeValidTimeRange(range);
         LongData allocation = new LongData();
         LongData promotion = new LongData();
-        iterateEventsWithinTimeRange(gcCollectionEvents, range, event -> {
+        iterateEventsWithinTimeRange(gcCollectionEvents, range, event ->
+        {
             allocation.add(event.getAllocation());
             promotion.add(event.getPromotion());
         });
         return new ObjectStatistics(
-                allocation.getSum() != Constant.UNKNOWN_DOUBLE ? allocation.getSum() / range.length() : Constant.UNKNOWN_DOUBLE,
-                promotion.getSum() != Constant.UNKNOWN_DOUBLE ? promotion.getSum() / range.length() : Constant.UNKNOWN_DOUBLE,
-                (long) promotion.average(), promotion.getMax()
+                allocation.getSum() != Constant.UNKNOWN_DOUBLE ?
+                        allocation.getSum() / range.length() :
+                        Constant.UNKNOWN_DOUBLE,
+                promotion.getSum() != Constant.UNKNOWN_DOUBLE ?
+                        promotion.getSum() / range.length() :
+                        Constant.UNKNOWN_DOUBLE,
+                (long)promotion.average(), promotion.getMax()
         );
     }
 
     // decide start and end time using events
-    public void autoDecideStartEndTime() {
+    private void autoDecideStartEndTime()
+    {
         gcEvents.sort(Comparator.comparingDouble(GCEvent::getStartTime));
-        if (gcEvents.size() == 0) {
+        if (gcEvents.isEmpty())
+        {
             return;
         }
-        GCEvent event = gcEvents.get(gcEvents.size() - 1);
+        GCEvent event = gcEvents.getLast();
         double endTime = event.getEndTime();
-        if (event.hasPhases()) {
-            endTime = Math.max(endTime, event.getPhases().get(event.getPhases().size() - 1).getEndTime());
+        if (event.hasPhases())
+        {
+            endTime = Math.max(endTime, event.getPhases().getLast().getEndTime());
         }
         setEndTime(Math.max(this.endTime, endTime));
     }
 
     @ApiMeta("timeGraphData")
-    public Map<String, List<Object[]>> getTimeGraphData(String[] dataTypes) {
+    public Map<String, List<Object[]>> getTimeGraphData(String[] dataTypes)
+    {
         Map<String, List<Object[]>> result = new LinkedHashMap<>();
-        for (String dataType : dataTypes) {
-            if (dataType.endsWith("Used") || dataType.endsWith("Capacity")) {
+        for (String dataType : dataTypes)
+        {
+            if (dataType.endsWith("Used") || dataType.endsWith("Capacity"))
+            {
                 result.put(dataType, getTimeGraphMemoryData(dataType));
-            } else if (dataType.equals("promotion")) {
+            }
+            else if (dataType.equals("promotion"))
+            {
                 result.put(dataType, getTimeGraphPromotionData());
-            } else if (dataType.equals("reclamation")) {
+            }
+            else if (dataType.equals("reclamation"))
+            {
                 result.put(dataType, getTimeGraphReclamationData());
-            } else {
+            }
+            else
+            {
                 result.put(dataType, getTimeGraphDurationData(dataType));
             }
         }
         return result;
     }
 
-    private List<Object[]> getTimeGraphMemoryData(String dataType) {
+    private List<Object[]> getTimeGraphMemoryData(String dataType)
+    {
         boolean used = dataType.endsWith("Used");
         String areString = dataType.substring(0, dataType.length() - (used ? "Used" : "Capacity").length());
         MemoryArea area = MemoryArea.getMemoryArea(areString);
         List<Object[]> result = new ArrayList<>();
-        for (GCEvent event : this.gcCollectionEvents) {
+        for (GCEvent event : this.gcCollectionEvents)
+        {
             GCMemoryItem memory = event.getMemoryItem(area);
-            if (memory == null) {
+            if (memory == null)
+            {
                 continue;
             }
-            if (used) {
-                if (memory.getPreUsed() != Constant.UNKNOWN_LONG) {
-                    result.add(new Object[]{(long) event.getStartTime(), memory.getPreUsed()});
+            if (used)
+            {
+                if (memory.getPreUsed() != Constant.UNKNOWN_LONG)
+                {
+                    result.add(new Object[] { (long)event.getStartTime(), memory.getPreUsed() });
                 }
-                if (memory.getPostUsed() != Constant.UNKNOWN_LONG) {
-                    result.add(new Object[]{(long) event.getEndTime(), memory.getPostUsed()});
+                if (memory.getPostUsed() != Constant.UNKNOWN_LONG)
+                {
+                    result.add(new Object[] { (long)event.getEndTime(), memory.getPostUsed() });
                 }
-            } else {
-                if (memory.getPostCapacity() != Constant.UNKNOWN_LONG) {
-                    result.add(new Object[]{(long) event.getEndTime(), memory.getPostCapacity()});
+            }
+            else
+            {
+                if (memory.getPostCapacity() != Constant.UNKNOWN_LONG)
+                {
+                    result.add(new Object[] { (long)event.getEndTime(), memory.getPostCapacity() });
                 }
             }
         }
-        result.sort(Comparator.comparingLong(d -> (long) d[0]));
+        result.sort(Comparator.comparingLong(d -> (long)d[0]));
         return result;
     }
 
-    private List<Object[]> getTimeGraphPromotionData() {
+    private List<Object[]> getTimeGraphPromotionData()
+    {
         return allEvents.stream()
-                        .filter(event -> event.getPromotion() >= 0)
-                        .map(event -> new Object[]{(long) event.getStartTime(), event.getPromotion()})
-                        .collect(Collectors.toList());
+                .filter(event -> event.getPromotion() >= 0)
+                .map(event -> new Object[] { (long)event.getStartTime(), event.getPromotion() })
+                .collect(Collectors.toList());
     }
 
-    private List<Object[]> getTimeGraphReclamationData() {
+    private List<Object[]> getTimeGraphReclamationData()
+    {
         return gcCollectionEvents.stream()
-                                 .filter(event -> event.getReclamation() != Constant.UNKNOWN_LONG)
-                                 .map(event -> new Object[]{(long) event.getStartTime(), event.getReclamation()})
-                                 .collect(Collectors.toList());
+                .filter(event -> event.getReclamation() != Constant.UNKNOWN_LONG)
+                .map(event -> new Object[] { (long)event.getStartTime(), event.getReclamation() })
+                .collect(Collectors.toList());
     }
 
-    private List<Object[]> getTimeGraphDurationData(String phaseName) {
+    private List<Object[]> getTimeGraphDurationData(String phaseName)
+    {
         return allEvents.stream()
-                        .filter(event -> event.getEventType().getName().equals(phaseName)
-                                         && event.getDuration() != Constant.UNKNOWN_DOUBLE)
-                        .map(event -> new Object[]{(long) event.getStartTime(), event.getDuration()})
-                        .collect(Collectors.toList());
+                .filter(event -> event.getEventType().getName().equals(phaseName)
+                        && event.getDuration() != Constant.UNKNOWN_DOUBLE)
+                .map(event -> new Object[] { (long)event.getStartTime(), event.getDuration() })
+                .collect(Collectors.toList());
     }
 
     @ApiMeta("diagnoseInfo")
-    public GlobalDiagnoser.GlobalAbnormalInfo getGlobalAbnormalInfo(AnalysisConfig config) {
+    public GlobalDiagnoser.GlobalAbnormalInfo getGlobalAbnormalInfo(AnalysisConfig config)
+    {
         config.setTimeRange(makeValidTimeRange(config.getTimeRange()));
         return new GlobalDiagnoser(this, config).diagnose();
     }
 
-    public long getRecommendMaxHeapSize() {
+    public long getRecommendMaxHeapSize()
+    {
         // not supported
         return Constant.UNKNOWN_INT;
     }
 
-    public void putEvent(GCEvent event) {
+    public void putEvent(GCEvent event)
+    {
         gcEvents.add(event);
         allEvents.add(event);
     }
 
-    public void addPhase(GCEvent parent, GCEvent phase) {
+    public void addPhase(GCEvent parent, GCEvent phase)
+    {
         allEvents.add(phase);
         parent.addPhase(phase);
     }
 
-    public void calculateDerivedInfo(ProgressListener progressListener) {
+    public void calculateDerivedInfo(ProgressListener progressListener)
+    {
         allEvents = null;
         // must be done before other steps
         filterInvalidEvents();
@@ -581,42 +704,54 @@ public abstract class GCModel {
     }
 
     // for implementation
-    protected void doBeforeCalculatingDerivedInfo() {
+    protected void doBeforeCalculatingDerivedInfo()
+    {
     }
 
     // for implementation
-    protected void doAfterCalculatingDerivedInfo() {
+    protected void doAfterCalculatingDerivedInfo()
+    {
     }
 
-    private void rebuildEventLists() {
+    private void rebuildEventLists()
+    {
         allEvents = new ArrayList<>();
-        for (GCEvent event : gcEvents) {
+        for (GCEvent event : gcEvents)
+        {
             allEvents.add(event);
-            if (event.hasPhases()) {
+            if (event.hasPhases())
+            {
                 allEvents.addAll(event.getPhases());
             }
         }
         allEvents.sort(Comparator.comparingDouble(GCEvent::getStartTime));
-        for (int i = 0; i < allEvents.size(); i++) {
+        for (int i = 0; i < allEvents.size(); i++)
+        {
             allEvents.get(i).setId(i);
         }
     }
 
-    private void decideAndFixEventInfo() {
-        for (GCEvent event : gcEvents) {
+    private void decideAndFixEventInfo()
+    {
+        for (GCEvent event : gcEvents)
+        {
             List<GCEvent> phases = event.getPhases();
-            if (phases == null) {
+            if (phases == null)
+            {
                 continue;
             }
-            for (int i = phases.size() - 1; i >= 0; i--) {
+            for (int i = phases.size() - 1; i >= 0; i--)
+            {
                 GCEvent phase = phases.get(i);
-                if (phase.getDuration() == Constant.UNKNOWN_DOUBLE) {
+                if (phase.getDuration() == Constant.UNKNOWN_DOUBLE)
+                {
                     //this is unlikely to happen, just give a reasonable value
-                    phase.setDuration(phases.get(phases.size() - 1).getStartTime() - phase.getStartTime());
+                    phase.setDuration(phases.getLast().getStartTime() - phase.getStartTime());
                 }
             }
-            if (event.getDuration() == Constant.UNKNOWN_DOUBLE && getStartTime() != Constant.UNKNOWN_DOUBLE) {
-                event.setDuration(phases.get(phases.size() - 1).getEndTime() - event.getStartTime());
+            if (event.getDuration() == Constant.UNKNOWN_DOUBLE && getStartTime() != Constant.UNKNOWN_DOUBLE)
+            {
+                event.setDuration(phases.getLast().getEndTime() - event.getStartTime());
             }
         }
     }
@@ -625,33 +760,40 @@ public abstract class GCModel {
      * calculate heap size(young, humongous, old, metaspace,total),
      * object allocation, reclamation and promotion
      */
-    private void calculateEventsMemoryInfo() {
-        for (GCEvent event : gcEvents) {
+    private void calculateEventsMemoryInfo()
+    {
+        for (GCEvent event : gcEvents)
+        {
             calculateEventMemoryItems(event);
         }
         gcCollectionEvents.sort(Comparator.comparingDouble(GCEvent::getStartTime));
 
         long lastTotalMemory = 0;
-        for (GCEvent event : gcCollectionEvents) {
+        for (GCEvent event : gcCollectionEvents)
+        {
             GCMemoryItem young = event.getMemoryItem(YOUNG);
             GCMemoryItem total = event.getMemoryItem(HEAP);
             GCMemoryItem humongous = event.getMemoryItem(HUMONGOUS);
             // reclamation
             // sometimes it may have been calculated during parsing log
             if (event.getReclamation() == Constant.UNKNOWN_INT && total != null &&
-                total.getPreUsed() != Constant.UNKNOWN_INT && total.getPostUsed() != Constant.UNKNOWN_INT) {
+                    total.getPreUsed() != Constant.UNKNOWN_INT && total.getPostUsed() != Constant.UNKNOWN_INT)
+            {
                 event.setReclamation(zeroIfNegative(total.getPreUsed() - total.getPostUsed()));
             }
             // promotion
             if (event.getPromotion() == Constant.UNKNOWN_INT
-                && event.hasPromotion() && event.getEventType() != G1_MIXED_GC
-                && young != null && total != null) {
+                    && event.hasPromotion() && event.getEventType() != G1_MIXED_GC
+                    && young != null && total != null)
+            {
                 // notice: g1 young mixed gc should have promotion, but we have no way to know it exactly
                 long youngReduction = young.getMemoryReduction();
                 long totalReduction = total.getMemoryReduction();
-                if (youngReduction != Constant.UNKNOWN_INT && totalReduction != Constant.UNKNOWN_INT) {
+                if (youngReduction != Constant.UNKNOWN_INT && totalReduction != Constant.UNKNOWN_INT)
+                {
                     long promotion = youngReduction - totalReduction;
-                    if (humongous != null && humongous.getMemoryReduction() != Constant.UNKNOWN_INT) {
+                    if (humongous != null && humongous.getMemoryReduction() != Constant.UNKNOWN_INT)
+                    {
                         promotion -= humongous.getMemoryReduction();
                     }
                     event.setPromotion(zeroIfNegative(promotion));
@@ -659,7 +801,8 @@ public abstract class GCModel {
             }
             // allocation
             if (event.getAllocation() == Constant.UNKNOWN_INT &&
-                total != null && total.getPreUsed() != Constant.UNKNOWN_INT) {
+                    total != null && total.getPreUsed() != Constant.UNKNOWN_INT)
+            {
                 // As to concurrent event, allocation is composed of two parts: allocation between two adjacent events
                 // and during event. If original allocation is not unknown, that value is allocation during event.
                 event.setAllocation(zeroIfNegative(
@@ -669,17 +812,21 @@ public abstract class GCModel {
         }
     }
 
-    private long zeroIfUnknownInt(long x) {
+    private static long zeroIfUnknownInt(long x)
+    {
         return x == Constant.UNKNOWN_INT ? 0 : x;
     }
 
-    private long zeroIfNegative(long x) {
+    private static long zeroIfNegative(long x)
+    {
         return x < 0 ? 0 : x;
     }
 
-    private void calculateEventMemoryItems(GCEvent event) {
+    private void calculateEventMemoryItems(GCEvent event)
+    {
         event.phasesDoDFS(this::calculateEventMemoryItems);
-        if (event.getMemoryItems() == null) {
+        if (event.getMemoryItems() == null)
+        {
             return;
         }
         gcCollectionEvents.add(event);
@@ -687,79 +834,87 @@ public abstract class GCModel {
         // hack: Survivor capacity of g1 is not printed in jdk8. Make it equal to pre used so that
         // we can calculate young and old capacity
         if (event.getMemoryItem(SURVIVOR) != null &&
-            event.getMemoryItem(SURVIVOR).getPostCapacity() == Constant.UNKNOWN_INT) {
+                event.getMemoryItem(SURVIVOR).getPostCapacity() == Constant.UNKNOWN_INT)
+        {
             event.getMemoryItem(SURVIVOR).setPostCapacity(event.getMemoryItem(SURVIVOR).getPreUsed());
         }
 
         //case 1: know eden and survivor, calculate young
         GCMemoryItem young = event.getMemoryItemOrEmptyObject(EDEN)
-                                  .merge(event.getMemoryItem(SURVIVOR));
+                .merge(event.getMemoryItem(SURVIVOR));
         young.setArea(YOUNG);
         event.setMemoryItem(event.getMemoryItemOrEmptyObject(YOUNG)
-                                 .updateIfAbsent(young), true);
+                .updateIfAbsent(young), true);
 
         //case 2: know young and old, calculate heap
         GCMemoryItem heap = event.getMemoryItemOrEmptyObject(YOUNG)
-                                 .merge(event.getMemoryItem(OLD))
-                                 .mergeIfPresent(event.getMemoryItem(HUMONGOUS))
-                                 .mergeIfPresent(event.getMemoryItem(ARCHIVE));
+                .merge(event.getMemoryItem(OLD))
+                .mergeIfPresent(event.getMemoryItem(HUMONGOUS))
+                .mergeIfPresent(event.getMemoryItem(ARCHIVE));
         heap.setArea(HEAP);
         event.setMemoryItem(event.getMemoryItemOrEmptyObject(HEAP)
-                                 .updateIfAbsent(heap), true);
+                .updateIfAbsent(heap), true);
 
         //case 3: know old and heap, calculate young
         young = event.getMemoryItemOrEmptyObject(HEAP)
-                     .subtract(event.getMemoryItem(OLD))
-                     .subtractIfPresent(event.getMemoryItem(HUMONGOUS))
-                     .subtractIfPresent(event.getMemoryItem(ARCHIVE));
+                .subtract(event.getMemoryItem(OLD))
+                .subtractIfPresent(event.getMemoryItem(HUMONGOUS))
+                .subtractIfPresent(event.getMemoryItem(ARCHIVE));
         young.setArea(YOUNG);
         event.setMemoryItem(event.getMemoryItemOrEmptyObject(YOUNG)
-                                 .updateIfAbsent(young), true);
+                .updateIfAbsent(young), true);
 
         //case 4: know young and heap, calculate old
         GCMemoryItem old = event.getMemoryItemOrEmptyObject(HEAP)
-                                .subtract(event.getMemoryItem(YOUNG))
-                                .subtractIfPresent(event.getMemoryItem(HUMONGOUS))
-                                .subtractIfPresent(event.getMemoryItem(ARCHIVE));
+                .subtract(event.getMemoryItem(YOUNG))
+                .subtractIfPresent(event.getMemoryItem(HUMONGOUS))
+                .subtractIfPresent(event.getMemoryItem(ARCHIVE));
         old.setArea(OLD);
         event.setMemoryItem(event.getMemoryItemOrEmptyObject(OLD)
-                                 .updateIfAbsent(old), true);
+                .updateIfAbsent(old), true);
 
         // Although we can calculate metaspace = class + non class, there is no need to do
         // so because when class and non class are known, metaspace must have been known
     }
 
-    private void filterInvalidEvents() {
-        // Sometimes the given log is just a part of the complete log. This may lead to some incomplete events at
-        // beginning or end of this log. Such event at beginning is likely to have been dealt by parser, so here we try
+    private void filterInvalidEvents()
+    {
+        // Sometimes the given log is just a part of the complete LOG. This may lead to some incomplete events at
+        // beginning or end of this LOG. Such event at beginning is likely to have been dealt by parser, so here we try
         // to deal with the last event
-        if (gcEvents.get(gcEvents.size() - 1).getEndTime() == Constant.UNKNOWN_DOUBLE) {
-            gcEvents.remove(gcEvents.size() - 1);
+        if (gcEvents.getLast().getEndTime() == Constant.UNKNOWN_DOUBLE)
+        {
+            gcEvents.removeLast();
         }
     }
 
-    protected static List<GCEventType> calcAllEventTypes(GCCollectorType collector) {
+    protected static List<GCEventType> calcAllEventTypes(GCCollectorType collector)
+    {
         return GCEventType.getAllEventTypes().stream()
-                          .filter(e -> e.getGcs().contains(collector))
-                          .collect(Collectors.toList());
+                .filter(e -> e.getGcs().contains(collector))
+                .collect(Collectors.toList());
     }
 
-    protected static List<GCEventType> calcPauseEventTypes(GCCollectorType collector) {
+    protected static List<GCEventType> calcPauseEventTypes(GCCollectorType collector)
+    {
         return GCEventType.getAllEventTypes().stream()
-                          .filter(e -> e.getGcs().contains(collector) && e.getPause() == GCPause.PAUSE)
-                          .collect(Collectors.toList());
+                .filter(e -> e.getGcs().contains(collector) && e.getPause() == GCPause.PAUSE)
+                .collect(Collectors.toList());
     }
 
-    protected static List<GCEventType> calcMainPauseEventTypes(GCCollectorType collector) {
+    protected static List<GCEventType> calcMainPauseEventTypes(GCCollectorType collector)
+    {
         return GCEventType.getAllEventTypes().stream()
-                          .filter(e -> e.getGcs().contains(collector) && e.isMainPauseEventType())
-                          .collect(Collectors.toList());
+                .filter(e -> e.getGcs().contains(collector) && e.isMainPauseEventType())
+                .collect(Collectors.toList());
     }
 
-    protected static List<GCEventType> calcParentEventTypes(GCCollectorType collector) {
-        return Stream.of(YOUNG_GC, G1_MIXED_GC, CMS_CONCURRENT_MARK_SWEPT, G1_CONCURRENT_CYCLE, FULL_GC, ZGC_GARBAGE_COLLECTION)
-                     .filter(e -> e.getGcs().contains(collector))
-                     .collect(Collectors.toList());
+    protected static List<GCEventType> calcParentEventTypes(GCCollectorType collector)
+    {
+        return Stream.of(YOUNG_GC, G1_MIXED_GC, CMS_CONCURRENT_MARK_SWEPT, G1_CONCURRENT_CYCLE, FULL_GC,
+                        ZGC_GARBAGE_COLLECTION)
+                .filter(e -> e.getGcs().contains(collector))
+                .collect(Collectors.toList());
     }
 
     protected abstract List<GCEventType> getAllEventTypes();
@@ -772,10 +927,13 @@ public abstract class GCModel {
 
     protected abstract List<GCEventType> getImportantEventTypes();
 
-    public GCEvent getLastEventWithCondition(Predicate<GCEvent> condition) {
-        for (int i = allEvents.size() - 1; i >= 0; i--) {
+    public GCEvent getLastEventWithCondition(Predicate<GCEvent> condition)
+    {
+        for (int i = allEvents.size() - 1; i >= 0; i--)
+        {
             GCEvent event = allEvents.get(i);
-            if (condition.test(event)) {
+            if (condition.test(event))
+            {
                 return event;
             }
         }
@@ -783,60 +941,75 @@ public abstract class GCModel {
     }
 
     // mainly used in jdk8, where gcid may be missing
-    public GCEvent getLastEventOfType(GCEventType... types) {
+    public GCEvent getLastEventOfType(GCEventType... types)
+    {
         List<GCEventType> typeList = Arrays.asList(types);
         return getLastEventWithCondition(event -> typeList.contains(event.getEventType()));
     }
 
     // mainly used in parser of jdk11, where gcid is always logged if tag includes gc
-    public GCEvent getLastEventOfGCID(int gcid) {
-        return getLastEventWithCondition(event -> event.getEventLevel() == GCEventLevel.EVENT && event.getGcid() == gcid);
+    public GCEvent getLastEventOfGCID(int gcid)
+    {
+        return getLastEventWithCondition(
+                event -> event.getEventLevel() == GCEventLevel.EVENT && event.getGcid() == gcid);
     }
 
-    public double getReferenceTimestamp() {
+    public double getReferenceTimestamp()
+    {
         return referenceTimestamp;
     }
 
-    public void setReferenceTimestamp(double referenceTimestamp) {
+    public void setReferenceTimestamp(double referenceTimestamp)
+    {
         this.referenceTimestamp = referenceTimestamp;
     }
 
-    public void setVmOptions(VmOptions vmOptions) {
+    public void setVmOptions(VmOptions vmOptions)
+    {
         this.vmOptions = vmOptions;
     }
 
-    public VmOptions getVmOptions() {
+    public VmOptions getVmOptions()
+    {
         return vmOptions;
     }
 
     @ApiMeta("vmOptions")
-    public VmOptions.VmOptionResult getVmOptionResult() {
+    public VmOptions.VmOptionResult getVmOptionResult()
+    {
         return vmOptions == null ? null : vmOptions.getVmOptionResult();
     }
 
-    private void calculateEventsInterval() {
+    private void calculateEventsInterval()
+    {
         Map<GCEventType, Double> lastEndTime = new HashMap<>();
         Map<GCEventType, Map<GCCause, Double>> lastCauseEndTime = new HashMap<>();
-        for (GCEvent event : allEvents) {
+        for (GCEvent event : allEvents)
+        {
             GCEventType eventType = event.getEventType();
             // regard mixed gc as young gc
-            if (event.isYoungGC()) {
+            if (event.isYoungGC())
+            {
                 eventType = YOUNG_GC;
             }
 
-            if (lastEndTime.containsKey(eventType)) {
+            if (lastEndTime.containsKey(eventType))
+            {
                 event.setInterval(Math.max(0, event.getStartTime() - lastEndTime.get(eventType)));
             }
             lastEndTime.put(eventType, event.getEndTime());
 
             GCCause cause = event.getCause();
-            if (cause != null) {
+            if (cause != null)
+            {
                 Map<GCCause, Double> map = lastCauseEndTime.getOrDefault(eventType, null);
-                if (map == null) {
+                if (map == null)
+                {
                     map = new HashMap<>();
                     lastCauseEndTime.put(eventType, map);
                 }
-                if (map.containsKey(cause)) {
+                if (map.containsKey(cause))
+                {
                     event.setCauseInterval(Math.max(0, event.getStartTime() - map.get(cause)));
                 }
                 map.put(cause, event.getEndTime());
@@ -844,38 +1017,47 @@ public abstract class GCModel {
         }
     }
 
-    public String toDebugString() {
+    public String toDebugString()
+    {
         StringBuilder sb = new StringBuilder();
-        for (GCEvent event : gcEvents) {
+        for (GCEvent event : gcEvents)
+        {
             sb.append(event.toDebugString(this)).append("\n");
             event.phasesDoDFS(phase -> sb.append("    ").append(phase.toDebugString(this)).append("\n"));
         }
         return sb.toString();
     }
 
-    public boolean shouldAvoidFullGC() {
+    public boolean shouldAvoidFullGC()
+    {
         return collectorType != SERIAL && collectorType != PARALLEL && collectorType != UNKNOWN;
     }
 
-    public List<GCEventVO> getEventsVO(List<GCEvent> events, AnalysisConfig config) {
+    public List<GCEventVO> getEventsVO(List<GCEvent> events, AnalysisConfig config)
+    {
         GlobalDiagnoseInfo diagnose = getGlobalDiagnoseInfo(config);
         return events.stream().map(event -> event.toEventVO(this, diagnose)).collect(Collectors.toList());
     }
 
-    public GCEventVO getEventVO(GCEvent event, AnalysisConfig config) {
+    public GCEventVO getEventVO(GCEvent event, AnalysisConfig config)
+    {
         GlobalDiagnoseInfo diagnose = getGlobalDiagnoseInfo(config);
         return event.toEventVO(this, diagnose);
     }
 
     @ApiMeta("gcDetails")
-    public PageView<GCEventVO> getGCDetails(PagingRequest pagingRequest, GCDetailFilter filter, AnalysisConfig config) {
+    public PageView<GCEventVO> getGCDetails(PagingRequest pagingRequest, GCDetailFilter filter, AnalysisConfig config)
+    {
         int firstIndex = (pagingRequest.getPage() - 1) * pagingRequest.getPageSize();
         int total = 0;
         List<GCEvent> resultEvents = new ArrayList<>();
 
-        for (GCEvent event : gcEvents) {
-            if (!filter.isFiltered(event)) {
-                if (total >= firstIndex && resultEvents.size() < pagingRequest.getPageSize()) {
+        for (GCEvent event : gcEvents)
+        {
+            if (!filter.isFiltered(event))
+            {
+                if (total >= firstIndex && resultEvents.size() < pagingRequest.getPageSize())
+                {
                     resultEvents.add(event);
                 }
                 total++;
@@ -885,12 +1067,14 @@ public abstract class GCModel {
         return new PageView<>(pagingRequest, total, result);
     }
 
-    public boolean shouldTryToAvoidMemoryFullGC() {
+    public boolean shouldTryToAvoidMemoryFullGC()
+    {
         return collectorType != SERIAL && collectorType != PARALLEL;
     }
 
     @ApiMeta(value = "metadata")
-    public GCLogMetadata getGcModelMetadata() {
+    public GCLogMetadata getGcModelMetadata()
+    {
         return metadata;
     }
 
@@ -899,23 +1083,25 @@ public abstract class GCModel {
             G1_CONCURRENT_UNDO_CYCLE, G1_MERGE_HEAP_ROOTS, G1_CONCURRENT_REBUILD_REMEMBERED_SETS,
             ZGC_CONCURRENT_DETATCHED_PAGES);
 
-    private List<String> dealEventTypeForMetadata(List<GCEventType> eventTypesExpected,
-                                                  Set<GCEventType> eventTypesActuallyShowUp) {
+    private static List<String> dealEventTypeForMetadata(List<GCEventType> eventTypesExpected,
+            Set<GCEventType> eventTypesActuallyShowUp)
+    {
         return eventTypesExpected.stream()
-                                 .filter(eventType -> !EVENT_TYPES_SHOULD_NOT_BE_REPORTED_IF_NOT_PRESENT.contains(eventType)
-                                                      || eventTypesActuallyShowUp.contains(eventType))
-                                 .map(GCEventType::getName)
-                                 .collect(Collectors.toList());
+                .filter(eventType -> !EVENT_TYPES_SHOULD_NOT_BE_REPORTED_IF_NOT_PRESENT.contains(eventType)
+                        || eventTypesActuallyShowUp.contains(eventType))
+                .map(GCEventType::getName)
+                .collect(Collectors.toList());
     }
 
-    private void calculateGcModelMetadata() {
+    private void calculateGcModelMetadata()
+    {
         metadata = new GCLogMetadata();
         metadata.setCauses(gcEvents.stream()
-                                   .map(GCEvent::getCause)
-                                   .filter(Objects::nonNull)
-                                   .map(GCCause::getName)
-                                   .distinct()
-                                   .collect(Collectors.toList()));
+                .map(GCEvent::getCause)
+                .filter(Objects::nonNull)
+                .map(GCCause::getName)
+                .distinct()
+                .collect(Collectors.toList()));
         metadata.setCollector(getCollectorType().toString());
         metadata.setLogStyle(getLogStyle().toString());
         metadata.setPauseless(isPauseless());
@@ -926,8 +1112,8 @@ public abstract class GCModel {
         metadata.setEndTime(getEndTime());
 
         Set<GCEventType> eventTypesActuallyShowUp = this.allEvents.stream()
-                                                                  .map(GCEvent::getEventType)
-                                                                  .collect(Collectors.toSet());
+                .map(GCEvent::getEventType)
+                .collect(Collectors.toSet());
         metadata.setParentEventTypes(dealEventTypeForMetadata(getParentEventTypes(), eventTypesActuallyShowUp));
         metadata.setImportantEventTypes(dealEventTypeForMetadata(getImportantEventTypes(), eventTypesActuallyShowUp));
         metadata.setPauseEventTypes(dealEventTypeForMetadata(getPauseEventTypes(), eventTypesActuallyShowUp));
@@ -939,65 +1125,76 @@ public abstract class GCModel {
         metadata.setConcurrentGCThreads(getConcurrentThread());
     }
 
-    protected boolean isMetaspaceCapacityReliable() {
+    protected boolean isMetaspaceCapacityReliable()
+    {
         return metaspaceCapacityReliable;
     }
 
-    public void setMetaspaceCapacityReliable(boolean metaspaceCapacityReliable) {
+    public void setMetaspaceCapacityReliable(boolean metaspaceCapacityReliable)
+    {
         this.metaspaceCapacityReliable = metaspaceCapacityReliable;
     }
 
-    public void setParallelThread(int parallelThread) {
+    public void setParallelThread(int parallelThread)
+    {
         this.parallelThread = parallelThread;
     }
 
-    public void setConcurrentThread(int concurrentThread) {
+    public void setConcurrentThread(int concurrentThread)
+    {
         this.concurrentThread = concurrentThread;
     }
 
-    public int getParallelThread() {
-        if (parallelThread == Constant.UNKNOWN_INT && vmOptions != null) {
-            return vmOptions.<Long>getOptionValue("ParallelGCThreads", Constant.UNKNOWN_LONG).intValue();
+    public int getParallelThread()
+    {
+        if (parallelThread == Constant.UNKNOWN_INT && vmOptions != null)
+        {
+            return vmOptions.<Long> getOptionValue("ParallelGCThreads", Constant.UNKNOWN_LONG).intValue();
         }
         return parallelThread;
     }
 
-    public int getConcurrentThread() {
-        if (concurrentThread == Constant.UNKNOWN_INT && vmOptions != null) {
-            return vmOptions.<Long>getOptionValue("ConcGCThreads", Constant.UNKNOWN_LONG).intValue();
+    public int getConcurrentThread()
+    {
+        if (concurrentThread == Constant.UNKNOWN_INT && vmOptions != null)
+        {
+            return vmOptions.<Long> getOptionValue("ConcGCThreads", Constant.UNKNOWN_LONG).intValue();
         }
         return concurrentThread;
     }
 
-    public GlobalDiagnoseInfo getGlobalDiagnoseInfo(AnalysisConfig config) {
+    public GlobalDiagnoseInfo getGlobalDiagnoseInfo(AnalysisConfig config)
+    {
         GlobalDiagnoseInfo result = globalDiagnoseInfoCache.getIfPresent(config);
-        if (result == null) {
+        if (result == null)
+        {
             result = calculateGlobalDiagnoseInfo(config);
             globalDiagnoseInfoCache.put(config, result);
         }
         return result;
     }
 
-    private GlobalDiagnoseInfo calculateGlobalDiagnoseInfo(AnalysisConfig config) {
+    private GlobalDiagnoseInfo calculateGlobalDiagnoseInfo(AnalysisConfig config)
+    {
         GlobalDiagnoseInfo info = new GlobalDiagnoseInfo(this, config);
         EventAbnormalDetector abDetector = new EventAbnormalDetector(this, config, info);
         abDetector.diagnose();
         return info;
     }
 
-    @Data
-    @NoArgsConstructor
-    @ToString
-    public static class GCDetailFilter {
+    public static class GCDetailFilter
+    {
         private String eventType;
         @JsonAdapter(GCCauseDeserializer.class)
         private GCCause gcCause;
         //in ms
-        private double logTimeLow = -Double.MAX_VALUE ;
+        private double logTimeLow = -Double.MAX_VALUE;
         private double logTimeHigh = Double.MAX_VALUE;
         private double pauseTimeLow = -Double.MAX_VALUE;
 
-        public GCDetailFilter(String eventType, String gcCause, Double logTimeLow, Double logTimeHigh, Double pauseTimeLow) {
+        public GCDetailFilter(String eventType, String gcCause, Double logTimeLow, Double logTimeHigh,
+                Double pauseTimeLow)
+        {
             this.eventType = eventType;
             this.gcCause = GCCause.getCause(gcCause);
             this.logTimeLow = logTimeLow == null ? -Double.MAX_VALUE : logTimeLow;
@@ -1005,17 +1202,71 @@ public abstract class GCModel {
             this.pauseTimeLow = pauseTimeLow == null ? -Double.MAX_VALUE : pauseTimeLow;
         }
 
-        public boolean isFiltered(GCEvent event) {
-            return event.getEventType() == SAFEPOINT ||
-                   !((StringUtils.isBlank(eventType) || eventType.equals(event.getEventType().getName()))
-                     && (gcCause == null || gcCause == event.getCause())
-                     && (logTimeLow <= event.getEndTime() && event.getEndTime() <= logTimeHigh)
-                     && (pauseTimeLow <= event.getPause()));
+        public String getEventType()
+        {
+            return eventType;
         }
 
-        static  class GCCauseDeserializer implements JsonDeserializer<GCCause> {
+        public void setEventType(String eventType)
+        {
+            this.eventType = eventType;
+        }
+
+        public GCCause getGcCause()
+        {
+            return gcCause;
+        }
+
+        public void setGcCause(GCCause gcCause)
+        {
+            this.gcCause = gcCause;
+        }
+
+        public double getLogTimeLow()
+        {
+            return logTimeLow;
+        }
+
+        public void setLogTimeLow(double logTimeLow)
+        {
+            this.logTimeLow = logTimeLow;
+        }
+
+        public double getLogTimeHigh()
+        {
+            return logTimeHigh;
+        }
+
+        public void setLogTimeHigh(double logTimeHigh)
+        {
+            this.logTimeHigh = logTimeHigh;
+        }
+
+        public double getPauseTimeLow()
+        {
+            return pauseTimeLow;
+        }
+
+        public void setPauseTimeLow(double pauseTimeLow)
+        {
+            this.pauseTimeLow = pauseTimeLow;
+        }
+
+        public boolean isFiltered(GCEvent event)
+        {
+            return event.getEventType() == SAFEPOINT ||
+                    !((StringUtils.isBlank(eventType) || eventType.equals(event.getEventType().getName()))
+                            && (gcCause == null || gcCause == event.getCause())
+                            && (logTimeLow <= event.getEndTime() && event.getEndTime() <= logTimeHigh)
+                            && (pauseTimeLow <= event.getPause()));
+        }
+
+        static class GCCauseDeserializer implements JsonDeserializer<GCCause>
+        {
             @Override
-            public GCCause deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
+            public GCCause deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context)
+                    throws JsonParseException
+            {
                 return GCCause.getCause(json.getAsString());
             }
         }

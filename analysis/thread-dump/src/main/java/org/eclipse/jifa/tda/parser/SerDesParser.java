@@ -16,9 +16,11 @@ package org.eclipse.jifa.tda.parser;
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
-import lombok.extern.slf4j.Slf4j;
+
 import org.eclipse.jifa.analysis.listener.ProgressListener;
 import org.eclipse.jifa.tda.model.Snapshot;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -28,13 +30,15 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-@Slf4j
-public class SerDesParser implements Parser {
-
+public class SerDesParser implements Parser
+{
+    private static final Logger LOG = LoggerFactory.getLogger(SerDesParser.class);
     private static final ThreadLocal<Kryo> KRYO;
 
-    static {
-        KRYO = ThreadLocal.withInitial(() -> {
+    static
+    {
+        KRYO = ThreadLocal.withInitial(() ->
+        {
             Kryo kryo = new Kryo();
             kryo.setRegistrationRequired(false);
             return kryo;
@@ -43,53 +47,69 @@ public class SerDesParser implements Parser {
 
     private final Parser parser;
 
-    public SerDesParser(Parser parser) {
+    public SerDesParser(Parser parser)
+    {
         this.parser = parser;
     }
 
     @Override
-    public Snapshot parse(Path path, ProgressListener listener) {
+    public Snapshot parse(Path path, ProgressListener listener)
+    {
         // TODO: multi-threads support
         Path serializedDataPath = resolveSerializedDataPath(path);
-        if (Files.exists(serializedDataPath)) {
-            try {
+        if (Files.exists(serializedDataPath))
+        {
+            try
+            {
                 listener.beginTask("Deserializing thread dump", 100);
                 Snapshot snapshot = deserialize(serializedDataPath);
                 listener.worked(100);
                 return snapshot;
-            } catch (Throwable t) {
-                log.error("Failed to deserialize thread dump: {}", t.getMessage());
+            }
+            catch (Throwable t)
+            {
+                LOG.error("Failed to deserialize thread dump: {}", t.getMessage());
                 listener.sendUserMessage(ProgressListener.Level.WARNING, "Deserialize thread dump failed", t);
                 listener.reset();
             }
         }
 
         Snapshot snapshot = parser.parse(path, listener);
-        try {
+        try
+        {
             listener.beginTask("Serializing thread dump", 5);
             serialize(snapshot, serializedDataPath);
-        } catch (Throwable t) {
-            log.warn("Failed to serialize thread dump: {}", t.getMessage());
-        } finally {
+        }
+        catch (Throwable t)
+        {
+            LOG.warn("Failed to serialize thread dump: {}", t.getMessage());
+        }
+        finally
+        {
             listener.worked(5);
         }
         return snapshot;
     }
 
-    private Path resolveSerializedDataPath(Path source) {
+    private Path resolveSerializedDataPath(Path source)
+    {
         return Paths.get(source.toFile().getAbsoluteFile() + ".kryo");
     }
 
-    private void serialize(Snapshot snapshot, Path path) throws FileNotFoundException {
+    private void serialize(Snapshot snapshot, Path path) throws FileNotFoundException
+    {
         Kryo kryo = KRYO.get();
-        try (Output out = new Output(new FileOutputStream(path.toFile()))) {
+        try (Output out = new Output(new FileOutputStream(path.toFile())))
+        {
             kryo.writeObject(out, snapshot);
         }
     }
 
-    private Snapshot deserialize(Path path) throws IOException {
+    private Snapshot deserialize(Path path) throws IOException
+    {
         Kryo kryo = KRYO.get();
-        try (Input input = new Input(new FileInputStream(path.toFile()))) {
+        try (Input input = new Input(new FileInputStream(path.toFile())))
+        {
             return kryo.readObject(input, Snapshot.class);
         }
     }

@@ -16,20 +16,21 @@ import org.eclipse.jifa.server.domain.entity.shared.file.DeletedFileEntity;
 import org.eclipse.jifa.server.domain.entity.shared.file.FileEntity;
 import org.eclipse.jifa.server.domain.entity.shared.file.TransferringFileEntity;
 
-public abstract class EntityConverter {
-
-    public static DeletedFileEntity convert(FileEntity file) {
+public abstract class EntityConverter
+{
+    public static DeletedFileEntity convert(FileEntity file)
+    {
         DeletedFileEntity deletedFile = new DeletedFileEntity();
         deletedFile.setUniqueName(file.getUniqueName());
         deletedFile.setUser(file.getUser());
         deletedFile.setOriginalName(file.getOriginalName());
         deletedFile.setType(file.getType());
         deletedFile.setOriginalCreatedTime(file.getCreatedTime());
-
         return deletedFile;
     }
 
-    public static FileEntity convert(TransferringFileEntity transferringFile) {
+    public static FileEntity convert(TransferringFileEntity transferringFile)
+    {
         FileEntity file = new FileEntity();
         file.setUniqueName(transferringFile.getUniqueName());
         file.setUser(transferringFile.getUser());
@@ -38,5 +39,4 @@ public abstract class EntityConverter {
         file.setSize(transferringFile.getTotalSize());
         return file;
     }
-
 }

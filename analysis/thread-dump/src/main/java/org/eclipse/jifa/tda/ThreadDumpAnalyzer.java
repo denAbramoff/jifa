@@ -52,11 +52,13 @@ import java.util.Map;
 /**
  * Thread dump analyzer
  */
-public class ThreadDumpAnalyzer {
+public class ThreadDumpAnalyzer
+{
 
     private final Snapshot snapshot;
 
-    ThreadDumpAnalyzer(Path path, ProgressListener listener) {
+    ThreadDumpAnalyzer(Path path, ProgressListener listener)
+    {
         snapshot = ParserFactory.buildParser(path).parse(path, listener);
     }
 
@@ -67,32 +69,36 @@ public class ThreadDumpAnalyzer {
      * @param listener progress listener
      * @return analyzer
      */
-    public static ThreadDumpAnalyzer build(Path path, ProgressListener listener) {
+    public static ThreadDumpAnalyzer build(Path path, ProgressListener listener)
+    {
         return ProxyBuilder.build(ThreadDumpAnalyzer.class,
-                                  new Class[]{Path.class, ProgressListener.class},
-                                  new Object[]{path, listener});
+                new Class[] { Path.class, ProgressListener.class },
+                new Object[] { path, listener });
     }
 
-    private void computeThreadState(Overview o, Thread thread) {
+    private void computeThreadState(Overview o, Thread thread)
+    {
         ThreadType type = thread.getType();
-        switch (type) {
-            case JAVA:
-                JavaThread jt = ((JavaThread) thread);
-                o.getJavaThreadStat().inc(jt.getJavaThreadState());
-                o.getJavaThreadStat().inc(jt.getOsThreadState());
-                if (jt.isDaemon()) {
-                    o.getJavaThreadStat().incDaemon();
-                }
-                break;
-            case JIT:
-                o.getJitThreadStat().inc(thread.getOsThreadState());
-                break;
-            case GC:
-                o.getGcThreadStat().inc(thread.getOsThreadState());
-                break;
-            case VM:
-                o.getOtherThreadStat().inc(thread.getOsThreadState());
-                break;
+        switch (type)
+        {
+        case JAVA:
+            JavaThread jt = ((JavaThread)thread);
+            o.getJavaThreadStat().inc(jt.getJavaThreadState());
+            o.getJavaThreadStat().inc(jt.getOsThreadState());
+            if (jt.isDaemon())
+            {
+                o.getJavaThreadStat().incDaemon();
+            }
+            break;
+        case JIT:
+            o.getJitThreadStat().inc(thread.getOsThreadState());
+            break;
+        case GC:
+            o.getGcThreadStat().inc(thread.getOsThreadState());
+            break;
+        case VM:
+            o.getOtherThreadStat().inc(thread.getOsThreadState());
+            break;
         }
         o.getThreadStat().inc(thread.getOsThreadState());
     }
@@ -101,23 +107,29 @@ public class ThreadDumpAnalyzer {
      * @return the overview of the thread dump
      */
     @Cacheable
-    public Overview overview() {
+    public Overview overview()
+    {
         Overview o = new Overview();
         CollectionUtil.forEach(t -> computeThreadState(o, t), snapshot.getJavaThreads(), snapshot.getNonJavaThreads());
 
         snapshot.getThreadGroup().forEach(
-            (p, l) -> {
-                for (Thread t : l) {
-                    o.getThreadGroupStat().computeIfAbsent(p, i -> new Overview.ThreadStat()).inc(t.getOsThreadState());
+                (p, l) ->
+                {
+                    for (Thread t : l)
+                    {
+                        o.getThreadGroupStat()
+                                .computeIfAbsent(p, i -> new Overview.ThreadStat())
+                                .inc(t.getOsThreadState());
+                    }
                 }
-            }
         );
         o.setTimestamp(snapshot.getTimestamp());
         o.setVmInfo(snapshot.getVmInfo());
         o.setJniRefs(snapshot.getJniRefs());
         o.setJniWeakRefs(snapshot.getJniWeakRefs());
 
-        if (snapshot.getDeadLockThreads() != null) {
+        if (snapshot.getDeadLockThreads() != null)
+        {
             o.setDeadLockCount(snapshot.getDeadLockThreads().size());
         }
 
@@ -128,14 +140,17 @@ public class ThreadDumpAnalyzer {
     /**
      * @return the call site tree by parent id
      */
-    public PageView<VFrame> callSiteTree(int parentId, PagingRequest paging) {
+    public PageView<VFrame> callSiteTree(int parentId, PagingRequest paging)
+    {
         CallSiteTree tree = snapshot.getCallSiteTree();
-        if (parentId < 0 || parentId >= tree.getId2Node().length) {
+        if (parentId < 0 || parentId >= tree.getId2Node().length)
+        {
             throw new IllegalArgumentException("Illegal parent id: " + parentId);
         }
         CallSiteTree.Node node = tree.getId2Node()[parentId];
         List<CallSiteTree.Node> children = node.getChildren() != null ? node.getChildren() : Collections.emptyList();
-        return PageViewBuilder.build(children, paging, n -> {
+        return PageViewBuilder.build(children, paging, n ->
+        {
             VFrame vFrame = new VFrame();
             vFrame.setId(n.getId());
             vFrame.setWeight(n.getWeight());
@@ -150,15 +165,17 @@ public class ThreadDumpAnalyzer {
 
             vFrame.setLine(frame.getLine());
 
-            if (frame.getMonitors() != null) {
+            if (frame.getMonitors() != null)
+            {
                 List<VMonitor> vMonitors = new ArrayList<>();
-                for (Monitor monitor : frame.getMonitors()) {
+                for (Monitor monitor : frame.getMonitors())
+                {
                     String clazz = null;
                     RawMonitor rm = monitor.getRawMonitor();
                     clazz = rm.getClazz();
                     vMonitors.add(new VMonitor(rm.getId(), rm.getAddress(), rm.isClassInstance(),
-                                               clazz,
-                                               monitor.getState()));
+                            clazz,
+                            monitor.getState()));
                 }
                 vFrame.setMonitors(vMonitors);
             }
@@ -166,8 +183,10 @@ public class ThreadDumpAnalyzer {
         });
     }
 
-    private PageView<VThread> buildVThreadPageView(List<Thread> threads, PagingRequest paging) {
-        return PageViewBuilder.build(threads, paging, thread -> {
+    private PageView<VThread> buildVThreadPageView(List<Thread> threads, PagingRequest paging)
+    {
+        return PageViewBuilder.build(threads, paging, thread ->
+        {
             VThread vThread = new VThread();
             vThread.setId(thread.getId());
             vThread.setName(thread.getName());
@@ -182,14 +201,18 @@ public class ThreadDumpAnalyzer {
      * @return the threads filtered by name and type
      */
     public PageView<VThread> threads(@ApiParameterMeta(required = false) String name,
-                                     @ApiParameterMeta(required = false) ThreadType type,
-                                     PagingRequest paging) {
+            @ApiParameterMeta(required = false) ThreadType type,
+            PagingRequest paging)
+    {
         List<Thread> threads = new ArrayList<>();
-        CollectionUtil.forEach(t -> {
-            if (type != null && t.getType() != type) {
+        CollectionUtil.forEach(t ->
+        {
+            if (type != null && t.getType() != type)
+            {
                 return;
             }
-            if (StringUtils.isNotBlank(name) && !t.getName().contains(name)) {
+            if (StringUtils.isNotBlank(name) && !t.getName().contains(name))
+            {
                 return;
             }
             threads.add(t);
@@ -203,14 +226,17 @@ public class ThreadDumpAnalyzer {
      * @param paging    paging request
      * @return the threads filtered by group name and type
      */
-    public PageView<VThread> threadsOfGroup(String groupName, PagingRequest paging) {
+    public PageView<VThread> threadsOfGroup(String groupName, PagingRequest paging)
+    {
         List<Thread> threads = snapshot.getThreadGroup().getOrDefault(groupName, Collections.emptyList());
         return buildVThreadPageView(threads, paging);
     }
 
-    public List<String> rawContentOfThread(int id) throws IOException {
+    public List<String> rawContentOfThread(int id) throws IOException
+    {
         Thread thread = snapshot.getThreadMap().get(id);
-        if (thread == null) {
+        if (thread == null)
+        {
             throw new IllegalArgumentException("Thread id is illegal: " + id);
         }
         String path = snapshot.getPath();
@@ -219,12 +245,15 @@ public class ThreadDumpAnalyzer {
         int end = thread.getLineEnd();
         List<String> content = new ArrayList<>();
 
-        try (LineNumberReader lnr = new LineNumberReader(new FileReader(path))) {
-            for (int i = 1; i < start; i++) {
+        try (LineNumberReader lnr = new LineNumberReader(new FileReader(path)))
+        {
+            for (int i = 1; i < start; i++)
+            {
                 lnr.readLine();
             }
 
-            for (int i = start; i <= end; i++) {
+            for (int i = start; i <= end; i++)
+            {
                 content.add(lnr.readLine());
             }
         }
@@ -238,24 +267,30 @@ public class ThreadDumpAnalyzer {
      * @return the raw content
      * @throws IOException
      */
-    public Content content(int lineNo, int lineLimit) throws IOException {
+    public Content content(int lineNo, int lineLimit) throws IOException
+    {
         String path = snapshot.getPath();
 
         int end = lineNo + lineLimit - 1;
         List<String> content = new ArrayList<>();
         boolean reachEnd;
 
-        try (LineNumberReader lnr = new LineNumberReader(new FileReader(path))) {
-            for (int i = 1; i < lineNo; i++) {
+        try (LineNumberReader lnr = new LineNumberReader(new FileReader(path)))
+        {
+            for (int i = 1; i < lineNo; i++)
+            {
                 String line = lnr.readLine();
-                if (line == null) {
+                if (line == null)
+                {
                     break;
                 }
             }
 
-            for (int i = lineNo; i <= end; i++) {
+            for (int i = lineNo; i <= end; i++)
+            {
                 String line = lnr.readLine();
-                if (line == null) {
+                if (line == null)
+                {
                     break;
                 }
                 content.add(line);
@@ -271,10 +306,11 @@ public class ThreadDumpAnalyzer {
      * @param paging paging request
      * @return the monitors
      */
-    public PageView<VMonitor> monitors(PagingRequest paging) {
+    public PageView<VMonitor> monitors(PagingRequest paging)
+    {
         IdentityPool<RawMonitor> monitors = snapshot.getRawMonitors();
         return PageViewBuilder.build(monitors.objects(), paging,
-                                     m -> new VMonitor(m.getId(), m.getAddress(), m.isClassInstance(), m.getClazz()));
+                m -> new VMonitor(m.getId(), m.getAddress(), m.isClassInstance(), m.getClazz(), null));
     }
 
     /**
@@ -283,9 +319,11 @@ public class ThreadDumpAnalyzer {
      * @param paging paging request
      * @return the threads by monitor id and state
      */
-    public PageView<VThread> threadsByMonitor(int id, MonitorState state, PagingRequest paging) {
+    public PageView<VThread> threadsByMonitor(int id, MonitorState state, PagingRequest paging)
+    {
         Map<MonitorState, List<Thread>> map = snapshot.getMonitorThreads().get(id);
-        if (map == null) {
+        if (map == null)
+        {
             throw new IllegalArgumentException("Illegal monitor id: " + id);
         }
         return buildVThreadPageView(map.getOrDefault(state, Collections.emptyList()), paging);
@@ -295,9 +333,11 @@ public class ThreadDumpAnalyzer {
      * @param id monitor id
      * @return the <state, count> map by monitor id
      */
-    public Map<MonitorState, Integer> threadCountsByMonitor(int id) {
+    public Map<MonitorState, Integer> threadCountsByMonitor(int id)
+    {
         Map<MonitorState, List<Thread>> map = snapshot.getMonitorThreads().get(id);
-        if (map == null) {
+        if (map == null)
+        {
             throw new IllegalArgumentException("Illegal monitor id: " + id);
         }
 

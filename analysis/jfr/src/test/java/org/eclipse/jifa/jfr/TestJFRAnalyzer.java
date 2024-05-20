@@ -34,25 +34,34 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 
-public class TestJFRAnalyzer {
+public class TestJFRAnalyzer
+{
 
     @Test
-    public void testMetadata() throws IOException, InvocationTargetException, IllegalAccessException, NoSuchMethodException {
+    public void testMetadata()
+            throws IOException, InvocationTargetException, IllegalAccessException, NoSuchMethodException
+    {
         Path path = createTmpFileForResource("jfr.jfr");
-        Method buildAnalyzer = JFRAnalysisApiExecutor.class.getDeclaredMethod("buildAnalyzer", Path.class, Map.class, ProgressListener.class);
+        Method buildAnalyzer = JFRAnalysisApiExecutor.class.getDeclaredMethod("buildAnalyzer", Path.class, Map.class,
+                ProgressListener.class);
         buildAnalyzer.setAccessible(true);
-        JFRAnalyzer analyzer = (JFRAnalyzer) buildAnalyzer.invoke(new JFRAnalysisApiExecutor(), path, null, ProgressListener.NoOpProgressListener);
+        JFRAnalyzer analyzer = (JFRAnalyzer)buildAnalyzer.invoke(new JFRAnalysisApiExecutor(), path, null,
+                ProgressListener.NoOpProgressListener);
         Metadata meta = analyzer.metadata();
         Assertions.assertNotNull(meta.getPerfDimensions());
         Assertions.assertTrue(meta.getPerfDimensions().length > 0);
     }
 
     @Test
-    public void testFlameGraph() throws IOException, InvocationTargetException, IllegalAccessException, NoSuchMethodException {
+    public void testFlameGraph()
+            throws IOException, InvocationTargetException, IllegalAccessException, NoSuchMethodException
+    {
         Path path = createTmpFileForResource("jfr.jfr");
-        Method buildAnalyzer = JFRAnalysisApiExecutor.class.getDeclaredMethod("buildAnalyzer", Path.class, Map.class, ProgressListener.class);
+        Method buildAnalyzer = JFRAnalysisApiExecutor.class.getDeclaredMethod("buildAnalyzer", Path.class, Map.class,
+                ProgressListener.class);
         buildAnalyzer.setAccessible(true);
-        JFRAnalyzer analyzer = (JFRAnalyzer) buildAnalyzer.invoke(new JFRAnalysisApiExecutor(), path, null, ProgressListener.NoOpProgressListener);
+        JFRAnalyzer analyzer = (JFRAnalyzer)buildAnalyzer.invoke(new JFRAnalysisApiExecutor(), path, null,
+                ProgressListener.NoOpProgressListener);
         FlameGraph fg = analyzer.getFlameGraph(ProfileDimension.CPU.getKey(), false, null);
         Assertions.assertNotNull(fg.getData());
         Assertions.assertNotNull(fg.getSymbolTable());
@@ -60,9 +69,11 @@ public class TestJFRAnalyzer {
     }
 
     @Test
-    public void testCpu() throws IOException {
+    public void testCpu() throws IOException
+    {
         Path path = createTmpFileForResource("jfr.jfr");
-        JFRAnalyzerImpl analyzer = new JFRAnalyzerImpl(path, DimensionBuilder.CPU, null, ProgressListener.NoOpProgressListener);
+        JFRAnalyzerImpl analyzer = new JFRAnalyzerImpl(path, DimensionBuilder.CPU, null,
+                ProgressListener.NoOpProgressListener);
         AnalysisResult result = analyzer.getResult();
         Assertions.assertNotNull(result.getCpuTime());
 
@@ -71,7 +82,7 @@ public class TestJFRAnalyzer {
                 .filter(item -> item.getTask().getName().equals("Thread-6")).findAny();
         Assertions.assertTrue(optional.isPresent());
         TaskCPUTime tct = optional.get();
-        SimpleFlameGraph g = SimpleFlameGraph.parse((JavaThreadCPUTime) tct);
+        SimpleFlameGraph g = SimpleFlameGraph.parse((JavaThreadCPUTime)tct);
 
         Assertions.assertEquals(18852L, nanoToMillis(g.totalSampleValue.longValue()));
 
@@ -81,7 +92,7 @@ public class TestJFRAnalyzer {
         optional = cpuTimes.stream().filter(item -> item.getTask().getName().equals("main")).findAny();
         Assertions.assertTrue(optional.isPresent());
         tct = optional.get();
-        g = SimpleFlameGraph.parse((JavaThreadCPUTime) tct);
+        g = SimpleFlameGraph.parse((JavaThreadCPUTime)tct);
         list = g.queryLeafNodes(10);
         Assertions.assertEquals(1, list.size());
         Optional<Triple<String, String, String>> t = list.stream().filter(
@@ -93,7 +104,7 @@ public class TestJFRAnalyzer {
         optional = cpuTimes.stream().filter(item -> item.getTask().getName().equals("GC Thread")).findAny();
         Assertions.assertTrue(optional.isPresent());
         tct = optional.get();
-        g = SimpleFlameGraph.parse((JavaThreadCPUTime) tct);
+        g = SimpleFlameGraph.parse((JavaThreadCPUTime)tct);
         list = g.queryLeafNodes(0);
         Assertions.assertEquals(1, list.size());
         t = list.stream().filter(item -> item.getLeft().contains("JVM.GC")).findAny();
@@ -102,9 +113,11 @@ public class TestJFRAnalyzer {
     }
 
     @Test
-    public void testCpu2() throws IOException {
+    public void testCpu2() throws IOException
+    {
         Path path = createTmpFileForResource("ap-cpu-default.jfr");
-        JFRAnalyzerImpl analyzer = new JFRAnalyzerImpl(path, DimensionBuilder.CPU, null, ProgressListener.NoOpProgressListener);
+        JFRAnalyzerImpl analyzer = new JFRAnalyzerImpl(path, DimensionBuilder.CPU, null,
+                ProgressListener.NoOpProgressListener);
         AnalysisResult result = analyzer.getResult();
         Assertions.assertNotNull(result.getCpuTime());
 
@@ -113,7 +126,7 @@ public class TestJFRAnalyzer {
                 .filter(item -> item.getTask().getName().equals("main")).findAny();
         Assertions.assertTrue(optional.isPresent());
         TaskCPUTime tct = optional.get();
-        SimpleFlameGraph g = SimpleFlameGraph.parse((JavaThreadCPUTime) tct);
+        SimpleFlameGraph g = SimpleFlameGraph.parse((JavaThreadCPUTime)tct);
 
         Assertions.assertEquals(9860L, nanoToMillis(g.totalSampleValue.longValue()));
 
@@ -123,14 +136,16 @@ public class TestJFRAnalyzer {
         optional = cpuTimes.stream().filter(item -> item.getTask().getName().equals("GC task thread#-9")).findAny();
         Assertions.assertTrue(optional.isPresent());
         tct = optional.get();
-        g = SimpleFlameGraph.parse((JavaThreadCPUTime) tct);
+        g = SimpleFlameGraph.parse((JavaThreadCPUTime)tct);
         Assertions.assertEquals(30L, nanoToMillis(g.totalSampleValue.longValue()));
     }
 
     @Test
-    public void testCpu3() throws IOException {
+    public void testCpu3() throws IOException
+    {
         Path path = createTmpFileForResource("jfr.jfr");
-        JFRAnalyzerImpl analyzer = new JFRAnalyzerImpl(path, DimensionBuilder.CPU_SAMPLE, null, ProgressListener.NoOpProgressListener);
+        JFRAnalyzerImpl analyzer = new JFRAnalyzerImpl(path, DimensionBuilder.CPU_SAMPLE, null,
+                ProgressListener.NoOpProgressListener);
         AnalysisResult result = analyzer.getResult();
         Assertions.assertNotNull(result.getCpuSample());
 
@@ -152,9 +167,11 @@ public class TestJFRAnalyzer {
     }
 
     @Test
-    public void testWall() throws IOException {
+    public void testWall() throws IOException
+    {
         Path path = createTmpFileForResource("ap-wall-default.jfr");
-        JFRAnalyzerImpl analyzer = new JFRAnalyzerImpl(path, DimensionBuilder.WALL_CLOCK, null, ProgressListener.NoOpProgressListener);
+        JFRAnalyzerImpl analyzer = new JFRAnalyzerImpl(path, DimensionBuilder.WALL_CLOCK, null,
+                ProgressListener.NoOpProgressListener);
         AnalysisResult result = analyzer.getResult();
         Assertions.assertFalse(result.getWallClock().getList().isEmpty());
 
@@ -176,9 +193,11 @@ public class TestJFRAnalyzer {
     }
 
     @Test
-    public void testNative() throws IOException {
+    public void testNative() throws IOException
+    {
         Path path = createTmpFileForResource("jfr.jfr");
-        JFRAnalyzerImpl analyzer = new JFRAnalyzerImpl(path, DimensionBuilder.NATIVE_EXECUTION_SAMPLES, null, ProgressListener.NoOpProgressListener);
+        JFRAnalyzerImpl analyzer = new JFRAnalyzerImpl(path, DimensionBuilder.NATIVE_EXECUTION_SAMPLES, null,
+                ProgressListener.NoOpProgressListener);
         AnalysisResult result = analyzer.getResult();
         Assertions.assertNotNull(result.getNativeExecutionSamples());
 
@@ -194,16 +213,22 @@ public class TestJFRAnalyzer {
         Assertions.assertEquals(1, list.size());
 
         Optional<Triple<String, String, String>> t =
-                list.stream().filter(item -> item.getLeft().equals("java.net.SocketInputStream.socketRead0(FileDescriptor, byte[], int, int, int)")).findAny();
+                list.stream()
+                        .filter(item -> item.getLeft()
+                                .equals("java.net.SocketInputStream.socketRead0(FileDescriptor, byte[], int, int, "
+                                        + "int)"))
+                        .findAny();
         Assertions.assertTrue(t.isPresent());
         Assertions.assertEquals(951, Long.valueOf(t.get().getMiddle()));
         Assertions.assertEquals("95.0", t.get().getRight());
     }
 
     @Test
-    public void testAllocations() throws IOException {
+    public void testAllocations() throws IOException
+    {
         Path path = createTmpFileForResource("jfr.jfr");
-        JFRAnalyzerImpl analyzer = new JFRAnalyzerImpl(path, DimensionBuilder.ALLOC, null, ProgressListener.NoOpProgressListener);
+        JFRAnalyzerImpl analyzer = new JFRAnalyzerImpl(path, DimensionBuilder.ALLOC, null,
+                ProgressListener.NoOpProgressListener);
         AnalysisResult result = analyzer.getResult();
         Assertions.assertNotNull(result.getAllocations());
 
@@ -226,9 +251,11 @@ public class TestJFRAnalyzer {
     }
 
     @Test
-    public void testAllocations2() throws IOException {
+    public void testAllocations2() throws IOException
+    {
         Path path = createTmpFileForResource("object-allocation-sample.jfr");
-        JFRAnalyzerImpl analyzer = new JFRAnalyzerImpl(path, DimensionBuilder.ALLOC, null, ProgressListener.NoOpProgressListener);
+        JFRAnalyzerImpl analyzer = new JFRAnalyzerImpl(path, DimensionBuilder.ALLOC, null,
+                ProgressListener.NoOpProgressListener);
         AnalysisResult result = analyzer.getResult();
         Assertions.assertNotNull(result.getAllocations());
 
@@ -251,9 +278,11 @@ public class TestJFRAnalyzer {
     }
 
     @Test
-    public void testAllocatedMemory() throws IOException {
+    public void testAllocatedMemory() throws IOException
+    {
         Path path = createTmpFileForResource("jfr.jfr");
-        JFRAnalyzerImpl analyzer = new JFRAnalyzerImpl(path, DimensionBuilder.MEM, null, ProgressListener.NoOpProgressListener);
+        JFRAnalyzerImpl analyzer = new JFRAnalyzerImpl(path, DimensionBuilder.MEM, null,
+                ProgressListener.NoOpProgressListener);
         AnalysisResult result = analyzer.getResult();
         Assertions.assertNotNull(result.getAllocatedMemory());
 
@@ -276,9 +305,11 @@ public class TestJFRAnalyzer {
     }
 
     @Test
-    public void testAllocatedMemory2() throws IOException {
+    public void testAllocatedMemory2() throws IOException
+    {
         Path path = createTmpFileForResource("object-allocation-sample.jfr");
-        JFRAnalyzerImpl analyzer = new JFRAnalyzerImpl(path, DimensionBuilder.MEM, null, ProgressListener.NoOpProgressListener);
+        JFRAnalyzerImpl analyzer = new JFRAnalyzerImpl(path, DimensionBuilder.MEM, null,
+                ProgressListener.NoOpProgressListener);
         AnalysisResult result = analyzer.getResult();
         Assertions.assertNotNull(result.getAllocatedMemory());
 
@@ -301,9 +332,12 @@ public class TestJFRAnalyzer {
     }
 
     @Test
-    public void testCpuAndAllocAndMem() throws IOException {
+    public void testCpuAndAllocAndMem() throws IOException
+    {
         Path path = createTmpFileForResource("jfr.jfr");
-        JFRAnalyzerImpl analyzer = new JFRAnalyzerImpl(path, DimensionBuilder.CPU | DimensionBuilder.ALLOC | DimensionBuilder.MEM, null, ProgressListener.NoOpProgressListener);
+        JFRAnalyzerImpl analyzer = new JFRAnalyzerImpl(path,
+                DimensionBuilder.CPU | DimensionBuilder.ALLOC | DimensionBuilder.MEM, null,
+                ProgressListener.NoOpProgressListener);
         AnalysisResult result = analyzer.getResult();
         Assertions.assertNotNull(result.getCpuTime());
         Assertions.assertFalse(result.getCpuTime().getList().isEmpty());
@@ -314,9 +348,12 @@ public class TestJFRAnalyzer {
     }
 
     @Test
-    public void testFileIO() throws IOException {
+    public void testFileIO() throws IOException
+    {
         Path path = createTmpFileForResource("jfr.jfr");
-        JFRAnalyzerImpl analyzer = new JFRAnalyzerImpl(path, DimensionBuilder.FILE_IO_TIME | DimensionBuilder.FILE_READ_SIZE | DimensionBuilder.FILE_WRITE_SIZE, null, ProgressListener.NoOpProgressListener);
+        JFRAnalyzerImpl analyzer = new JFRAnalyzerImpl(path,
+                DimensionBuilder.FILE_IO_TIME | DimensionBuilder.FILE_READ_SIZE | DimensionBuilder.FILE_WRITE_SIZE,
+                null, ProgressListener.NoOpProgressListener);
         AnalysisResult result = analyzer.getResult();
         Assertions.assertNotNull(result.getFileIOTime());
         Assertions.assertFalse(result.getFileIOTime().getList().isEmpty());
@@ -331,7 +368,9 @@ public class TestJFRAnalyzer {
         List<Triple<String, String, String>> list = g.queryLeafNodes(10);
         Assertions.assertEquals(2, list.size());
         Optional<Triple<String, String, String>> t =
-                list.stream().filter(item -> item.getLeft().contains("java.io.FileOutputStream.write(byte[], int, int)")).findAny();
+                list.stream()
+                        .filter(item -> item.getLeft().contains("java.io.FileOutputStream.write(byte[], int, int)"))
+                        .findAny();
         Assertions.assertTrue(t.isPresent());
         Assertions.assertEquals(58214, Long.valueOf(t.get().getMiddle()));
         Assertions.assertEquals("47.3", t.get().getRight());
@@ -346,7 +385,9 @@ public class TestJFRAnalyzer {
         Assertions.assertEquals(6651, g.totalSampleValue.longValue());
         list = g.queryLeafNodes(20);
         Assertions.assertEquals(1, list.size());
-        t = list.stream().filter(item -> item.getLeft().contains("java.io.FileInputStream.read(byte[], int, int)")).findAny();
+        t = list.stream()
+                .filter(item -> item.getLeft().contains("java.io.FileInputStream.read(byte[], int, int)"))
+                .findAny();
         Assertions.assertTrue(t.isPresent());
         Assertions.assertEquals(5352, Long.valueOf(t.get().getMiddle()));
         Assertions.assertEquals("80.47", t.get().getRight());
@@ -361,14 +402,17 @@ public class TestJFRAnalyzer {
         Assertions.assertEquals(31, g.totalSampleValue.longValue());
         list = g.queryLeafNodes(20);
         Assertions.assertEquals(1, list.size());
-        t = list.stream().filter(item -> item.getLeft().contains("java.io.FileOutputStream.write(byte[], int, int)")).findAny();
+        t = list.stream()
+                .filter(item -> item.getLeft().contains("java.io.FileOutputStream.write(byte[], int, int)"))
+                .findAny();
         Assertions.assertTrue(t.isPresent());
         Assertions.assertEquals(29, Long.valueOf(t.get().getMiddle()));
         Assertions.assertEquals("93.55", t.get().getRight());
     }
 
     @Test
-    public void testSocketIO() throws IOException {
+    public void testSocketIO() throws IOException
+    {
         Path path = createTmpFileForResource("jfr.jfr");
         JFRAnalyzerImpl analyzer = new JFRAnalyzerImpl(path,
                 DimensionBuilder.SOCKET_WRITE_SIZE | DimensionBuilder.SOCKET_WRITE_TIME
@@ -388,7 +432,10 @@ public class TestJFRAnalyzer {
         List<Triple<String, String, String>> list = g.queryLeafNodes(10);
         Assertions.assertEquals(1, list.size());
         Optional<Triple<String, String, String>> t =
-                list.stream().filter(item -> item.getLeft().contains("java.net.SocketOutputStream.socketWrite(byte[], int, int)")).findAny();
+                list.stream()
+                        .filter(item -> item.getLeft()
+                                .contains("java.net.SocketOutputStream.socketWrite(byte[], int, int)"))
+                        .findAny();
         Assertions.assertTrue(t.isPresent());
         Assertions.assertEquals(114, Long.valueOf(t.get().getMiddle()));
         Assertions.assertEquals("100.0", t.get().getRight());
@@ -403,7 +450,9 @@ public class TestJFRAnalyzer {
         Assertions.assertEquals(685179, g.totalSampleValue.longValue());
         list = g.queryLeafNodes(20);
         Assertions.assertEquals(1, list.size());
-        t = list.stream().filter(item -> item.getLeft().contains("java.net.SocketOutputStream.socketWrite(byte[], int, int)")).findAny();
+        t = list.stream()
+                .filter(item -> item.getLeft().contains("java.net.SocketOutputStream.socketWrite(byte[], int, int)"))
+                .findAny();
         Assertions.assertTrue(t.isPresent());
         Assertions.assertEquals(685179, Long.valueOf(t.get().getMiddle()));
         Assertions.assertEquals("100.0", t.get().getRight());
@@ -418,9 +467,11 @@ public class TestJFRAnalyzer {
         Assertions.assertEquals(19001, nanoToMillis(g.totalSampleValue.longValue()));
         list = g.queryLeafNodes(20);
         Assertions.assertEquals(1, list.size());
-        t = list.stream().filter(item -> item.getLeft().contains("java.net.SocketInputStream.read(byte[], int, int, int)")).findAny();
+        t = list.stream()
+                .filter(item -> item.getLeft().contains("java.net.SocketInputStream.read(byte[], int, int, int)"))
+                .findAny();
         Assertions.assertTrue(t.isPresent());
-        Assertions.assertEquals(19001, nanoToMillis(Long.valueOf(t.get().getMiddle())));
+        Assertions.assertEquals(19001, nanoToMillis(Long.parseLong(t.get().getMiddle())));
         Assertions.assertEquals("100.0", t.get().getRight());
 
         Assertions.assertNotNull(result.getSocketReadSize());
@@ -433,14 +484,17 @@ public class TestJFRAnalyzer {
         Assertions.assertEquals(114, g.totalSampleValue.longValue());
         list = g.queryLeafNodes(20);
         Assertions.assertEquals(1, list.size());
-        t = list.stream().filter(item -> item.getLeft().contains("java.net.SocketInputStream.read(byte[], int, int, int)")).findAny();
+        t = list.stream()
+                .filter(item -> item.getLeft().contains("java.net.SocketInputStream.read(byte[], int, int, int)"))
+                .findAny();
         Assertions.assertTrue(t.isPresent());
         Assertions.assertEquals(114, Long.valueOf(t.get().getMiddle()));
         Assertions.assertEquals("100.0", t.get().getRight());
     }
 
     @Test
-    public void testSynchronization() throws IOException {
+    public void testSynchronization() throws IOException
+    {
         Path path = createTmpFileForResource("jfr.jfr");
         JFRAnalyzerImpl analyzer = new JFRAnalyzerImpl(path, DimensionBuilder.SYNCHRONIZATION,
                 null, ProgressListener.NoOpProgressListener);
@@ -464,7 +518,8 @@ public class TestJFRAnalyzer {
     }
 
     @Test
-    public void testThreadPark() throws IOException {
+    public void testThreadPark() throws IOException
+    {
         Path path = createTmpFileForResource("jfr.jfr");
         JFRAnalyzerImpl analyzer = new JFRAnalyzerImpl(path, DimensionBuilder.THREAD_PARK,
                 null, ProgressListener.NoOpProgressListener);
@@ -472,21 +527,26 @@ public class TestJFRAnalyzer {
         Assertions.assertNotNull(result.getThreadPark());
         Assertions.assertFalse(result.getThreadPark().getList().isEmpty());
         List<TaskSum> taskSumList = result.getThreadPark().getList();
-        Optional<TaskSum> optional = taskSumList.stream().filter(item -> item.getTask().getName().equals("Thread-5")).findAny();
+        Optional<TaskSum> optional = taskSumList.stream()
+                .filter(item -> item.getTask().getName().equals("Thread-5"))
+                .findAny();
         Assertions.assertTrue(optional.isPresent());
         TaskSum ta = optional.get();
         SimpleFlameGraph g = SimpleFlameGraph.parse(ta);
         Assertions.assertEquals(999, nanoToMillis(g.totalSampleValue.longValue()));
-        List<Triple<String, String, String>>  list = g.queryLeafNodes(20);
+        List<Triple<String, String, String>> list = g.queryLeafNodes(20);
         Assertions.assertEquals(1, list.size());
-        Optional<Triple<String, String, String>>  t = list.stream().filter(item -> item.getLeft().contains("sun.misc.Unsafe.park(boolean, long)")).findAny();
+        Optional<Triple<String, String, String>> t = list.stream()
+                .filter(item -> item.getLeft().contains("sun.misc.Unsafe.park(boolean, long)"))
+                .findAny();
         Assertions.assertTrue(t.isPresent());
         Assertions.assertEquals(999, nanoToMillis(Long.valueOf(t.get().getMiddle())));
         Assertions.assertEquals("100.0", t.get().getRight());
     }
 
     @Test
-    public void testClassLoad() throws IOException {
+    public void testClassLoad() throws IOException
+    {
         Path path = createTmpFileForResource("jfr.jfr");
         JFRAnalyzerImpl analyzer = new JFRAnalyzerImpl(path,
                 DimensionBuilder.CLASS_LOAD_COUNT | DimensionBuilder.CLASS_LOAD_WALL_TIME,
@@ -512,7 +572,9 @@ public class TestJFRAnalyzer {
         Assertions.assertNotNull(result.getClassLoadCount());
         Assertions.assertFalse(result.getClassLoadCount().getList().isEmpty());
         List<TaskCount> taskCountList = result.getClassLoadCount().getList();
-        Optional<TaskCount> optional2 = taskCountList.stream().filter(item -> item.getTask().getName().equals("Thread-2")).findAny();
+        Optional<TaskCount> optional2 = taskCountList.stream()
+                .filter(item -> item.getTask().getName().equals("Thread-2"))
+                .findAny();
         Assertions.assertTrue(optional2.isPresent());
         TaskCount ta2 = optional2.get();
         g = SimpleFlameGraph.parse(ta2);
@@ -526,9 +588,11 @@ public class TestJFRAnalyzer {
     }
 
     @Test
-    public void testSleep() throws IOException {
+    public void testSleep() throws IOException
+    {
         Path path = createTmpFileForResource("jfr.jfr");
-        JFRAnalyzerImpl analyzer = new JFRAnalyzerImpl(path, DimensionBuilder.THREAD_SLEEP, null, ProgressListener.NoOpProgressListener);
+        JFRAnalyzerImpl analyzer = new JFRAnalyzerImpl(path, DimensionBuilder.THREAD_SLEEP, null,
+                ProgressListener.NoOpProgressListener);
         AnalysisResult result = analyzer.getResult();
         Assertions.assertNotNull(result.getThreadSleepTime());
 
@@ -550,7 +614,8 @@ public class TestJFRAnalyzer {
     }
 
     @Test
-    public void tesJfrNoWall() throws IOException {
+    public void tesJfrNoWall() throws IOException
+    {
         Path path = createTmpFileForResource("jfr.jfr");
         JFRAnalyzerImpl analyzer = new JFRAnalyzerImpl(path,
                 DimensionBuilder.CPU | DimensionBuilder.CPU_SAMPLE | DimensionBuilder.WALL_CLOCK,
@@ -562,7 +627,8 @@ public class TestJFRAnalyzer {
     }
 
     @Test
-    public void testAsyncCpuNoWall() throws IOException {
+    public void testAsyncCpuNoWall() throws IOException
+    {
         // asprof -e cpu -d 10 -f ap.jfr jps
         // event=cpu, interval=0
         Path path = createTmpFileForResource("ap-cpu-default.jfr");
@@ -587,7 +653,8 @@ public class TestJFRAnalyzer {
     }
 
     @Test
-    public void testAsyncWallNoCpu() throws IOException {
+    public void testAsyncWallNoCpu() throws IOException
+    {
         // asprof -e wall -d 10 -f ap.jfr jps
         // event=wall, interval=0
         Path path = createTmpFileForResource("ap-wall-default.jfr");
@@ -622,7 +689,8 @@ public class TestJFRAnalyzer {
         Assertions.assertTrue(result.getCpuSample().getList().isEmpty());
     }
 
-    public static Path createTmpFileForResource(String resource) throws IOException {
+    public static Path createTmpFileForResource(String resource) throws IOException
+    {
         Path path = Files.createTempFile("temp", ".jfr");
         path.toFile().deleteOnExit();
         FileUtils.copyInputStreamToFile(Objects.requireNonNull(
@@ -631,7 +699,8 @@ public class TestJFRAnalyzer {
         return path;
     }
 
-    private static long nanoToMillis(long nano) {
+    private static long nanoToMillis(long nano)
+    {
         return nano / 1000 / 1000;
     }
 }

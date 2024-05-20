@@ -13,6 +13,7 @@
 package org.eclipse.jifa.server.service.impl;
 
 import jakarta.annotation.PostConstruct;
+
 import org.eclipse.jifa.common.domain.exception.CommonException;
 import org.eclipse.jifa.common.util.Validate;
 import org.eclipse.jifa.server.ConfigurationAccessor;
@@ -21,11 +22,13 @@ import org.eclipse.jifa.server.domain.dto.PublicKey;
 import org.eclipse.jifa.server.domain.entity.shared.ConfigurationEntity;
 import org.eclipse.jifa.server.repository.ConfigurationRepo;
 import org.eclipse.jifa.server.service.CipherService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import javax.crypto.Cipher;
+
 import java.io.ByteArrayOutputStream;
 import java.security.KeyFactory;
 import java.security.KeyPair;
@@ -40,8 +43,8 @@ import java.util.Base64;
 import java.util.Optional;
 
 @Service
-public class CipherServiceImpl extends ConfigurationAccessor implements CipherService {
-
+public class CipherServiceImpl extends ConfigurationAccessor implements CipherService
+{
     private final ConfigurationRepo configurationRepo;
 
     private final TransactionTemplate transactionTemplate;
@@ -52,25 +55,31 @@ public class CipherServiceImpl extends ConfigurationAccessor implements CipherSe
 
     private PublicKey key;
 
-    public CipherServiceImpl(ConfigurationRepo configurationRepo, TransactionTemplate transactionTemplate) {
+    @Autowired
+    public CipherServiceImpl(ConfigurationRepo configurationRepo, TransactionTemplate transactionTemplate)
+    {
         this.configurationRepo = configurationRepo;
         this.transactionTemplate = transactionTemplate;
     }
 
     @PostConstruct
-    private void init() throws NoSuchAlgorithmException, InvalidKeySpecException {
+    private void init() throws NoSuchAlgorithmException, InvalidKeySpecException
+    {
         Optional<ConfigurationEntity> optional = configurationRepo.findByUniqueName(Constant.CONFIGURATION_PUBLIC_KEY);
-        if (optional.isEmpty()) {
+        if (optional.isEmpty())
+        {
             KeyPair keyPair;
             KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA");
             generator.initialize(2048);
             keyPair = generator.generateKeyPair();
-            RSAPublicKey rsaPublicKey = (RSAPublicKey) keyPair.getPublic();
+            RSAPublicKey rsaPublicKey = (RSAPublicKey)keyPair.getPublic();
             String rsaPublicKeyString = Base64.getEncoder().encodeToString(rsaPublicKey.getEncoded());
-            RSAPrivateKey rasPrivateKey = (RSAPrivateKey) keyPair.getPrivate();
+            RSAPrivateKey rasPrivateKey = (RSAPrivateKey)keyPair.getPrivate();
             String rsaPrivateKeyString = Base64.getEncoder().encodeToString(rasPrivateKey.getEncoded());
-            try {
-                transactionTemplate.executeWithoutResult(status -> {
+            try
+            {
+                transactionTemplate.executeWithoutResult(status ->
+                {
                     ConfigurationEntity publicKeyEntity = new ConfigurationEntity();
                     publicKeyEntity.setUniqueName(Constant.CONFIGURATION_PUBLIC_KEY);
                     publicKeyEntity.setContent(rsaPublicKeyString);
@@ -82,14 +91,17 @@ public class CipherServiceImpl extends ConfigurationAccessor implements CipherSe
                 });
                 publicKey = rsaPublicKey;
                 privateKey = rasPrivateKey;
-            } catch (DataIntegrityViolationException ignored) {
+            }
+            catch (DataIntegrityViolationException ignored)
+            {
                 // find again
                 optional = configurationRepo.findByUniqueName(Constant.CONFIGURATION_PUBLIC_KEY);
                 Validate.isTrue(optional.isPresent(), "Failed to init key");
             }
         }
 
-        if (optional.isPresent()) {
+        if (optional.isPresent())
+        {
             publicKey = deserializePublicKey(optional.get().getContent());
             optional = configurationRepo.findByUniqueName(Constant.CONFIGURATION_PRIVATE_KEY);
             Validate.isTrue(optional.isPresent(), "Failed to init key");
@@ -101,45 +113,57 @@ public class CipherServiceImpl extends ConfigurationAccessor implements CipherSe
     }
 
     @Override
-    public String encrypt(String raw) {
-        try {
+    public String encrypt(String raw)
+    {
+        try
+        {
             Cipher cipher = Cipher.getInstance(getPublicKey().getAlgorithm());
             cipher.init(Cipher.ENCRYPT_MODE, getPublicKey());
             byte[] bytes = cipher.doFinal(raw.getBytes(Constant.CHARSET));
             return Base64.getEncoder().encodeToString(bytes);
-        } catch (Throwable t) {
+        }
+        catch (Throwable t)
+        {
             throw new CommonException(t);
         }
     }
 
     @Override
-    public String decrypt(String encoded) {
-        try {
+    public String decrypt(String encoded)
+    {
+        try
+        {
             byte[] bytes = Base64.getDecoder().decode(encoded);
             Cipher cipher = Cipher.getInstance(getPrivateKey().getAlgorithm());
             cipher.init(Cipher.DECRYPT_MODE, getPrivateKey());
             return new String(cipher.doFinal(bytes), Constant.CHARSET);
-        } catch (Throwable t) {
+        }
+        catch (Throwable t)
+        {
             throw new CommonException(t);
         }
     }
 
     @Override
-    public RSAPublicKey getPublicKey() {
+    public RSAPublicKey getPublicKey()
+    {
         return publicKey;
     }
 
     @Override
-    public RSAPrivateKey getPrivateKey() {
+    public RSAPrivateKey getPrivateKey()
+    {
         return privateKey;
     }
 
     @Override
-    public PublicKey getPublicKeyString() {
+    public PublicKey getPublicKeyString()
+    {
         return key;
     }
 
-    private String pkcs8() {
+    private String pkcs8()
+    {
         byte[] publicKeyBytes = publicKey.getEncoded();
         return """
                 -----BEGIN PUBLIC KEY-----
@@ -148,38 +172,43 @@ public class CipherServiceImpl extends ConfigurationAccessor implements CipherSe
                 """.formatted(Base64.getEncoder().encodeToString(publicKeyBytes));
     }
 
-    private String ssh2() {
+    private String ssh2()
+    {
         String prefix = "ssh-rsa";
 
-        RSAPublicKey key = publicKey;
+        RSAPublicKey rsaPublicKey = publicKey;
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        bos.writeBytes(new byte[]{0, 0, 0, 7});
+        bos.writeBytes(new byte[] { 0, 0, 0, 7 });
         bos.writeBytes(prefix.getBytes());
 
-        byte[] exponent = key.getPublicExponent().toByteArray();
+        byte[] exponent = rsaPublicKey.getPublicExponent().toByteArray();
         bos.writeBytes(toLengthBytes(exponent.length));
         bos.writeBytes(exponent);
 
-        byte[] module = key.getModulus().toByteArray();
+        byte[] module = rsaPublicKey.getModulus().toByteArray();
         bos.writeBytes(toLengthBytes(module.length));
         bos.writeBytes(module);
 
         return prefix + " " + Base64.getEncoder().encodeToString(bos.toByteArray());
     }
 
-    private byte[] toLengthBytes(int length) {
-        return new byte[]{(byte) (length >> 24), (byte) (length >> 16), (byte) (length >> 8), (byte) length};
+    private static byte[] toLengthBytes(int length)
+    {
+        return new byte[] { (byte)(length >> 24), (byte)(length >> 16), (byte)(length >> 8), (byte)length };
     }
 
-    private RSAPublicKey deserializePublicKey(String content) throws NoSuchAlgorithmException, InvalidKeySpecException {
+    private static RSAPublicKey deserializePublicKey(String content) throws NoSuchAlgorithmException, InvalidKeySpecException
+    {
         byte[] encoded = Base64.getDecoder().decode(content);
         KeyFactory keyFactory = KeyFactory.getInstance("RSA");
-        return (RSAPublicKey) keyFactory.generatePublic(new X509EncodedKeySpec(encoded));
+        return (RSAPublicKey)keyFactory.generatePublic(new X509EncodedKeySpec(encoded));
     }
 
-    private RSAPrivateKey deserializePrivateKey(String content) throws NoSuchAlgorithmException, InvalidKeySpecException {
+    private static RSAPrivateKey deserializePrivateKey(String content) throws NoSuchAlgorithmException,
+            InvalidKeySpecException
+    {
         byte[] encoded = Base64.getDecoder().decode(content);
         KeyFactory keyFactory = KeyFactory.getInstance("RSA");
-        return (RSAPrivateKey) keyFactory.generatePrivate(new PKCS8EncodedKeySpec(encoded));
+        return (RSAPrivateKey)keyFactory.generatePrivate(new PKCS8EncodedKeySpec(encoded));
     }
 }

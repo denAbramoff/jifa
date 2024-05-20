@@ -13,6 +13,7 @@
 package org.eclipse.jifa.server.controller;
 
 import jakarta.annotation.Nullable;
+
 import org.eclipse.jifa.server.ConfigurationAccessor;
 import org.eclipse.jifa.server.Constant;
 import org.eclipse.jifa.server.domain.dto.HandshakeResponse;
@@ -34,7 +35,8 @@ import java.util.Map;
  * System information controller
  */
 @RestController
-public class HandshakeController extends ConfigurationAccessor {
+public class HandshakeController extends ConfigurationAccessor
+{
 
     private final CipherService cipherService;
 
@@ -43,15 +45,18 @@ public class HandshakeController extends ConfigurationAccessor {
     private final Map<String, String> oauth2LoginLinks = new HashMap<>();
 
     public HandshakeController(CipherService cipherService,
-                               UserService userService,
-                               @Nullable OAuth2ClientProperties oauth2ClientProperties) {
+            UserService userService,
+            @Nullable OAuth2ClientProperties oauth2ClientProperties)
+    {
         this.cipherService = cipherService;
         this.userService = userService;
-        if (oauth2ClientProperties != null) {
+        if (oauth2ClientProperties != null)
+        {
             Map<String, OAuth2ClientProperties.Registration> registration = oauth2ClientProperties.getRegistration();
             registration.keySet()
-                        .forEach(key -> oauth2LoginLinks.put(key.substring(0, 1).toUpperCase() + key.substring(1),
-                                                             OAuth2AuthorizationRequestRedirectFilter.DEFAULT_AUTHORIZATION_REQUEST_BASE_URI + "/" + key));
+                    .forEach(key -> oauth2LoginLinks.put(key.substring(0, 1).toUpperCase() + key.substring(1),
+                            OAuth2AuthorizationRequestRedirectFilter.DEFAULT_AUTHORIZATION_REQUEST_BASE_URI + "/"
+                                    + key));
         }
     }
 
@@ -59,16 +64,17 @@ public class HandshakeController extends ConfigurationAccessor {
      * @return Handshake result
      */
     @GetMapping(Constant.HTTP_HANDSHAKE_MAPPING)
-    public HandshakeResponse handshake() {
+    public HandshakeResponse handshake()
+    {
         UserEntity userEntity = userService.getCurrentUser();
         User user = userEntity == null ? null : new User(userEntity.getName(), userEntity.isAdmin());
         return new HandshakeResponse(getRole(),
-                                     config.isAllowLogin(),
-                                     config.isAllowLogin() ? oauth2LoginLinks : Collections.emptyMap(),
-                                     config.isAllowAnonymousAccess(),
-                                     config.isAllowRegistration(),
-                                     cipherService.getPublicKeyString(),
-                                     config.getDisabledFileTransferMethods(),
-                                     user);
+                config.isAllowLogin(),
+                config.isAllowLogin() ? oauth2LoginLinks : Collections.emptyMap(),
+                config.isAllowAnonymousAccess(),
+                config.isAllowRegistration(),
+                cipherService.getPublicKeyString(),
+                config.getDisabledFileTransferMethods(),
+                user);
     }
 }

@@ -12,12 +12,12 @@
  ********************************************************************************/
 package org.eclipse.jifa.jfr.model;
 
-import lombok.Getter;
-import lombok.Setter;
 import org.eclipse.jifa.jfr.model.Frame;
 
-public class JavaFrame extends Frame {
-    public enum Type {
+public class JavaFrame extends Frame
+{
+    public enum Type
+    {
         INTERPRETER("Interpreted"),
         JIT("JIT compiled"),
         INLINE("Inlined"),
@@ -25,13 +25,17 @@ public class JavaFrame extends Frame {
 
         final String value;
 
-        Type(String value) {
+        Type(String value)
+        {
             this.value = value;
         }
 
-        public static Type typeOf(String value) {
-            for (Type type : Type.values()) {
-                if (type.value.equals(value)) {
+        public static Type typeOf(String value)
+        {
+            for (Type type : Type.values())
+            {
+                if (type.value.equals(value))
+                {
                     return type;
                 }
             }
@@ -41,19 +45,37 @@ public class JavaFrame extends Frame {
 
     private boolean isJavaFrame;
 
-    @Setter
-    @Getter
     private Type type;
 
-    @Setter
-    @Getter
     private long bci = -1;
 
-    public boolean isJavaFrame() {
+    public Type getType()
+    {
+        return type;
+    }
+
+    public void setType(Type type)
+    {
+        this.type = type;
+    }
+
+    public long getBci()
+    {
+        return bci;
+    }
+
+    public void setBci(long bci)
+    {
+        this.bci = bci;
+    }
+
+    public boolean isJavaFrame()
+    {
         return isJavaFrame;
     }
 
-    public void setJavaFrame(boolean javaFrame) {
+    public void setJavaFrame(boolean javaFrame)
+    {
         isJavaFrame = javaFrame;
     }
 }

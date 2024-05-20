@@ -29,7 +29,7 @@ tasks.register('moveStaticResourcesToServer', Copy) {
 }
 
 tasks.register('build') {
-    dependsOn(moveStaticResourcesToServer)
+    //dependsOn(moveStaticResourcesToServer)
 }
 
 tasks.register('clean') {

@@ -16,20 +16,37 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.MapsId;
 import jakarta.persistence.OneToOne;
-import lombok.Getter;
-import lombok.Setter;
+
 import org.eclipse.jifa.server.domain.entity.shared.BaseEntity;
 import org.eclipse.jifa.server.domain.entity.shared.file.FileEntity;
 
 @Entity(name = "file_static_worker_binds")
-@Getter
-@Setter
-public class FileStaticWorkerBindEntity extends BaseEntity  {
-
+public class FileStaticWorkerBindEntity extends BaseEntity
+{
     @OneToOne
     @MapsId
     private FileEntity file;
 
     @ManyToOne(optional = false)
     private StaticWorkerEntity staticWorker;
+
+    public FileEntity getFile()
+    {
+        return file;
+    }
+
+    public void setFile(FileEntity file)
+    {
+        this.file = file;
+    }
+
+    public StaticWorkerEntity getStaticWorker()
+    {
+        return staticWorker;
+    }
+
+    public void setStaticWorker(StaticWorkerEntity staticWorker)
+    {
+        this.staticWorker = staticWorker;
+    }
 }

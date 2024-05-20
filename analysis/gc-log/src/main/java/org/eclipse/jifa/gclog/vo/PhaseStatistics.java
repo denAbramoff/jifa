@@ -13,37 +13,16 @@
 
 package org.eclipse.jifa.gclog.vo;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
 import java.util.List;
 
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-public class PhaseStatistics {
-    private List<ParentStatisticsInfo> parents;
-
-    @Data
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class ParentStatisticsInfo {
-        private PhaseStatisticItem self;
-        private List<PhaseStatisticItem> phases;
-        private List<PhaseStatisticItem> causes;
+public record PhaseStatistics(List<ParentStatisticsInfo> parents)
+{
+    public static record ParentStatisticsInfo(PhaseStatisticItem self, List<PhaseStatisticItem> phases, List<PhaseStatisticItem> causes)
+    {
     }
 
-    @Data
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class PhaseStatisticItem{
-        private String name;
-        private int count;
-        private double intervalAvg;
-        private double intervalMin;
-        private double durationAvg;
-        private double durationMax;
-        private double durationTotal;
+    public static record PhaseStatisticItem(String name, int count, double intervalAvg, double intervalMin,
+                                            double durationAvg, double durationMax, double durationTotal)
+    {
     }
 }

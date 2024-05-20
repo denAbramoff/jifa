@@ -18,15 +18,16 @@ import static org.eclipse.jifa.common.enums.CommonErrorCode.INTERNAL_ERROR;
  * Common Exception.
  * Use this exception when you don't know what exception to use.
  */
-public class CommonException extends ErrorCodeException {
-
+public class CommonException extends ErrorCodeException
+{
     /**
      * Create a new CommonException.
      *
      * @param errorCode error code
      * @param message   message
      */
-    public CommonException(ErrorCode errorCode, String message) {
+    public CommonException(ErrorCode errorCode, String message)
+    {
         super(errorCode, message);
     }
 
@@ -35,7 +36,8 @@ public class CommonException extends ErrorCodeException {
      *
      * @param errorCode error code
      */
-    public CommonException(ErrorCode errorCode) {
+    public CommonException(ErrorCode errorCode)
+    {
         super(errorCode);
     }
 
@@ -44,7 +46,8 @@ public class CommonException extends ErrorCodeException {
      *
      * @param message message
      */
-    public CommonException(String message) {
+    public CommonException(String message)
+    {
         super(INTERNAL_ERROR, message);
     }
 
@@ -53,7 +56,8 @@ public class CommonException extends ErrorCodeException {
      *
      * @param throwable cause
      */
-    public CommonException(Throwable throwable) {
+    public CommonException(Throwable throwable)
+    {
         super(INTERNAL_ERROR, throwable);
     }
 
@@ -63,7 +67,8 @@ public class CommonException extends ErrorCodeException {
      * @param errorCode error code
      * @return new common exception
      */
-    public static CommonException CE(ErrorCode errorCode) {
+    public static CommonException CE(ErrorCode errorCode)
+    {
         return new CommonException(errorCode);
     }
 }

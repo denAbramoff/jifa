@@ -27,13 +27,17 @@ import java.util.stream.Collectors;
 import org.eclipse.jifa.jfr.model.Task;
 import org.eclipse.jifa.jfr.model.TaskSum;
 
-public abstract class SumExtractor extends Extractor {
-    SumExtractor(JFRAnalysisContext context, List<String> interested) {
+public abstract class SumExtractor extends Extractor
+{
+    SumExtractor(JFRAnalysisContext context, List<String> interested)
+    {
         super(context, interested);
     }
 
-    public static class TaskSumData extends TaskData {
-        TaskSumData(RecordedThread thread) {
+    public static class TaskSumData extends TaskData
+    {
+        TaskSumData(RecordedThread thread)
+        {
             super(thread);
         }
 
@@ -42,18 +46,22 @@ public abstract class SumExtractor extends Extractor {
 
     protected final Map<Long, TaskSumData> data = new HashMap<>();
 
-    TaskSumData getTaskSumData(RecordedThread thread) {
+    TaskSumData getTaskSumData(RecordedThread thread)
+    {
         return data.computeIfAbsent(thread.getJavaThreadId(), i -> new TaskSumData(thread));
     }
 
-    protected void visitEvent(RecordedEvent event, long eventValue) {
+    protected void visitEvent(RecordedEvent event, long eventValue)
+    {
         RecordedStackTrace stackTrace = event.getStackTrace();
-        if (stackTrace == null) {
+        if (stackTrace == null)
+        {
             return;
         }
 
         TaskSumData data = getTaskSumData(event.getThread());
-        if (data.getSamples() == null) {
+        if (data.getSamples() == null)
+        {
             data.setSamples(new HashMap<>());
         }
 
@@ -61,10 +69,13 @@ public abstract class SumExtractor extends Extractor {
         data.sum += eventValue;
     }
 
-    public List<TaskSum> buildTaskSums() {
+    public List<TaskSum> buildTaskSums()
+    {
         List<TaskSum> sums = new ArrayList<>();
-        for (TaskSumData data : this.data.values()) {
-            if (data.sum == 0) {
+        for (TaskSumData data : this.data.values())
+        {
+            if (data.sum == 0)
+            {
                 continue;
             }
 
@@ -74,7 +85,8 @@ public abstract class SumExtractor extends Extractor {
             ta.setName(context.getThread(data.getThread()).getName());
             ts.setTask(ta);
 
-            if (data.getSamples() != null) {
+            if (data.getSamples() != null)
+            {
                 ts.setSum(data.sum);
                 ts.setSamples(data.getSamples().entrySet().stream().collect(
                         Collectors.toMap(
@@ -87,7 +99,8 @@ public abstract class SumExtractor extends Extractor {
             sums.add(ts);
         }
 
-        sums.sort((o1, o2) -> {
+        sums.sort((o1, o2) ->
+        {
             long delta = o2.getSum() - o1.getSum();
             return delta > 0 ? 1 : (delta == 0 ? 0 : -1);
         });

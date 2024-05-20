@@ -12,9 +12,8 @@
  ********************************************************************************/
 package org.eclipse.jifa.jfr.common;
 
-import lombok.Getter;
-
-public enum ProfileDimension {
+public enum ProfileDimension
+{
     CPU(1, "CPU Time"),
     CPU_SAMPLE(1 << 1, "CPU Sample"),
     WALL_CLOCK(1 << 2, "Wall Clock"),
@@ -41,37 +40,56 @@ public enum ProfileDimension {
 
     PROBLEMS(1 << 20, "Problem");
 
-    @Getter
     private final int value;
 
-    @Getter
     private final String key;
 
-    @Getter
     private final String desc;
 
-    ProfileDimension(int v, String key) {
+    ProfileDimension(int v, String key)
+    {
         this.value = v;
         this.key = key;
         this.desc = key;
     }
 
-    public static ProfileDimension of(String key) {
-        for (ProfileDimension f : ProfileDimension.values()) {
-            if (f.key.equalsIgnoreCase(key)) {
+    public int getValue()
+    {
+        return value;
+    }
+
+    public String getKey()
+    {
+        return key;
+    }
+
+    public String getDesc()
+    {
+        return desc;
+    }
+
+    public static ProfileDimension of(String key)
+    {
+        for (ProfileDimension f : ProfileDimension.values())
+        {
+            if (f.key.equalsIgnoreCase(key))
+            {
                 return f;
             }
         }
         throw new RuntimeException("invalid profile dimension key [" + key + "]");
     }
 
-    public boolean active(int dimensions) {
+    public boolean active(int dimensions)
+    {
         return (dimensions & this.value) != 0;
     }
 
-    public static int of(ProfileDimension... dimensions) {
+    public static int of(ProfileDimension... dimensions)
+    {
         int r = 0;
-        for (ProfileDimension dimension : dimensions) {
+        for (ProfileDimension dimension : dimensions)
+        {
             r |= dimension.value;
         }
         return r;

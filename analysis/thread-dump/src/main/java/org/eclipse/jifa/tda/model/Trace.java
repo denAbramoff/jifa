@@ -13,30 +13,49 @@
 
 package org.eclipse.jifa.tda.model;
 
-import lombok.Data;
-
 import java.util.Arrays;
 
-@Data
-public class Trace {
-
+public class Trace
+{
     private Frame[] frames;
 
     private ConcurrentLock[] concurrentLocks;
 
+    public Frame[] getFrames()
+    {
+        return frames;
+    }
+
+    public void setFrames(Frame[] frames)
+    {
+        this.frames = frames;
+    }
+
+    public ConcurrentLock[] getConcurrentLocks()
+    {
+        return concurrentLocks;
+    }
+
+    public void setConcurrentLocks(ConcurrentLock[] concurrentLocks)
+    {
+        this.concurrentLocks = concurrentLocks;
+    }
+
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(Object o)
+    {
         if (this == o)
             return true;
         if (o == null || getClass() != o.getClass())
             return false;
-        Trace trace = (Trace) o;
+        Trace trace = (Trace)o;
         return Arrays.equals(frames, trace.frames) &&
-               Arrays.equals(concurrentLocks, trace.concurrentLocks);
+                Arrays.equals(concurrentLocks, trace.concurrentLocks);
     }
 
     @Override
-    public int hashCode() {
+    public int hashCode()
+    {
         int result = Arrays.hashCode(frames);
         result = 31 * result + Arrays.hashCode(concurrentLocks);
         return result;

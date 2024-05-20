@@ -38,7 +38,7 @@ export default defineConfig({
             items: [
               {
                 text: 'Changelog',
-                link: '/guide/changelog.md'
+                link: '/guide/changeLOG.md'
               },
               {
                 text: 'Contributing',
@@ -73,7 +73,7 @@ export default defineConfig({
           },
           {
             items: [
-              {text: 'Changelog', link: '/guide/changelog.md'},
+              {text: 'Changelog', link: '/guide/changeLOG.md'},
               {text: 'Contributing', link: '/guide/contributing.md'},
             ]
           }
@@ -112,7 +112,7 @@ export default defineConfig({
             items: [
               {
                 text: '更新日志',
-                link: '/zh/guide/changelog.md'
+                link: '/zh/guide/changeLOG.md'
               },
               {
                 text: '贡献指南',
@@ -147,7 +147,7 @@ export default defineConfig({
           },
           {
             items: [
-              {text: '更新日志', link: '/zh/guide/changelog.md'},
+              {text: '更新日志', link: '/zh/guide/changeLOG.md'},
               {text: '贡献指南', link: '/zh/guide/contributing.md'},
             ]
           }

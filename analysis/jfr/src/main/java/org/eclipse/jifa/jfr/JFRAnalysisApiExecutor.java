@@ -12,7 +12,7 @@
  ********************************************************************************/
 package org.eclipse.jifa.jfr;
 
-import lombok.extern.slf4j.Slf4j;
+
 import org.eclipse.jifa.analysis.AbstractApiExecutor;
 import org.eclipse.jifa.analysis.listener.ProgressListener;
 import org.eclipse.jifa.analysis.support.MethodNameConverter;
@@ -22,7 +22,7 @@ import java.nio.file.Path;
 import java.util.Map;
 import java.util.function.Predicate;
 
-@Slf4j
+
 public class JFRAnalysisApiExecutor extends AbstractApiExecutor<JFRAnalyzer> {
     @Override
     public String namespace() {

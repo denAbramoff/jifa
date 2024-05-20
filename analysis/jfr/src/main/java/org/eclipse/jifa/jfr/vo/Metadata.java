@@ -12,12 +12,19 @@
  ********************************************************************************/
 package org.eclipse.jifa.jfr.vo;
 
-import lombok.Getter;
-import lombok.Setter;
 import org.eclipse.jifa.jfr.model.PerfDimension;
 
-@Setter
-@Getter
-public class Metadata {
+public class Metadata
+{
     private PerfDimension[] perfDimensions;
+
+    public PerfDimension[] getPerfDimensions()
+    {
+        return perfDimensions;
+    }
+
+    public void setPerfDimensions(PerfDimension[] perfDimensions)
+    {
+        this.perfDimensions = perfDimensions;
+    }
 }

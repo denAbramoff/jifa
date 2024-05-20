@@ -15,8 +15,7 @@ package org.eclipse.jifa.server.domain.entity.shared.user;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
-import lombok.Getter;
-import lombok.Setter;
+
 import org.eclipse.jifa.server.domain.entity.shared.BaseEntity;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -25,10 +24,9 @@ import java.time.LocalDateTime;
 @SuppressWarnings("JpaDataSourceORMInspection")
 @Entity
 @Table(name = "users")
-@Getter
-@Setter
-public class UserEntity extends BaseEntity {
 
+public class UserEntity extends BaseEntity
+{
     @Column(length = 64)
     private String name;
 
@@ -38,4 +36,34 @@ public class UserEntity extends BaseEntity {
     @Column(nullable = false)
     @UpdateTimestamp
     private LocalDateTime lastModifiedTime;
+
+    public String getName()
+    {
+        return name;
+    }
+
+    public void setName(String name)
+    {
+        this.name = name;
+    }
+
+    public boolean isAdmin()
+    {
+        return admin;
+    }
+
+    public void setAdmin(boolean admin)
+    {
+        this.admin = admin;
+    }
+
+    public LocalDateTime getLastModifiedTime()
+    {
+        return lastModifiedTime;
+    }
+
+    public void setLastModifiedTime(LocalDateTime lastModifiedTime)
+    {
+        this.lastModifiedTime = lastModifiedTime;
+    }
 }

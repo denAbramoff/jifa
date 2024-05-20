@@ -563,6 +563,13 @@ public abstract class GCModel
             endTime = Math.max(endTime, event.getPhases().getLast().getEndTime());
         }
         setEndTime(Math.max(this.endTime, endTime));
+        // update start time.
+        event = gcEvents.get(0);
+        double startTime = event.getStartTime();
+        if (event.hasPhases()) {
+            startTime = Math.min(startTime, event.getPhases().get(0).getStartTime());
+        }
+        setStartTime(Math.min(this.startTime, startTime));
     }
 
     @ApiMeta("timeGraphData")
